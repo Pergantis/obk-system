@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oslo Biljardklubb - System</title>
+    <!-- Vi bruker biblioteket som vi vet er stabilt -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -24,29 +25,25 @@
         .module { display: none; }
         .module.active { display: block; }
         
-        /* Kort-design */
-        .card { background: var(--hvit); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #ddd; margin-bottom: 20px; }
+        /* Bord-kortene */
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+        .card { background: var(--hvit); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 8px solid #ddd; text-align: center; }
+        .card.active { border-top-color: var(--biljard-gronn); background: #fafffa; }
         
-        /* Periodekort Modul Layout */
+        /* Periodekort Layout */
         .p-container { display: flex; gap: 20px; }
         .p-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-
-        /* Input og Knapper */
         .timer-text { font-size: 22px; font-weight: 900; color: var(--marine); margin: 8px 0; }
         .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; font-size: 13px; margin-top: 5px; }
         .name-in { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; margin-bottom: 10px; }
         
-        /* Søkeresultater styling */
-        .search-item { padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-top: 8px; cursor: pointer; transition: 0.2s; }
+        .search-item { padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-top: 8px; cursor: pointer; text-align: left; }
         .search-item:hover { border-color: var(--gull); background: #fdfaf0; }
 
-        /* Tabell for aktive kort */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 12px; border-bottom: 2px solid #eee; color: #666; font-size: 12px; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
-        
-        /* Dager igjen farger */
+        /* Tabell */
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; border-bottom: 2px solid #eee; color: #666; font-size: 11px; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
         .dager-ok { color: var(--biljard-gronn); font-weight: bold; }
         .dager-advarsel { color: #f39c12; font-weight: bold; }
         .dager-utlopt { color: var(--advarsel); font-weight: bold; }
@@ -67,7 +64,7 @@
 <nav>
     <div style="text-align: center; margin-bottom: 20px;">
         <img src="https://images.squarespace-cdn.com/content/v1/5f1ea20392e2991054b38d3f/1596796347854-Y9E9R9R6X9R9R9R9R9R9/logo.png" 
-             alt="OBK Logo" style="width: 120px; height: auto;" onerror="this.style.display='none';">
+             style="width: 120px; height: auto;" onerror="this.style.display='none';">
     </div>
     <button class="nav-btn active" id="btn-bord" onclick="showModule('bord')">🎱 BORDLEIE</button>
     <button class="nav-btn" id="btn-medlem" onclick="showModule('medlem')">👤 PERIODEKORT</button>
@@ -77,17 +74,14 @@
 <main>
     <div id="error-log"></div>
 
-    <!-- MODUL: BORDLEIE -->
     <div id="mod-bord" class="module active">
         <h1 id="status-text">Bordkontroll</h1>
         <div id="bord-grid" class="card-grid">Laster bord...</div>
     </div>
 
-    <!-- MODUL: PERIODEKORT (STEG 4.3) -->
     <div id="mod-medlem" class="module">
         <h1>Periodekort Administrasjon</h1>
         <div class="p-container">
-            <!-- VENSTRE: Søk og valg -->
             <div style="flex: 1;">
                 <div class="p-box" style="border-top: 5px solid var(--biljard-blaa);">
                     <h3 style="margin-top:0;">Finn Medlem</h3>
@@ -95,56 +89,34 @@
                     <button class="btn" style="background: var(--marine)" onclick="runSearch()">SØK</button>
                     <div id="p-search-results" style="margin-top: 15px;"></div>
                 </div>
-
-                <!-- Skjema for aktivering -->
                 <div id="p-form-box" class="p-box" style="display:none; margin-top: 20px; border-top: 5px solid var(--gull);">
-                    <h3 id="p-selected-name" style="margin-top:0; color: var(--marine);">Navn</h3>
-                    <div style="margin-bottom: 15px;">
-                        <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase;">Startdato</label>
-                        <input type="date" id="p-start-date" class="name-in">
-                        <label style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase;">Sluttdato</label>
-                        <input type="date" id="p-end-date" class="name-in">
-                    </div>
+                    <h3 id="p-selected-name" style="margin-top:0;">Navn</h3>
+                    <label>Startdato</label><input type="date" id="p-start-date" class="name-in">
+                    <label>Sluttdato</label><input type="date" id="p-end-date" class="name-in">
                     <button class="btn" id="p-save-btn" style="background: var(--biljard-gronn); padding: 15px;" onclick="savePass()">AKTIVER / FORNY KORT</button>
                     <button class="btn" style="background: #95a5a6; margin-top: 10px;" onclick="cancelSelection()">AVBRYT</button>
                 </div>
             </div>
-
-            <!-- HØYRE: Oversikt over aktive -->
             <div style="flex: 1.5;">
                 <div class="p-box" style="border-top: 5px solid var(--biljard-gronn);">
                     <h3 style="margin-top:0;">Aktive Periodekort</h3>
-                    <div style="overflow-x: auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Navn</th>
-                                    <th>Mobil</th>
-                                    <th>Utløper</th>
-                                    <th>Dager</th>
-                                </tr>
-                            </thead>
-                            <tbody id="p-active-table-body">
-                                <tr><td colspan="4">Henter aktive medlemmer...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <table>
+                        <thead><tr><th>Navn</th><th>Mobil</th><th>Utløper</th><th>Status</th></tr></thead>
+                        <tbody id="p-active-table-body"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODUL: SKAP -->
     <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Under utvikling...</p></div>
 </main>
 
-<!-- STOPP-MODAL (For bordleie) -->
 <div id="modal-overlay">
     <div class="modal-content">
         <h2 id="modal-title">BORD FERDIG</h2>
         <div style="display: flex; align-items: baseline; justify-content: center; gap: 5px; color: var(--advarsel);">
-            <span class="big-minutes" id="modal-minutes">0</span>
-            <span style="font-size: 30px; font-weight: bold;">min</span>
+            <span class="big-minutes" id="modal-minutes">0</span><span style="font-size: 30px; font-weight: bold;">min</span>
         </div>
         <div id="modal-player" style="font-weight: bold; margin-bottom: 20px;">👤 Spiller</div>
         <button class="btn" style="background:var(--biljard-gronn); padding: 15px;" onclick="confirmStop()">BEKREFT OG LAGRE</button>
@@ -155,29 +127,29 @@
 <script>
     const SB_URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
-    const supabase = window.supabase.createClient(SB_URL, SB_KEY);
-
+    let sb;
     let tableData = [];
     let currentStoppingId = null;
     let selectedMemberId = null;
 
-    // --- 1. OPPSTART ---
     async function startSystem() {
         try {
             if (!window.supabase) return;
-            await loadTables();
-            await loadActivePasses();
+            sb = window.supabase.createClient(SB_URL, SB_KEY);
+            
+            // Last de to tingene uavhengig av hverandre
+            loadTables();
+            loadActivePasses();
             
             setInterval(loadTables, 10000);
-            setInterval(loadActivePasses, 15000); // Oppdater medlemsliste hvert 15. sek
-            setInterval(renderGrid, 30000);
-        } catch (err) { showError("Feil: " + err.message); }
+            setInterval(loadActivePasses, 30000);
+        } catch (err) { console.error(err); }
     }
 
-    // --- 2. BORDLEIE ---
+    // --- BORDLEIE ---
     async function loadTables() {
-        const { data } = await supabase.from('bord_status').select('*').order('bord_nummer');
-        if (data) { tableData = data; renderGrid(); }
+        const { data, error } = await sb.from('bord_status').select('*').order('bord_nummer');
+        if (!error) { tableData = data; renderGrid(); }
     }
 
     function renderGrid() {
@@ -197,16 +169,13 @@
                         onclick="${isActive ? `openModal(${b.bord_nummer}, '${b.start_tid}', '${b.kunde_navn}')` : `startTable(${b.bord_nummer})`}">
                         ${isActive ? 'STOPP' : 'START'}
                     </button>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
     async function startTable(id) {
         const name = document.getElementById(`name-${id}`).value;
-        showLoader(true);
-        await supabase.from('bord_status').update({ status: 'Opptatt', start_tid: new Date().toISOString(), kunde_navn: name }).eq('bord_nummer', id);
-        showLoader(false);
+        await sb.from('bord_status').update({ status: 'Opptatt', start_tid: new Date().toISOString(), kunde_navn: name }).eq('bord_nummer', id);
         loadTables();
     }
 
@@ -219,122 +188,87 @@
     }
 
     async function confirmStop() {
-        showLoader(true);
-        await supabase.from('bord_status').update({ status: 'Ledig', start_tid: null, kunde_navn: null }).eq('bord_nummer', currentStoppingId);
-        showLoader(false);
+        await sb.from('bord_status').update({ status: 'Ledig', start_tid: null, kunde_navn: null }).eq('bord_nummer', currentStoppingId);
         document.getElementById('modal-overlay').style.display = 'none';
         loadTables();
     }
 
     function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
 
-    // --- 3. PERIODEKORT ---
-
+    // --- PERIODEKORT ---
     async function runSearch() {
         const input = document.getElementById('p-search-input').value.trim();
-        const resultsArea = document.getElementById('p-search-results');
         if (input.length < 2) return;
-        resultsArea.innerHTML = "Søker...";
-        const { data, error } = await supabase.from('medlemmer').select('*').or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%`).limit(5);
-        if (error) { resultsArea.innerHTML = "Feil: " + error.message; return; }
-        if (data.length === 0) { resultsArea.innerHTML = "Ingen funnet."; return; }
-        resultsArea.innerHTML = data.map(m => `
+        const { data, error } = await sb.from('medlemmer').select('*').or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%`).limit(5);
+        if (error) return;
+        document.getElementById('p-search-results').innerHTML = data.map(m => `
             <div class="search-item" onclick="selectMemberForPass('${m.id}', '${m.fornavn} ${m.etternavn}')">
                 <strong>${m.fornavn} ${m.etternavn}</strong><br><small>📱 ${m.tlf_mobil}</small>
-            </div>
-        `).join('');
+            </div>`).join('');
     }
 
     function selectMemberForPass(id, name) {
         selectedMemberId = id;
         document.getElementById('p-selected-name').innerText = "👤 " + name;
         document.getElementById('p-form-box').style.display = 'block';
-        document.getElementById('p-search-results').innerHTML = "";
-        document.getElementById('p-search-input').value = "";
-        
         const iDag = new Date();
-        const om30 = new Date();
-        om30.setDate(iDag.getDate() + 30);
+        const om30 = new Date(); om30.setDate(iDag.getDate() + 30);
         document.getElementById('p-start-date').value = iDag.toISOString().split('T')[0];
         document.getElementById('p-end-date').value = om30.toISOString().split('T')[0];
     }
 
     async function savePass() {
         if (!selectedMemberId) return;
-        const start = document.getElementById('p-start-date').value;
-        const slutt = document.getElementById('p-end-date').value;
-        
         showLoader(true);
-        const { error } = await supabase.from('periodekort').insert({
+        const { error } = await sb.from('periodekort').insert({
             medlem_id: selectedMemberId,
-            start_dato: start,
-            slutt_dato: slutt
+            start_dato: document.getElementById('p-start-date').value,
+            slutt_dato: document.getElementById('p-end-date').value
         });
-
         showLoader(false);
-        if (error) { alert("Kunne ikke lagre: " + error.message); } 
-        else {
-            alert("Periodekort er lagret!");
-            cancelSelection();
-            loadActivePasses();
-        }
+        if (error) alert("Feil: " + error.message);
+        else { alert("Lagret!"); cancelSelection(); loadActivePasses(); }
     }
 
     async function loadActivePasses() {
         const today = new Date().toISOString().split('T')[0];
-        
-        // Vi henter data fra 'periodekort' og inkluderer navn fra 'medlemmer' tabellen
-        const { data, error } = await supabase
-            .from('periodekort')
-            .select('*, medlemmer(fornavn, etternavn, tlf_mobil)')
+        // Hent medlemsinfo via join
+        const { data, error } = await sb.from('periodekort')
+            .select('slutt_dato, medlemmer(fornavn, etternavn, tlf_mobil)')
             .gte('slutt_dato', today)
             .order('slutt_dato', { ascending: true });
 
-        if (error) { console.error(error); return; }
+        if (error) { console.log("Liste-feil:", error); return; }
 
         const tbody = document.getElementById('p-active-table-body');
         if (!data || data.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='4'>Ingen aktive kort funnet.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='4'>Ingen aktive kort.</td></tr>";
             return;
         }
 
         tbody.innerHTML = data.map(p => {
             const slutt = new Date(p.slutt_dato);
-            const naa = new Date();
-            naa.setHours(0,0,0,0);
-            const dagerIgjen = Math.ceil((slutt - naa) / (1000 * 60 * 60 * 24));
-            
-            let fargeKlasse = "dager-ok";
-            if (dagerIgjen <= 0) fargeKlasse = "dager-utlopt";
-            else if (dagerIgjen <= 7) fargeKlasse = "dager-advarsel";
-
-            const dagerTekst = dagerIgjen <= 0 ? "Siste dag!" : dagerIgjen + " dager";
-
-            return `
-                <tr>
-                    <td><strong>${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</strong></td>
-                    <td>${p.medlemmer.tlf_mobil}</td>
-                    <td>${slutt.toLocaleDateString('no-NO')}</td>
-                    <td class="${fargeKlasse}">${dagerTekst}</td>
-                </tr>
-            `;
+            const dager = Math.ceil((slutt - new Date().setHours(0,0,0,0)) / 86400000);
+            let klasse = dager <= 7 ? "dager-advarsel" : "dager-ok";
+            if (dager <= 0) klasse = "dager-utlopt";
+            return `<tr>
+                <td><strong>${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</strong></td>
+                <td>${p.medlemmer.tlf_mobil}</td>
+                <td>${slutt.toLocaleDateString('no-NO')}</td>
+                <td class="${klasse}">${dager <= 0 ? 'Siste dag!' : dager + ' dager'}</td>
+            </tr>`;
         }).join('');
     }
 
-    function cancelSelection() {
-        document.getElementById('p-form-box').style.display = 'none';
-        selectedMemberId = null;
-    }
-
+    function cancelSelection() { document.getElementById('p-form-box').style.display = 'none'; }
+    function showLoader(show) { document.getElementById('sync-loader').style.display = show ? 'block' : 'none'; }
+    
     function showModule(id) {
         document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('mod-' + id).classList.add('active');
         document.getElementById('btn-' + id).classList.add('active');
     }
-
-    function showLoader(show) { document.getElementById('sync-loader').style.display = show ? 'block' : 'none'; }
-    function showError(msg) { const el = document.getElementById('error-log'); el.innerText = msg; el.style.display = 'block'; }
 
     window.addEventListener('load', startSystem);
 </script>
