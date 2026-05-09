@@ -85,6 +85,7 @@
                     <div id="p-search-results" style="margin-top: 15px;"></div>
                 </div>
 
+                <!-- Skjema for eksisterende medlem -->
                 <div id="p-form-box" class="p-box" style="display:none; margin-top: 20px; border-top-color: var(--gull);">
                     <h3 id="p-display-name" style="margin-top:0; color: var(--marine);">Navn</h3>
                     <p id="p-current-status" style="font-size: 12px; background: #eee; padding: 8px; border-radius: 5px; margin-bottom: 15px;"></p>
@@ -106,6 +107,7 @@
                     <button class="btn" style="background: #95a5a6; margin-top: 10px;" onclick="cancelSelection()">AVBRYT</button>
                 </div>
 
+                <!-- Skjema for helt nytt medlem -->
                 <div id="p-new-member-box" class="p-box" style="display:none; margin-top: 20px; border-top-color: var(--marine);">
                     <h3 style="margin-top:0;">Registrer Nytt Medlem</h3>
                     <label>Fornavn <span class="req">*</span></label>
@@ -248,11 +250,16 @@
     }
 
     async function selectMemberForPass(id, name, epost, tlf) {
+        // VIKTIG: Sett ID først
         selectedMemberId = id;
-        cancelSelection(); 
+        
+        // Skjul andre bokser før vi viser den nye
+        document.getElementById('p-new-member-box').style.display = 'none';
+        
         document.getElementById('p-display-name').innerText = "👤 " + name;
         document.getElementById('p-edit-email').value = epost || "";
         document.getElementById('p-edit-phone').value = tlf || "";
+
         const { data } = await sb.from('periodekort').select('slutt_dato').eq('medlem_id', id).order('slutt_dato', { ascending: false }).limit(1);
         const statusEl = document.getElementById('p-current-status');
         if (data && data.length > 0) {
@@ -263,15 +270,18 @@
             statusEl.innerText = "Medlemmet har ingen registrerte kort fra før.";
             statusEl.style.color = "#666";
         }
+
         document.getElementById('p-start-date').value = "";
         document.getElementById('p-end-date').value = "";
         document.getElementById('p-form-box').style.display = 'block';
         document.getElementById('p-search-results').innerHTML = "";
     }
 
-    // --- FIKSET FUNKSJON ---
     async function saveMemberPassUpdate() {
-        if (!selectedMemberId) return;
+        if (!selectedMemberId) {
+            alert("Feil: Ingen person er valgt. Vennligst søk på nytt.");
+            return;
+        }
         
         const nEmail = document.getElementById('p-edit-email').value.trim();
         const nPhone = document.getElementById('p-edit-phone').value.trim();
@@ -282,31 +292,19 @@
 
         try {
             showLoader(true);
-            
-            // 1. Oppdater medlemsinfo
-            const { error: memberError } = await sb.from('medlemmer')
-                .update({ epost: nEmail, tlf_mobil: nPhone })
-                .eq('id', selectedMemberId);
-
+            const { error: memberError } = await sb.from('medlemmer').update({ epost: nEmail, tlf_mobil: nPhone }).eq('id', selectedMemberId);
             if (memberError) throw memberError;
 
-            // 2. Lagre periodekort hvis datoer er satt
             if (nStart && nSlutt) {
-                const { error: passError } = await sb.from('periodekort').insert({
-                    medlem_id: selectedMemberId,
-                    start_dato: nStart,
-                    slutt_dato: nSlutt
-                });
+                const { error: passError } = await sb.from('periodekort').insert({ medlem_id: selectedMemberId, start_dato: nStart, slutt_dato: nSlutt });
                 if (passError) throw passError;
                 alert("Medlemsinfo og nytt periodekort ble lagret!");
             } else {
                 alert("Medlemsinfo ble oppdatert.");
             }
-
             showLoader(false);
             cancelSelection();
             loadActivePasses();
-
         } catch (err) {
             showLoader(false);
             alert("Databasefeil: " + err.message);
@@ -314,7 +312,7 @@
     }
 
     function showNewMemberBox(input) {
-        cancelSelection();
+        document.getElementById('p-form-box').style.display = 'none';
         document.getElementById('p-new-member-box').style.display = 'block';
         document.getElementById('p-search-results').innerHTML = "";
         if (!isNaN(input)) document.getElementById('n-phone').value = input;
@@ -333,28 +331,18 @@
 
         try {
             showLoader(true);
-            const { data, error: regError } = await sb.from('medlemmer')
-                .insert({ fornavn: fn, etternavn: en, epost: ep, tlf_mobil: ph })
-                .select();
-            
+            const { data, error: regError } = await sb.from('medlemmer').insert({ fornavn: fn, etternavn: en, epost: ep, tlf_mobil: ph }).select();
             if (regError) throw regError;
-
             if (data && st && sl) {
-                const { error: passError } = await sb.from('periodekort').insert({
-                    medlem_id: data[0].id,
-                    start_dato: st,
-                    slutt_dato: sl
-                });
+                const { error: passError } = await sb.from('periodekort').insert({ medlem_id: data[0].id, start_dato: st, slutt_dato: sl });
                 if (passError) throw passError;
                 alert("Nytt medlem registrert med periodekort!");
             } else {
                 alert("Nytt medlem registrert (uten kort).");
             }
-
             showLoader(false);
             cancelSelection();
             loadActivePasses();
-
         } catch (err) {
             showLoader(false);
             alert("Feil ved lagring: " + err.message);
@@ -363,11 +351,7 @@
 
     async function loadActivePasses() {
         const today = new Date().toISOString().split('T')[0];
-        const { data, error } = await sb.from('periodekort')
-            .select('slutt_dato, medlemmer(fornavn, etternavn, tlf_mobil)')
-            .gte('slutt_dato', today)
-            .order('slutt_dato', { ascending: true });
-
+        const { data, error } = await sb.from('periodekort').select('slutt_dato, medlemmer(fornavn, etternavn, tlf_mobil)').gte('slutt_dato', today).order('slutt_dato', { ascending: true });
         if (error) return;
         const tbody = document.getElementById('p-active-table-body');
         if (!data || data.length === 0) {
