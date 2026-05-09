@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oslo Biljardklubb - System</title>
-    <!-- Vi henter Supabase-biblioteket -->
+    
+    <!-- 1. Vi henter biblioteket med en gang -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root {
             --marine: #1a2f3c;
@@ -30,7 +32,8 @@
         .card.active { border-top-color: var(--biljard-gronn); background: #fafffa; }
         
         .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; margin-top: 10px; }
-        #error-log { color: red; background: #ffdada; padding: 10px; border-radius: 5px; display: none; margin-bottom: 20px; }
+        #error-log { color: red; background: #ffdada; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; border: 1px solid red; }
+        #debug-info { font-size: 10px; color: #aaa; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -45,109 +48,99 @@
 <main>
     <div id="error-log"></div>
     
-    <!-- MODUL: BORDLEIE -->
     <div id="mod-bord" class="module active">
-        <h1 id="status-text">Kobler til database...</h1>
+        <h1 id="status-text">Systemet våkner...</h1>
         <div id="bord-grid" class="card-grid"></div>
     </div>
 
-    <!-- MODUL: MEDLEMMER -->
-    <div id="mod-medlem" class="module">
-        <h1>Medlemsregister</h1>
-        <p>Her kommer søk og periodekort...</p>
-    </div>
+    <div id="mod-medlem" class="module"><h1>Medlemsregister</h1><p>Kommer snart...</p></div>
+    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Kommer snart...</p></div>
 
-    <!-- MODUL: SKAP -->
-    <div id="mod-skap" class="module">
-        <h1>Skapleie</h1>
-        <p>Her kommer kartet over 100 skap...</p>
-    </div>
+    <div id="debug-info">Status: <span id="debug-status">Venter på skript...</span></div>
 </main>
 
 <script>
-    // === SETT INN DINE DATA HER ===
+    // === VIKTIG: SJEKK AT DET IKKE ER MELLOMROM FØR ELLER ETTER NØKLENE ===
     const SUPABASE_URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
-    // ==============================
+    // ====================================================================
 
-    let supabase;
+    let sbClient;
 
-    // Funksjon for å bytte mellom moduler
-    function showModule(id) {
-        document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
-        document.getElementById('mod-' + id).classList.add('active');
-        if(id === 'bord') loadTables();
-    }
+    async function startSystem() {
+        const debug = document.getElementById('debug-status');
+        const statusText = document.getElementById('status-text');
 
-    // Funksjon som starter opp systemet
-    async function init() {
         try {
-            // Vi sjekker at biblioteket er lastet
-            if (typeof supabasejs === 'undefined' && !window.supabase) {
-                console.log("Venter på Supabase bibliotek...");
-                setTimeout(init, 500);
+            debug.innerText = "Sjekker Supabase-bibliotek...";
+            
+            // Sjekk om Supabase er lastet i nettleseren
+            if (!window.supabase) {
+                showError("Klarte ikke å laste Supabase-motoren. Sjekk internettforbindelsen.");
                 return;
             }
 
-            // Start Supabase-klienten
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            console.log("Supabase er klar!");
+            debug.innerText = "Kobler til Oslo Biljardklubb database...";
+            // Lag klienten
+            sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             
-            // Last bordene
-            loadTables();
+            debug.innerText = "Henter bord fra tabellen...";
+            await loadTables();
 
         } catch (err) {
-            showError("Feil ved oppstart: " + err.message);
+            showError("Noe gikk galt: " + err.message);
         }
     }
 
     async function loadTables() {
-        document.getElementById('status-text').innerText = "Henter bordstatus...";
+        const grid = document.getElementById('bord-grid');
+        const statusText = document.getElementById('status-text');
         
-        try {
-            const { data, error } = await supabase
-                .from('bord_status')
-                .select('*')
-                .order('bord_nummer', { ascending: true });
+        const { data, error } = await sbClient
+            .from('bord_status')
+            .select('*')
+            .order('bord_nummer', { ascending: true });
 
-            if (error) {
-                showError("Kunne ikke hente data: " + error.message);
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                showError("Ingen bord ble funnet i databasen. Sjekk Table Editor i Supabase.");
-                return;
-            }
-
-            document.getElementById('status-text').innerText = "Bordoversikt";
-            const grid = document.getElementById('bord-grid');
-            grid.innerHTML = data.map(b => `
-                <div class="card ${b.status === 'Opptatt' ? 'active' : ''}">
-                    <h3>Bord ${b.bord_nummer}</h3>
-                    <div style="font-size: 20px; font-weight: bold; margin: 10px 0;">
-                        ${b.status === 'Opptatt' ? 'I BRUK' : 'LEDIG'}
-                    </div>
-                    <button class="btn" style="background:${b.status === 'Opptatt' ? '#e74c3c' : '#2980b9'}">
-                        ${b.status === 'Opptatt' ? 'STOPP' : 'START'}
-                    </button>
-                </div>
-            `).join('');
-
-        } catch (err) {
-            showError("Kritisk feil ved henting av bord: " + err.message);
+        if (error) {
+            showError("Kunne ikke lese fra tabellen: " + error.message);
+            return;
         }
+
+        if (!data || data.length === 0) {
+            showError("Tabellen 'bord_status' er tom. Husk å legge inn 20 rader i Supabase.");
+            return;
+        }
+
+        statusText.innerText = "Bordoversikt";
+        document.getElementById('debug-status').innerText = "Systemet er OK";
+
+        grid.innerHTML = data.map(b => `
+            <div class="card ${b.status === 'Opptatt' ? 'active' : ''}">
+                <h3>Bord ${b.bord_nummer}</h3>
+                <div style="font-size: 20px; font-weight: bold; margin: 10px 0;">
+                    ${b.status === 'Opptatt' ? 'I BRUK' : 'LEDIG'}
+                </div>
+                <button class="btn" style="background:${b.status === 'Opptatt' ? '#e74c3c' : '#2980b9'}">
+                    ${b.status === 'Opptatt' ? 'STOPP' : 'START'}
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function showModule(id) {
+        document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+        document.getElementById('mod-' + id).classList.add('active');
     }
 
     function showError(msg) {
         const log = document.getElementById('error-log');
         log.innerText = msg;
         log.style.display = 'block';
-        document.getElementById('status-text').innerText = "Systemfeil";
+        document.getElementById('debug-status').innerText = "Feilet";
     }
 
-    // Start programmet
-    init();
+    // Start programmet når siden er helt ferdig lastet
+    window.addEventListener('load', startSystem);
 </script>
 
 </body>
