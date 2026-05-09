@@ -2,93 +2,76 @@
 <html lang="no">
 <head>
     <meta charset="UTF-8">
-    <title>Oslo Biljardklubb - System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oslo Biljardklubb</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --marine: #1a2f3c;
-            --gull: #c9a84c;
-            --biljard-gronn: #27ae60;
-            --biljard-blaa: #2980b9;
-            --krem: #f5f0e8;
-        }
+        :root { --marine: #1a2f3c; --gull: #c9a84c; --krem: #f5f0e8; }
         body { font-family: sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; }
-        
-        /* Navigasjon */
         nav { width: 200px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); }
-        nav h2 { font-size: 14px; color: var(--gull); letter-spacing: 2px; }
-        .nav-btn { width: 100%; padding: 12px; margin: 10px 0; background: none; border: 1px solid var(--gull); color: white; cursor: pointer; border-radius: 5px; font-weight: bold; }
-        .nav-btn:hover { background: var(--gull); color: var(--marine); }
-
-        /* Hovedinnhold */
-        main { flex: 1; padding: 30px; overflow-y: auto; }
-        .module { display: none; }
-        .module.active { display: block; }
-        
-        /* Kort-design */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
-        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #ddd; }
-        .card.active { border-top-color: var(--biljard-gronn); }
+        main { flex: 1; padding: 25px; overflow-y: auto; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-top: 5px solid #ccc; text-align: center; }
+        .card.active { border-top-color: #27ae60; background: #f0fff0; }
+        .btn { width: 100%; padding: 10px; margin-top: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; }
     </style>
 </head>
 <body>
 
 <nav>
-    <img src="https://images.squarespace-cdn.com/content/v1/5f1ea20392e2991054b38d3f/1596796347854-Y9E9R9R6X9R9R9R9R9R9/logo.png" style="width: 100%; margin-bottom: 20px;">
-    <h2>ADMIN</h2>
-    <button class="nav-btn" onclick="showModule('bord')">🎱 BORDLEIE</button>
-    <button class="nav-btn" onclick="showModule('medlem')">👤 MEDLEMMER</button>
-    <button class="nav-btn" onclick="showModule('skap')">🔐 SKAPLEIE</button>
+    <h2 style="color:var(--gull)">OBK ADMIN</h2>
+    <p>Bordkontroll</p>
 </nav>
 
 <main>
-    <!-- BORDLEIE MODUL -->
-    <div id="mod-bord" class="module active">
-        <h1>Bordkontroll</h1>
-        <div id="bord-grid" class="card-grid">Laster bord...</div>
-    </div>
-
-    <!-- MEDLEMSKAP MODUL -->
-    <div id="mod-medlem" class="module">
-        <h1>Medlemsregister</h1>
-        <p>Her kommer søk og periodekort...</p>
-    </div>
-
-    <!-- SKAPLEIE MODUL -->
-    <div id="mod-skap" class="module">
-        <h1>Skapleie (100 skap)</h1>
-        <p>Her kommer skap-kartet med notat-felt...</p>
-    </div>
+    <h1 id="headline">Laster system...</h1>
+    <div id="bord-grid" class="card-grid"></div>
+    <div id="error-msg" style="color:red; margin-top:20px;"></div>
 </main>
 
 <script>
-    // Disse må vi fylle ut i Vercel senere
-    const SB_URL = "https://xsakmdmhpuqjebcqrony.supabase.co";
+    // === SETT INN DINE DATA HER ===
+    const SB_URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
-    const supabase = scooped.createClient(SB_URL, SB_KEY);
+    // ==============================
 
-    function showModule(id) {
-        document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
-        document.getElementById('mod-' + id).classList.add('active');
-    }
+    const supabase = Object.assign(window.supabase).createClient(SB_URL, SB_KEY);
 
-    // Vi starter med å hente bordene
     async function loadTables() {
-        const { data, error } = await supabase.from('bord_status').select('*').order('bord_nummer');
-        if (data) {
+        try {
+            const { data, error } = await supabase
+                .from('bord_status')
+                .select('*')
+                .order('bord_nummer', { ascending: true });
+
+            if (error) {
+                console.error(error);
+                document.getElementById('error-msg').innerText = "Database-feil: " + error.message;
+                return;
+            }
+
+            document.getElementById('headline').innerText = "Bordoversikt";
             const grid = document.getElementById('bord-grid');
             grid.innerHTML = data.map(b => `
                 <div class="card ${b.status === 'Opptatt' ? 'active' : ''}">
-                    <b>Bord ${b.bord_nummer}</b>
-                    <p>${b.status}</p>
-                    <button style="width:100%; background:var(--biljard-blaa); color:white; border:none; padding:5px; border-radius:3px; cursor:pointer;">START</button>
+                    <h3>Bord ${b.bord_nummer}</h3>
+                    <div style="font-size: 24px; font-weight: bold; margin: 10px 0;">
+                        ${b.status === 'Opptatt' ? 'I BRUK' : 'LEDIG'}
+                    </div>
+                    <button class="btn" style="background:${b.status === 'Opptatt' ? '#e74c3c' : '#2980b9'}">
+                        ${b.status === 'Opptatt' ? 'STOPP' : 'START'}
+                    </button>
                 </div>
             `).join('');
+
+        } catch (err) {
+            document.getElementById('error-msg').innerText = "Kritisk feil: " + err.message;
         }
     }
 
-    // Vi venter med å kjøre denne til vi har koblet til Vercel
-    // loadTables();
+    // Kjør funksjonen når siden lastes
+    loadTables();
 </script>
+
 </body>
 </html>
