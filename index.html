@@ -3,41 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oslo Biljardklubb</title>
+    <title>Oslo Biljardklubb - System</title>
+    <!-- Vi henter Supabase-biblioteket -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --marine: #1a2f3c; --gull: #c9a84c; --krem: #f5f0e8; }
-        body { font-family: sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; }
-        nav { width: 200px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); }
+        :root {
+            --marine: #1a2f3c;
+            --gull: #c9a84c;
+            --biljard-gronn: #27ae60;
+            --krem: #f5f0e8;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; }
+        
+        /* Meny til venstre */
+        nav { width: 220px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); }
+        .nav-btn { width: 100%; padding: 12px; margin: 10px 0; background: none; border: 1px solid var(--gull); color: white; cursor: pointer; border-radius: 8px; font-weight: bold; text-align: left; }
+        .nav-btn:hover { background: var(--gull); color: var(--marine); }
+
+        /* Innhold */
         main { flex: 1; padding: 25px; overflow-y: auto; }
+        .module { display: none; }
+        .module.active { display: block; }
+        
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-top: 5px solid #ccc; text-align: center; }
-        .card.active { border-top-color: #27ae60; background: #f0fff0; }
-        .btn { width: 100%; padding: 10px; margin-top: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 8px solid #ddd; text-align: center; }
+        .card.active { border-top-color: var(--biljard-gronn); background: #fafffa; }
+        
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; margin-top: 10px; }
+        #error-log { color: red; background: #ffdada; padding: 10px; border-radius: 5px; display: none; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <nav>
-    <h2 style="color:var(--gull)">OBK ADMIN</h2>
-    <p>Bordkontroll</p>
+    <h2 style="color:var(--gull); margin-bottom: 30px;">OBK SYSTEM</h2>
+    <button class="nav-btn" onclick="showModule('bord')">🎱 BORDLEIE</button>
+    <button class="nav-btn" onclick="showModule('medlem')">👤 MEDLEMMER</button>
+    <button class="nav-btn" onclick="showModule('skap')">🔐 SKAPLEIE</button>
 </nav>
 
 <main>
-    <h1 id="headline">Laster system...</h1>
-    <div id="bord-grid" class="card-grid"></div>
-    <div id="error-msg" style="color:red; margin-top:20px;"></div>
+    <div id="error-log"></div>
+    
+    <!-- MODUL: BORDLEIE -->
+    <div id="mod-bord" class="module active">
+        <h1 id="status-text">Kobler til database...</h1>
+        <div id="bord-grid" class="card-grid"></div>
+    </div>
+
+    <!-- MODUL: MEDLEMMER -->
+    <div id="mod-medlem" class="module">
+        <h1>Medlemsregister</h1>
+        <p>Her kommer søk og periodekort...</p>
+    </div>
+
+    <!-- MODUL: SKAP -->
+    <div id="mod-skap" class="module">
+        <h1>Skapleie</h1>
+        <p>Her kommer kartet over 100 skap...</p>
+    </div>
 </main>
 
 <script>
     // === SETT INN DINE DATA HER ===
-    const SB_URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
-    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
+    const SUPABASE_URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
     // ==============================
 
-    const supabase = Object.assign(window.supabase).createClient(SB_URL, SB_KEY);
+    let supabase;
+
+    // Funksjon for å bytte mellom moduler
+    function showModule(id) {
+        document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+        document.getElementById('mod-' + id).classList.add('active');
+        if(id === 'bord') loadTables();
+    }
+
+    // Funksjon som starter opp systemet
+    async function init() {
+        try {
+            // Vi sjekker at biblioteket er lastet
+            if (typeof supabasejs === 'undefined' && !window.supabase) {
+                console.log("Venter på Supabase bibliotek...");
+                setTimeout(init, 500);
+                return;
+            }
+
+            // Start Supabase-klienten
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log("Supabase er klar!");
+            
+            // Last bordene
+            loadTables();
+
+        } catch (err) {
+            showError("Feil ved oppstart: " + err.message);
+        }
+    }
 
     async function loadTables() {
+        document.getElementById('status-text').innerText = "Henter bordstatus...";
+        
         try {
             const { data, error } = await supabase
                 .from('bord_status')
@@ -45,17 +111,21 @@
                 .order('bord_nummer', { ascending: true });
 
             if (error) {
-                console.error(error);
-                document.getElementById('error-msg').innerText = "Database-feil: " + error.message;
+                showError("Kunne ikke hente data: " + error.message);
                 return;
             }
 
-            document.getElementById('headline').innerText = "Bordoversikt";
+            if (!data || data.length === 0) {
+                showError("Ingen bord ble funnet i databasen. Sjekk Table Editor i Supabase.");
+                return;
+            }
+
+            document.getElementById('status-text').innerText = "Bordoversikt";
             const grid = document.getElementById('bord-grid');
             grid.innerHTML = data.map(b => `
                 <div class="card ${b.status === 'Opptatt' ? 'active' : ''}">
                     <h3>Bord ${b.bord_nummer}</h3>
-                    <div style="font-size: 24px; font-weight: bold; margin: 10px 0;">
+                    <div style="font-size: 20px; font-weight: bold; margin: 10px 0;">
                         ${b.status === 'Opptatt' ? 'I BRUK' : 'LEDIG'}
                     </div>
                     <button class="btn" style="background:${b.status === 'Opptatt' ? '#e74c3c' : '#2980b9'}">
@@ -65,12 +135,19 @@
             `).join('');
 
         } catch (err) {
-            document.getElementById('error-msg').innerText = "Kritisk feil: " + err.message;
+            showError("Kritisk feil ved henting av bord: " + err.message);
         }
     }
 
-    // Kjør funksjonen når siden lastes
-    loadTables();
+    function showError(msg) {
+        const log = document.getElementById('error-log');
+        log.innerText = msg;
+        log.style.display = 'block';
+        document.getElementById('status-text').innerText = "Systemfeil";
+    }
+
+    // Start programmet
+    init();
 </script>
 
 </body>
