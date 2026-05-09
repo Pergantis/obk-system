@@ -2,105 +2,77 @@
 <html lang="no">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OBK System - Debug</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>OBK System - Enkel test</title>
+    <!-- Vi bruker en annen kilde for biblioteket som ofte er mer stabil -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        :root { --marine: #1a2f3c; --gull: #c9a84c; --biljard-gronn: #27ae60; --krem: #f5f0e8; }
-        body { font-family: sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; }
-        nav { width: 220px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); }
-        main { flex: 1; padding: 25px; overflow-y: auto; }
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .card { background: white; padding: 15px; border-radius: 12px; border-top: 6px solid #ddd; text-align: center; }
-        #status-log { font-weight: bold; color: blue; margin-bottom: 20px; padding: 10px; background: #eef; border-radius: 5px; }
-        #error-log { color: red; font-weight: bold; padding: 10px; background: #fee; border-radius: 5px; display: none; margin-bottom: 20px; }
+        body { font-family: sans-serif; background: #f5f0e8; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+        .card { background: white; padding: 20px; border-radius: 10px; border-top: 5px solid #ccc; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #status { padding: 15px; margin-bottom: 20px; background: #fff; border: 2px solid #1a2f3c; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<nav>
-    <h2 style="color:var(--gull)">OBK SYSTEM</h2>
-    <p>Bordkontroll</p>
-</nav>
+    <div id="status">Venter på at koden skal starte...</div>
+    
+    <div id="bord-grid" class="grid"></div>
 
-<main>
-    <div id="status-log">Starter systemet...</div>
-    <div id="error-log"></div>
+    <script>
+        // FORSØK PÅ Å STARTE MED EN GANG
+        document.getElementById('status').innerHTML = "🚀 Koden har startet! Prøver å koble til Supabase...";
 
-    <div id="mod-bord">
-        <div id="bord-grid" class="card-grid"></div>
-    </div>
-</main>
+        // === DINE DATA ===
+        const SB_URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
+        // =================
 
-<script>
-    // === SETT INN DINE DATA HER ===
-    const URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
-    const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
-    // ==============================
-
-    let supabase;
-
-    function log(msg) {
-        document.getElementById('status-log').innerText = msg;
-        console.log(msg);
-    }
-
-    function err(msg) {
-        const el = document.getElementById('error-log');
-        el.innerText = "FEIL: " + msg;
-        el.style.display = "block";
-        log("Systemet stoppet pga. feil.");
-    }
-
-    async function init() {
-        try {
-            log("Steg 1: Sjekker Supabase-bibliotek...");
-            if (!window.supabase) {
-                err("Biblioteket 'supabase-js' ble ikke lastet. Sjekk internett.");
-                return;
-            }
-
-            log("Steg 2: Initialiserer klient...");
-            supabase = window.supabase.createClient(URL, KEY);
+        async function init() {
+            const statusEl = document.getElementById('status');
             
-            log("Steg 3: Sender forespørsel til tabellen 'bord_status'...");
-            const { data, error } = await supabase
-                .from('bord_status')
-                .select('*')
-                .order('bord_nummer', { ascending: true });
+            try {
+                // Sjekk om biblioteket er der
+                if (typeof window.supabase === 'undefined') {
+                    statusEl.innerHTML = "❌ FEIL: Supabase-biblioteket ble ikke lastet ned fra nettet.";
+                    return;
+                }
 
-            if (error) {
-                err(error.message + " (Kode: " + error.code + ")");
-                return;
+                statusEl.innerHTML = "🔗 Kobler til databasen...";
+                const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+
+                statusEl.innerHTML = "📥 Henter data fra 'bord_status'...";
+                const { data, error } = await supabase
+                    .from('bord_status')
+                    .select('*')
+                    .order('bord_nummer', { ascending: true });
+
+                if (error) {
+                    statusEl.innerHTML = "❌ DATABASE-FEIL: " + error.message;
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    statusEl.innerHTML = "❓ FANTASTISK: Koblingen virker, men tabellen er helt tom!";
+                    return;
+                }
+
+                statusEl.innerHTML = "✅ SUKSESS! Viser " + data.length + " bord.";
+                
+                const grid = document.getElementById('bord-grid');
+                grid.innerHTML = data.map(b => `
+                    <div class="card" style="border-top-color: ${b.status === 'Opptatt' ? '#27ae60' : '#ddd'}">
+                        <h3>Bord ${b.bord_nummer}</h3>
+                        <p>${b.status}</p>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                statusEl.innerHTML = "💥 KRITISK FEIL: " + err.message;
             }
-
-            if (!data || data.length === 0) {
-                err("Tabellen er tom (0 rader funnet).");
-                return;
-            }
-
-            log("Steg 4: Data mottatt! Tegner " + data.length + " bord...");
-            render(data);
-            log("Systemet er klart.");
-
-        } catch (e) {
-            err("Kritisk programfeil: " + e.message);
         }
-    }
 
-    function render(tables) {
-        const grid = document.getElementById('bord-grid');
-        grid.innerHTML = tables.map(b => `
-            <div class="card" style="border-top-color: ${b.status === 'Opptatt' ? '#27ae60' : '#ddd'}">
-                <h3>Bord ${b.bord_nummer}</h3>
-                <p>Status: <b>${b.status}</b></p>
-            </div>
-        `).join('');
-    }
-
-    // Kjør etter at alt er lastet
-    window.onload = init;
-</script>
-
+        // Vi kjører funksjonen manuelt
+        init();
+    </script>
 </body>
 </html>
