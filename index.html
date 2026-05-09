@@ -3,116 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OBK System</title>
-    <!-- Vi bruker biblioteket som fungerte -->
+    <title>Oslo Biljardklubb - System</title>
+    <!-- Biblioteket som bevist fungerer -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --marine: #1a2f3c; --gull: #c9a84c; --biljard-gronn: #27ae60;
             --biljard-blaa: #2980b9; --krem: #f5f0e8; --advarsel: #e74c3c;
         }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         /* Navigasjon */
-        nav { width: 220px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); }
+        nav { width: 220px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); flex-shrink: 0; }
         .nav-btn { width: 100%; padding: 12px; margin: 10px 0; background: none; border: 1px solid var(--gull); color: white; cursor: pointer; border-radius: 8px; font-weight: bold; text-align: left; }
         .nav-btn:hover { background: var(--gull); color: var(--marine); }
 
         /* Hovedområde */
-        main { flex: 1; padding: 25px; overflow-y: auto; }
+        main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
         .module { display: none; }
         .module.active { display: block; }
         
         /* Bord-kortene */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; }
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 8px solid #ddd; text-align: center; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 6px solid #ddd; text-align: center; }
         .card.active { border-top-color: var(--biljard-gronn); background: #fafffa; }
         
-        .timer { font-size: 24px; font-weight: bold; color: var(--marine); margin: 10px 0; }
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
-        .name-in { width: 100%; padding: 6px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        .timer { font-size: 22px; font-weight: bold; color: var(--marine); margin: 8px 0; }
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; font-size: 13px; }
+        .name-in { width: 100%; padding: 5px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
 
-        /* STOR RØD MODAL */
+        /* MODAL */
         #modal-overlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; 
+            background: rgba(0,0,0,0.92); z-index: 10000; justify-content: center; align-items: center; 
         }
-        .modal-content { 
-            background: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px; 
-        }
-        .big-minutes { display: block; font-size: 90px; font-weight: 900; color: var(--advarsel); margin: 10px 0; }
+        .modal-content { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px; }
+        .big-minutes { display: block; font-size: 80px; font-weight: 900; color: var(--advarsel); margin: 10px 0; }
         
-        #sync-indicator { position: fixed; top: 10px; right: 20px; color: #aaa; font-size: 11px; }
+        #error-msg { color: red; font-weight: bold; background: white; padding: 10px; border-radius: 5px; display: none; margin-bottom: 15px; border: 1px solid red; }
     </style>
 </head>
 <body>
 
-<div id="sync-indicator">Synkroniserer...</div>
-
 <nav>
-    <img src="https://images.squarespace-cdn.com/content/v1/5f1ea20392e2991054b38d3f/1596796347854-Y9E9R9R6X9R9R9R9R9R9/logo.png" style="width: 100%; margin-bottom: 20px;">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <img src="https://images.squarespace-cdn.com/content/v1/5f1ea20392e2991054b38d3f/1596796347854-Y9E9R9R6X9R9R9R9R9R9/logo.png" 
+             alt="OBK Logo" style="width: 120px; height: auto;" 
+             onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+        <h2 id="logo-fallback" style="display:none; color:var(--gull); font-size: 18px;">OSLO BILJARDKLUBB</h2>
+    </div>
     <button class="nav-btn" onclick="showModule('bord')">🎱 BORDLEIE</button>
     <button class="nav-btn" onclick="showModule('medlem')">👤 MEDLEMMER</button>
     <button class="nav-btn" onclick="showModule('skap')">🔐 SKAPLEIE</button>
 </nav>
 
 <main>
+    <div id="error-msg"></div>
+
     <div id="mod-bord" class="module active">
-        <h1>Bordkontroll</h1>
-        <div id="bord-grid" class="card-grid"></div>
+        <h1 id="headline">Bordkontroll</h1>
+        <div id="bord-grid" class="card-grid">Kobler til database...</div>
     </div>
 
-    <div id="mod-medlem" class="module"><h1>Medlemsregister</h1><p>Kommer snart...</p></div>
-    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Kommer snart...</p></div>
+    <div id="mod-medlem" class="module"><h1>Medlemsregister</h1><p>Under utvikling...</p></div>
+    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Under utvikling...</p></div>
 </main>
 
 <!-- STOPP-MODAL -->
 <div id="modal-overlay">
     <div class="modal-content">
-        <h2 id="modal-title">BORD FERDIG</h2>
+        <h2 style="margin:0; color:#333;">BORD FERDIG</h2>
         <span class="big-minutes" id="modal-minutes">0</span>
-        <p style="font-size: 18px; font-weight: bold; margin-bottom: 20px;">MINUTTER</p>
+        <p style="font-size: 18px; font-weight: bold; margin-bottom: 25px; color:#333;">MINUTTER</p>
         <button class="btn" style="background:var(--biljard-gronn); margin-bottom:10px;" onclick="confirmStop()">BEKREFT OG FRIGJØR</button>
         <button class="btn" style="background:#95a5a6" onclick="closeModal()">AVBRYT</button>
     </div>
 </div>
 
 <script>
-    // === DINE DATA ===
+    // === DINE DATA ER NÅ HARDKODET ===
     const SB_URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
-    // =================
+    // ================================
 
-    const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+    let supabase;
     let tableData = [];
     let currentStoppingId = null;
 
-    // Last data fra databasen
+    // Starter systemet umiddelbart
+    async function start() {
+        try {
+            if (!window.supabase) {
+                document.getElementById('error-msg').innerText = "Klarte ikke å laste Supabase-motoren. Vennligst oppdater siden.";
+                document.getElementById('error-msg').style.display = "block";
+                return;
+            }
+            supabase = window.supabase.createClient(SB_URL, SB_KEY);
+            await loadData();
+            
+            // Auto-oppdatering
+            setInterval(loadData, 8000); // Hent fra database hvert 8. sek
+            setInterval(render, 30000); // Oppdater klokker hvert 30. sek
+        } catch (e) {
+            console.error("Init-feil:", e);
+        }
+    }
+
     async function loadData() {
         const { data, error } = await supabase.from('bord_status').select('*').order('bord_nummer');
-        if (data) {
+        if (error) {
+            document.getElementById('error-msg').innerText = "Database-feil: " + error.message;
+            document.getElementById('error-msg').style.display = "block";
+        } else {
             tableData = data;
             render();
         }
     }
 
-    // Tegn bordene på skjermen
     function render() {
         const grid = document.getElementById('bord-grid');
+        if (!grid) return;
+
         grid.innerHTML = tableData.map(b => {
             const isActive = b.status === 'Opptatt';
             const startTime = b.start_tid ? new Date(b.start_tid) : null;
             const diffMin = startTime ? Math.floor((new Date() - startTime) / 60000) : 0;
             
-            // Knappefarger basert på bordnummer
+            // Farger: 1-10 Blå, 11-16 Grå, 17-20 Gul
             const btnColor = b.bord_nummer <= 10 ? 'var(--biljard-blaa)' : (b.bord_nummer <= 16 ? '#6D8196' : '#CAC254');
 
             return `
                 <div class="card ${isActive ? 'active' : ''}">
-                    <h3>Bord ${b.bord_nummer}</h3>
+                    <h3 style="margin:0; font-size:16px;">Bord ${b.bord_nummer}</h3>
                     <div class="timer">${isActive ? diffMin + ' min' : 'LEDIG'}</div>
                     ${isActive ? 
-                        `<div style="font-size:12px; color:var(--biljard-gronn); font-weight:bold; height:20px;">👤 ${b.kunde_navn || 'Aktiv'}</div>` : 
+                        `<div style="font-size:11px; color:var(--biljard-gronn); font-weight:bold; height:18px; overflow:hidden;">👤 ${b.kunde_navn || 'Aktiv'}</div>` : 
                         `<input type="text" id="name-${b.bord_nummer}" class="name-in" placeholder="Kundenavn">`
                     }
                     <button class="btn" 
@@ -125,9 +150,9 @@
         }).join('');
     }
 
-    // Start et bord
     async function startTable(id) {
-        const name = document.getElementById(`name-${id}`).value;
+        const nameIn = document.getElementById(`name-${id}`);
+        const name = nameIn ? nameIn.value : "";
         await supabase.from('bord_status').update({ 
             status: 'Opptatt', 
             start_tid: new Date().toISOString(),
@@ -136,7 +161,6 @@
         loadData();
     }
 
-    // Åpne stopp-vinduet
     function openModal(id, startTime) {
         currentStoppingId = id;
         const start = new Date(startTime);
@@ -145,12 +169,9 @@
         document.getElementById('modal-overlay').style.display = 'flex';
     }
 
-    // Bekreft avslutning
     async function confirmStop() {
         await supabase.from('bord_status').update({ 
-            status: 'Ledig', 
-            start_tid: null,
-            kunde_navn: null 
+            status: 'Ledig', start_tid: null, kunde_navn: null 
         }).eq('bord_nummer', currentStoppingId);
         closeModal();
         loadData();
@@ -163,13 +184,8 @@
         document.getElementById('mod-' + id).classList.add('active');
     }
 
-    // Oppdater hvert minutt
-    setInterval(render, 60000);
-    // Hent friske data hvert 10. sekund
-    setInterval(loadData, 10000);
-
-    // Første oppstart
-    loadData();
+    // Kjør ved oppstart
+    start();
 </script>
 </body>
 </html>
