@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oslo Biljardklubb - System</title>
-    <!-- Vi bruker biblioteket som vi vet er stabilt -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -14,41 +13,36 @@
         }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Navigasjon */
         nav { width: 220px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); flex-shrink: 0; }
         .nav-btn { width: 100%; padding: 12px; margin: 10px 0; background: none; border: 1px solid var(--gull); color: white; cursor: pointer; border-radius: 8px; font-weight: bold; text-align: left; }
         .nav-btn:hover { background: var(--gull); color: var(--marine); }
         .nav-btn.active { background: var(--gull); color: var(--marine); }
 
-        /* Hovedområde */
         main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
         .module { display: none; }
         .module.active { display: block; }
         
-        /* Bord-kortene */
+        .card { background: var(--hvit); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 8px solid #ddd; margin-bottom: 20px; }
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-        .card { background: var(--hvit); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 8px solid #ddd; text-align: center; }
-        .card.active { border-top-color: var(--biljard-gronn); background: #fafffa; }
         
-        /* Periodekort Layout */
         .p-container { display: flex; gap: 20px; }
-        .p-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .timer-text { font-size: 22px; font-weight: 900; color: var(--marine); margin: 8px 0; }
+        .p-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #eee; }
+
         .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; font-size: 13px; margin-top: 5px; }
-        .name-in { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; margin-bottom: 10px; }
+        .name-in { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; margin-bottom: 10px; font-size: 14px; }
+        label { display: block; font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; }
         
         .search-item { padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-top: 8px; cursor: pointer; text-align: left; }
         .search-item:hover { border-color: var(--gull); background: #fdfaf0; }
 
-        /* Tabell */
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 12px; border-bottom: 2px solid #eee; color: #666; font-size: 11px; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+        
         .dager-ok { color: var(--biljard-gronn); font-weight: bold; }
         .dager-advarsel { color: #f39c12; font-weight: bold; }
         .dager-utlopt { color: var(--advarsel); font-weight: bold; }
 
-        /* MODAL */
         #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 10000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px; color: #333; }
         .big-minutes { display: block; font-size: 90px; font-weight: 900; color: var(--advarsel); margin: 15px 0; }
@@ -74,34 +68,70 @@
 <main>
     <div id="error-log"></div>
 
+    <!-- MODUL: BORDLEIE -->
     <div id="mod-bord" class="module active">
-        <h1 id="status-text">Bordkontroll</h1>
+        <h1>Bordkontroll</h1>
         <div id="bord-grid" class="card-grid">Laster bord...</div>
     </div>
 
+    <!-- MODUL: PERIODEKORT -->
     <div id="mod-medlem" class="module">
         <h1>Periodekort Administrasjon</h1>
         <div class="p-container">
+            <!-- VENSTRE: Søk, Oppdatering og Nyregistrering -->
             <div style="flex: 1;">
-                <div class="p-box" style="border-top: 5px solid var(--biljard-blaa);">
+                <div class="p-box" style="border-top-color: var(--biljard-blaa);">
                     <h3 style="margin-top:0;">Finn Medlem</h3>
                     <input type="text" id="p-search-input" placeholder="Mobil eller etternavn..." class="name-in" onkeyup="if(event.key==='Enter') runSearch()">
                     <button class="btn" style="background: var(--marine)" onclick="runSearch()">SØK</button>
                     <div id="p-search-results" style="margin-top: 15px;"></div>
                 </div>
-                <div id="p-form-box" class="p-box" style="display:none; margin-top: 20px; border-top: 5px solid var(--gull);">
-                    <h3 id="p-selected-name" style="margin-top:0;">Navn</h3>
-                    <label>Startdato</label><input type="date" id="p-start-date" class="name-in">
-                    <label>Sluttdato</label><input type="date" id="p-end-date" class="name-in">
-                    <button class="btn" id="p-save-btn" style="background: var(--biljard-gronn); padding: 15px;" onclick="savePass()">AKTIVER / FORNY KORT</button>
+
+                <!-- Skjema for eksisterende medlem (Oppdatering + Fornyelse) -->
+                <div id="p-form-box" class="p-box" style="display:none; margin-top: 20px; border-top-color: var(--gull);">
+                    <h3 id="p-display-name" style="margin-top:0; color: var(--marine);">Navn</h3>
+                    <p id="p-current-status" style="font-size: 12px; background: #eee; padding: 8px; border-radius: 5px; margin-bottom: 15px;"></p>
+                    
+                    <label>E-post</label>
+                    <input type="email" id="p-edit-email" class="name-in">
+                    <label>Mobilnummer</label>
+                    <input type="tel" id="p-edit-phone" class="name-in">
+                    
+                    <div style="background: #fff9e6; padding: 10px; border-radius: 8px; border: 1px solid #ffe4b3; margin-top: 10px;">
+                        <label>Nytt periodekort (valgfritt)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex:1"><label>Start</label><input type="date" id="p-start-date" class="name-in"></div>
+                            <div style="flex:1"><label>Slutt</label><input type="date" id="p-end-date" class="name-in"></div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn" style="background: var(--biljard-gronn); padding: 15px;" onclick="saveMemberPassUpdate()">LAGRE ENDRINGER & KORT</button>
+                    <button class="btn" style="background: #95a5a6; margin-top: 10px;" onclick="cancelSelection()">AVBRYT</button>
+                </div>
+
+                <!-- Skjema for helt nytt medlem (Skjult) -->
+                <div id="p-new-member-box" class="p-box" style="display:none; margin-top: 20px; border-top-color: var(--marine);">
+                    <h3 style="margin-top:0;">Registrer Nytt Medlem</h3>
+                    <input type="text" id="n-fn" placeholder="Fornavn" class="name-in">
+                    <input type="text" id="n-en" placeholder="Etternavn" class="name-in">
+                    <input type="email" id="n-email" placeholder="E-post" class="name-in">
+                    <input type="tel" id="n-phone" placeholder="Mobilnummer" class="name-in">
+                    <label>Første periodekort</label>
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex:1"><label>Start</label><input type="date" id="n-start" class="name-in"></div>
+                        <div style="flex:1"><label>Slutt</label><input type="date" id="n-end" class="name-in"></div>
+                    </div>
+                    <button class="btn" style="background: var(--marine); padding: 15px;" onclick="registerBrandNewMember()">LAGRE NYTT MEDLEM</button>
                     <button class="btn" style="background: #95a5a6; margin-top: 10px;" onclick="cancelSelection()">AVBRYT</button>
                 </div>
             </div>
+
+            <!-- HØYRE: Oversikt over aktive -->
             <div style="flex: 1.5;">
-                <div class="p-box" style="border-top: 5px solid var(--biljard-gronn);">
+                <div class="p-box" style="border-top-color: var(--biljard-gronn);">
                     <h3 style="margin-top:0;">Aktive Periodekort</h3>
                     <table>
-                        <thead><tr><th>Navn</th><th>Mobil</th><th>Utløper</th><th>Status</th></tr></thead>
+                        <thead><tr><th>Navn</th><th>Mobil</th><th>Utløper</th><th>Dager</th></tr></thead>
                         <tbody id="p-active-table-body"></tbody>
                     </table>
                 </div>
@@ -109,9 +139,11 @@
         </div>
     </div>
 
-    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Under utvikling...</p></div>
+    <!-- MODUL: SKAP -->
+    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Kommer i Steg 5...</p></div>
 </main>
 
+<!-- STOPP-MODAL -->
 <div id="modal-overlay">
     <div class="modal-content">
         <h2 id="modal-title">BORD FERDIG</h2>
@@ -136,11 +168,8 @@
         try {
             if (!window.supabase) return;
             sb = window.supabase.createClient(SB_URL, SB_KEY);
-            
-            // Last de to tingene uavhengig av hverandre
             loadTables();
             loadActivePasses();
-            
             setInterval(loadTables, 10000);
             setInterval(loadActivePasses, 30000);
         } catch (err) { console.error(err); }
@@ -162,8 +191,8 @@
             return `
                 <div class="card ${isActive ? 'active' : ''}">
                     <h3 style="margin:0; font-size:14px;">Bord ${b.bord_nummer}</h3>
-                    <div class="timer-text">${isActive ? diff + ' min' : 'LEDIG'}</div>
-                    ${isActive ? `<div style="font-size:11px; color:var(--biljard-gronn); font-weight:bold; height:18px;">👤 ${b.kunde_navn || 'Aktiv'}</div>` : 
+                    <div style="font-size:22px; font-weight:900; margin:8px 0; color:var(--marine)">${isActive ? diff + ' min' : 'LEDIG'}</div>
+                    ${isActive ? `<div style="font-size:11px; color:var(--biljard-gronn); font-weight:bold; height:18px;">👤 ${b.kunde_navn || ''}</div>` : 
                     `<input type="text" id="name-${b.bord_nummer}" class="name-in" style="font-size:12px; margin-bottom:5px;" placeholder="Spiller valgfritt">`}
                     <button class="btn" style="background:${isActive ? 'var(--advarsel)' : btnColor}" 
                         onclick="${isActive ? `openModal(${b.bord_nummer}, '${b.start_tid}', '${b.kunde_navn}')` : `startTable(${b.bord_nummer})`}">
@@ -196,49 +225,135 @@
     function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
 
     // --- PERIODEKORT ---
+
     async function runSearch() {
         const input = document.getElementById('p-search-input').value.trim();
+        const resDiv = document.getElementById('p-search-results');
         if (input.length < 2) return;
+        
+        resDiv.innerHTML = "Søker...";
         const { data, error } = await sb.from('medlemmer').select('*').or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%`).limit(5);
-        if (error) return;
-        document.getElementById('p-search-results').innerHTML = data.map(m => `
-            <div class="search-item" onclick="selectMemberForPass('${m.id}', '${m.fornavn} ${m.etternavn}')">
-                <strong>${m.fornavn} ${m.etternavn}</strong><br><small>📱 ${m.tlf_mobil}</small>
+        
+        if (error) { resDiv.innerHTML = "Feil: " + error.message; return; }
+        
+        if (data.length === 0) {
+            resDiv.innerHTML = `
+                <div style="padding:10px; color:var(--advarsel); font-weight:bold;">Ingen funnet.</div>
+                <button class="btn" style="background:var(--marine)" onclick="showNewMemberBox('${input}')">+ REGISTRER NYTT MEDLEM</button>
+            `;
+            return;
+        }
+        
+        resDiv.innerHTML = data.map(m => `
+            <div class="search-item" onclick="selectMemberForPass('${m.id}', '${m.fornavn} ${m.etternavn}', '${m.epost}', '${m.tlf_mobil}')">
+                <strong>${m.fornavn} ${m.etternavn}</strong><br><small>📱 ${m.tlf_mobil} | 📧 ${m.epost}</small>
             </div>`).join('');
     }
 
-    function selectMemberForPass(id, name) {
+    async function selectMemberForPass(id, name, epost, tlf) {
         selectedMemberId = id;
-        document.getElementById('p-selected-name').innerText = "👤 " + name;
+        cancelSelection(); // Nullstiller andre bokser
+        
+        document.getElementById('p-display-name').innerText = "👤 " + name;
+        document.getElementById('p-edit-email').value = epost;
+        document.getElementById('p-edit-phone').value = tlf;
+        
+        // Finn siste periodekort for dette medlemmet
+        const { data } = await sb.from('periodekort').select('slutt_dato').eq('medlem_id', id).order('slutt_dato', { ascending: false }).limit(1);
+        
+        const statusEl = document.getElementById('p-current-status');
+        if (data && data.length > 0) {
+            const utlop = new Date(data[0].slutt_dato);
+            statusEl.innerText = "Nåværende kort utløper: " + utlop.toLocaleDateString('no-NO');
+            statusEl.style.color = utlop >= new Date() ? "green" : "red";
+        } else {
+            statusEl.innerText = "Medlemmet har ingen registrerte kort fra før.";
+            statusEl.style.color = "#666";
+        }
+
+        // Sett datovelgere til blanke for å unngå feil
+        document.getElementById('p-start-date').value = "";
+        document.getElementById('p-end-date').value = "";
+        
         document.getElementById('p-form-box').style.display = 'block';
-        const iDag = new Date();
-        const om30 = new Date(); om30.setDate(iDag.getDate() + 30);
-        document.getElementById('p-start-date').value = iDag.toISOString().split('T')[0];
-        document.getElementById('p-end-date').value = om30.toISOString().split('T')[0];
+        document.getElementById('p-search-results').innerHTML = "";
     }
 
-    async function savePass() {
+    async function saveMemberPassUpdate() {
         if (!selectedMemberId) return;
+        const nEmail = document.getElementById('p-edit-email').value;
+        const nPhone = document.getElementById('p-edit-phone').value;
+        const nStart = document.getElementById('p-start-date').value;
+        const nSlutt = document.getElementById('p-end-date').value;
+
         showLoader(true);
-        const { error } = await sb.from('periodekort').insert({
-            medlem_id: selectedMemberId,
-            start_dato: document.getElementById('p-start-date').value,
-            slutt_dato: document.getElementById('p-end-date').value
-        });
+        
+        // 1. Oppdater medlemsinfo
+        await sb.from('medlemmer').update({ epost: nEmail, tlf_mobil: nPhone }).eq('id', selectedMemberId);
+
+        // 2. Lagre periodekort hvis datoer er satt
+        if (nStart && nSlutt) {
+            await sb.from('periodekort').insert({ medlem_id: selectedMemberId, start_dato: nStart, slutt_dato: nSlutt });
+            alert("Informasjon og periodekort er lagret!");
+        } else {
+            alert("Medlemsinfo ble oppdatert.");
+        }
+
         showLoader(false);
-        if (error) alert("Feil: " + error.message);
-        else { alert("Lagret!"); cancelSelection(); loadActivePasses(); }
+        cancelSelection();
+        loadActivePasses();
+    }
+
+    function showNewMemberBox(input) {
+        cancelSelection();
+        document.getElementById('p-new-member-box').style.display = 'block';
+        document.getElementById('p-search-results').innerHTML = "";
+        
+        // Prøv å gjette om søket var mobil eller navn
+        if (!isNaN(input)) document.getElementById('n-phone').value = input;
+        else document.getElementById('n-en').value = input;
+        
+        const iDag = new Date();
+        const om30 = new Date(); om30.setDate(iDag.getDate() + 30);
+        document.getElementById('n-start').value = iDag.toISOString().split('T')[0];
+        document.getElementById('n-end').value = om30.toISOString().split('T')[0];
+    }
+
+    async function registerBrandNewMember() {
+        const fn = document.getElementById('n-fn').value;
+        const en = document.getElementById('n-en').value;
+        const ep = document.getElementById('n-email').value;
+        const ph = document.getElementById('n-phone').value;
+        const st = document.getElementById('n-start').value;
+        const sl = document.getElementById('n-end').value;
+
+        if (!fn || !en || !ph) { alert("Navn og mobil er obligatorisk."); return; }
+
+        showLoader(true);
+        const { data, error } = await sb.from('medlemmer').insert({ fornavn: fn, etternavn: en, epost: ep, tlf_mobil: ph }).select();
+        
+        if (!error && data && st && sl) {
+            await sb.from('periodekort').insert({ medlem_id: data[0].id, start_dato: st, slutt_dato: sl });
+            alert("Nytt medlem registrert med periodekort!");
+        } else if (!error) {
+            alert("Nytt medlem registrert (uten kort).");
+        } else {
+            alert("Feil: " + error.message);
+        }
+
+        showLoader(false);
+        cancelSelection();
+        loadActivePasses();
     }
 
     async function loadActivePasses() {
         const today = new Date().toISOString().split('T')[0];
-        // Hent medlemsinfo via join
         const { data, error } = await sb.from('periodekort')
             .select('slutt_dato, medlemmer(fornavn, etternavn, tlf_mobil)')
             .gte('slutt_dato', today)
             .order('slutt_dato', { ascending: true });
 
-        if (error) { console.log("Liste-feil:", error); return; }
+        if (error) return;
 
         const tbody = document.getElementById('p-active-table-body');
         if (!data || data.length === 0) {
@@ -260,9 +375,12 @@
         }).join('');
     }
 
-    function cancelSelection() { document.getElementById('p-form-box').style.display = 'none'; }
-    function showLoader(show) { document.getElementById('sync-loader').style.display = show ? 'block' : 'none'; }
-    
+    function cancelSelection() {
+        document.getElementById('p-form-box').style.display = 'none';
+        document.getElementById('p-new-member-box').style.display = 'none';
+        selectedMemberId = null;
+    }
+
     function showModule(id) {
         document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -270,6 +388,7 @@
         document.getElementById('btn-' + id).classList.add('active');
     }
 
+    function showLoader(show) { document.getElementById('sync-loader').style.display = show ? 'block' : 'none'; }
     window.addEventListener('load', startSystem);
 </script>
 </body>
