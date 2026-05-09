@@ -22,7 +22,7 @@
         .module { display: none; }
         .module.active { display: block; }
         
-        .card { background: var(--hvit); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 8px solid #ddd; margin-bottom: 20px; }
+        .card { background: var(--hvit); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #ddd; margin-bottom: 20px; }
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
         
         .p-container { display: flex; gap: 20px; }
@@ -31,6 +31,7 @@
         .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; font-size: 13px; margin-top: 5px; }
         .name-in { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; margin-bottom: 10px; font-size: 14px; }
         label { display: block; font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; }
+        .req { color: var(--advarsel); } /* Rød stjerne for obligatoriske felt */
         
         .search-item { padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-top: 8px; cursor: pointer; text-align: left; }
         .search-item:hover { border-color: var(--gull); background: #fdfaf0; }
@@ -78,7 +79,6 @@
     <div id="mod-medlem" class="module">
         <h1>Periodekort Administrasjon</h1>
         <div class="p-container">
-            <!-- VENSTRE: Søk, Oppdatering og Nyregistrering -->
             <div style="flex: 1;">
                 <div class="p-box" style="border-top-color: var(--biljard-blaa);">
                     <h3 style="margin-top:0;">Finn Medlem</h3>
@@ -87,14 +87,14 @@
                     <div id="p-search-results" style="margin-top: 15px;"></div>
                 </div>
 
-                <!-- Skjema for eksisterende medlem (Oppdatering + Fornyelse) -->
+                <!-- Skjema for eksisterende medlem -->
                 <div id="p-form-box" class="p-box" style="display:none; margin-top: 20px; border-top-color: var(--gull);">
                     <h3 id="p-display-name" style="margin-top:0; color: var(--marine);">Navn</h3>
                     <p id="p-current-status" style="font-size: 12px; background: #eee; padding: 8px; border-radius: 5px; margin-bottom: 15px;"></p>
                     
-                    <label>E-post</label>
+                    <label>E-post <span class="req">*</span></label>
                     <input type="email" id="p-edit-email" class="name-in">
-                    <label>Mobilnummer</label>
+                    <label>Mobilnummer <span class="req">*</span></label>
                     <input type="tel" id="p-edit-phone" class="name-in">
                     
                     <div style="background: #fff9e6; padding: 10px; border-radius: 8px; border: 1px solid #ffe4b3; margin-top: 10px;">
@@ -109,19 +109,26 @@
                     <button class="btn" style="background: #95a5a6; margin-top: 10px;" onclick="cancelSelection()">AVBRYT</button>
                 </div>
 
-                <!-- Skjema for helt nytt medlem (Skjult) -->
+                <!-- Skjema for helt nytt medlem -->
                 <div id="p-new-member-box" class="p-box" style="display:none; margin-top: 20px; border-top-color: var(--marine);">
                     <h3 style="margin-top:0;">Registrer Nytt Medlem</h3>
+                    <label>Fornavn <span class="req">*</span></label>
                     <input type="text" id="n-fn" placeholder="Fornavn" class="name-in">
+                    <label>Etternavn <span class="req">*</span></label>
                     <input type="text" id="n-en" placeholder="Etternavn" class="name-in">
+                    <label>E-post <span class="req">*</span></label>
                     <input type="email" id="n-email" placeholder="E-post" class="name-in">
+                    <label>Mobilnummer <span class="req">*</span></label>
                     <input type="tel" id="n-phone" placeholder="Mobilnummer" class="name-in">
-                    <label>Første periodekort</label>
-                    <div style="display: flex; gap: 10px;">
-                        <div style="flex:1"><label>Start</label><input type="date" id="n-start" class="name-in"></div>
-                        <div style="flex:1"><label>Slutt</label><input type="date" id="n-end" class="name-in"></div>
+                    
+                    <div style="background: #eef7ff; padding: 10px; border-radius: 8px; border: 1px solid #cfe3ff; margin-top: 10px;">
+                        <label>Periodekort (valgfritt)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex:1"><label>Start</label><input type="date" id="n-start" class="name-in"></div>
+                            <div style="flex:1"><label>Slutt</label><input type="date" id="n-end" class="name-in"></div>
+                        </div>
                     </div>
-                    <button class="btn" style="background: var(--marine); padding: 15px;" onclick="registerBrandNewMember()">LAGRE NYTT MEDLEM</button>
+                    <button class="btn" style="background: var(--marine); padding: 15px;" onclick="registerBrandNewMember()">LAGRE MEDLEM</button>
                     <button class="btn" style="background: #95a5a6; margin-top: 10px;" onclick="cancelSelection()">AVBRYT</button>
                 </div>
             </div>
@@ -140,7 +147,7 @@
     </div>
 
     <!-- MODUL: SKAP -->
-    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Kommer i Steg 5...</p></div>
+    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Under utvikling...</p></div>
 </main>
 
 <!-- STOPP-MODAL -->
@@ -192,7 +199,7 @@
                 <div class="card ${isActive ? 'active' : ''}">
                     <h3 style="margin:0; font-size:14px;">Bord ${b.bord_nummer}</h3>
                     <div style="font-size:22px; font-weight:900; margin:8px 0; color:var(--marine)">${isActive ? diff + ' min' : 'LEDIG'}</div>
-                    ${isActive ? `<div style="font-size:11px; color:var(--biljard-gronn); font-weight:bold; height:18px;">👤 ${b.kunde_navn || ''}</div>` : 
+                    ${isActive ? `<div style="font-size:11px; color:var(--biljard-gronn); font-weight:bold; height:18px; overflow:hidden;">👤 ${b.kunde_navn || ''}</div>` : 
                     `<input type="text" id="name-${b.bord_nummer}" class="name-in" style="font-size:12px; margin-bottom:5px;" placeholder="Spiller valgfritt">`}
                     <button class="btn" style="background:${isActive ? 'var(--advarsel)' : btnColor}" 
                         onclick="${isActive ? `openModal(${b.bord_nummer}, '${b.start_tid}', '${b.kunde_navn}')` : `startTable(${b.bord_nummer})`}">
@@ -230,12 +237,9 @@
         const input = document.getElementById('p-search-input').value.trim();
         const resDiv = document.getElementById('p-search-results');
         if (input.length < 2) return;
-        
         resDiv.innerHTML = "Søker...";
         const { data, error } = await sb.from('medlemmer').select('*').or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%`).limit(5);
-        
         if (error) { resDiv.innerHTML = "Feil: " + error.message; return; }
-        
         if (data.length === 0) {
             resDiv.innerHTML = `
                 <div style="padding:10px; color:var(--advarsel); font-weight:bold;">Ingen funnet.</div>
@@ -243,7 +247,6 @@
             `;
             return;
         }
-        
         resDiv.innerHTML = data.map(m => `
             <div class="search-item" onclick="selectMemberForPass('${m.id}', '${m.fornavn} ${m.etternavn}', '${m.epost}', '${m.tlf_mobil}')">
                 <strong>${m.fornavn} ${m.etternavn}</strong><br><small>📱 ${m.tlf_mobil} | 📧 ${m.epost}</small>
@@ -252,15 +255,11 @@
 
     async function selectMemberForPass(id, name, epost, tlf) {
         selectedMemberId = id;
-        cancelSelection(); // Nullstiller andre bokser
-        
+        cancelSelection(); 
         document.getElementById('p-display-name').innerText = "👤 " + name;
         document.getElementById('p-edit-email').value = epost;
         document.getElementById('p-edit-phone').value = tlf;
-        
-        // Finn siste periodekort for dette medlemmet
         const { data } = await sb.from('periodekort').select('slutt_dato').eq('medlem_id', id).order('slutt_dato', { ascending: false }).limit(1);
-        
         const statusEl = document.getElementById('p-current-status');
         if (data && data.length > 0) {
             const utlop = new Date(data[0].slutt_dato);
@@ -270,11 +269,8 @@
             statusEl.innerText = "Medlemmet har ingen registrerte kort fra før.";
             statusEl.style.color = "#666";
         }
-
-        // Sett datovelgere til blanke for å unngå feil
         document.getElementById('p-start-date').value = "";
         document.getElementById('p-end-date').value = "";
-        
         document.getElementById('p-form-box').style.display = 'block';
         document.getElementById('p-search-results').innerHTML = "";
     }
@@ -286,19 +282,18 @@
         const nStart = document.getElementById('p-start-date').value;
         const nSlutt = document.getElementById('p-end-date').value;
 
-        showLoader(true);
-        
-        // 1. Oppdater medlemsinfo
-        await sb.from('medlemmer').update({ epost: nEmail, tlf_mobil: nPhone }).eq('id', selectedMemberId);
+        if (!nEmail || !nPhone) { alert("E-post og mobil er obligatorisk."); return; }
 
-        // 2. Lagre periodekort hvis datoer er satt
+        showLoader(true);
+        await sb.from('medlemmer').update({ epost: nEmail, tlf_mobil: nPhone }).eq('id', selectedMemberId);
         if (nStart && nSlutt) {
             await sb.from('periodekort').insert({ medlem_id: selectedMemberId, start_dato: nStart, slutt_dato: nSlutt });
-            alert("Informasjon og periodekort er lagret!");
+            alert("Lagret!");
+        } else if (nStart || nSlutt) {
+            alert("Begge datoer må fylles ut for periodekort. Kun medlemsinfo ble oppdatert.");
         } else {
-            alert("Medlemsinfo ble oppdatert.");
+            alert("Medlemsinfo oppdatert.");
         }
-
         showLoader(false);
         cancelSelection();
         loadActivePasses();
@@ -308,37 +303,37 @@
         cancelSelection();
         document.getElementById('p-new-member-box').style.display = 'block';
         document.getElementById('p-search-results').innerHTML = "";
-        
-        // Prøv å gjette om søket var mobil eller navn
         if (!isNaN(input)) document.getElementById('n-phone').value = input;
         else document.getElementById('n-en').value = input;
-        
-        const iDag = new Date();
-        const om30 = new Date(); om30.setDate(iDag.getDate() + 30);
-        document.getElementById('n-start').value = iDag.toISOString().split('T')[0];
-        document.getElementById('n-end').value = om30.toISOString().split('T')[0];
     }
 
     async function registerBrandNewMember() {
-        const fn = document.getElementById('n-fn').value;
-        const en = document.getElementById('n-en').value;
-        const ep = document.getElementById('n-email').value;
-        const ph = document.getElementById('n-phone').value;
+        const fn = document.getElementById('n-fn').value.trim();
+        const en = document.getElementById('n-en').value.trim();
+        const ep = document.getElementById('n-email').value.trim();
+        const ph = document.getElementById('n-phone').value.trim();
         const st = document.getElementById('n-start').value;
         const sl = document.getElementById('n-end').value;
 
-        if (!fn || !en || !ph) { alert("Navn og mobil er obligatorisk."); return; }
+        // VALIDERINGS-LOGIKK: Sjekk at alle medlemsfelt er fylt ut
+        if (!fn || !en || !ep || !ph) { 
+            alert("Fornavn, Etternavn, E-post og Mobilnummer er obligatoriske felt."); 
+            return; 
+        }
 
         showLoader(true);
         const { data, error } = await sb.from('medlemmer').insert({ fornavn: fn, etternavn: en, epost: ep, tlf_mobil: ph }).select();
         
-        if (!error && data && st && sl) {
-            await sb.from('periodekort').insert({ medlem_id: data[0].id, start_dato: st, slutt_dato: sl });
-            alert("Nytt medlem registrert med periodekort!");
-        } else if (!error) {
-            alert("Nytt medlem registrert (uten kort).");
+        if (!error && data) {
+            // Sjekk om datoene er fylt ut for valgfritt periodekort
+            if (st && sl) {
+                await sb.from('periodekort').insert({ medlem_id: data[0].id, start_dato: st, slutt_dato: sl });
+                alert("Nytt medlem registrert med periodekort!");
+            } else {
+                alert("Nytt medlem registrert (uten periodekort).");
+            }
         } else {
-            alert("Feil: " + error.message);
+            alert("Feil ved lagring: " + (error ? error.message : "Ukjent feil"));
         }
 
         showLoader(false);
@@ -354,24 +349,17 @@
             .order('slutt_dato', { ascending: true });
 
         if (error) return;
-
         const tbody = document.getElementById('p-active-table-body');
         if (!data || data.length === 0) {
             tbody.innerHTML = "<tr><td colspan='4'>Ingen aktive kort.</td></tr>";
             return;
         }
-
         tbody.innerHTML = data.map(p => {
             const slutt = new Date(p.slutt_dato);
             const dager = Math.ceil((slutt - new Date().setHours(0,0,0,0)) / 86400000);
             let klasse = dager <= 7 ? "dager-advarsel" : "dager-ok";
             if (dager <= 0) klasse = "dager-utlopt";
-            return `<tr>
-                <td><strong>${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</strong></td>
-                <td>${p.medlemmer.tlf_mobil}</td>
-                <td>${slutt.toLocaleDateString('no-NO')}</td>
-                <td class="${klasse}">${dager <= 0 ? 'Siste dag!' : dager + ' dager'}</td>
-            </tr>`;
+            return `<tr><td><strong>${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</strong></td><td>${p.medlemmer.tlf_mobil}</td><td>${slutt.toLocaleDateString('no-NO')}</td><td class="${klasse}">${dager <= 0 ? 'Siste dag!' : dager + ' dager'}</td></tr>`;
         }).join('');
     }
 
@@ -379,6 +367,8 @@
         document.getElementById('p-form-box').style.display = 'none';
         document.getElementById('p-new-member-box').style.display = 'none';
         selectedMemberId = null;
+        // Tømmer felter i ny-medlem boks
+        document.querySelectorAll('#p-new-member-box input').forEach(i => i.value = "");
     }
 
     function showModule(id) {
