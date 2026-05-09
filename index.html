@@ -1,83 +1,53 @@
-<main>
-    <div id="error-log"></div>
-
-    <!-- MODUL: BORDLEIE -->
-    <div id="mod-bord" class="module active">
-        <h1>Bordkontroll</h1>
-        <div id="bord-grid" class="card-grid">Laster...</div>
-    </div>
-
-    <!-- MODUL: PERIODEKORT -->
-    <div id="mod-medlem" class="module">
-        <h1>Periodekort Administrasjon</h1>
-        <div class="p-container">
-            <div style="flex: 1;">
-                <div class="p-box" style="border-top-color: var(--biljard-blaa);">
-                    <h3>Finn Medlem</h3>
-                    <input type="text" id="p-search-input" placeholder="Mobil eller etternavn..." class="name-in" onkeyup="if(event.key==='Enter') runSearch()">
-                    <button class="btn" style="background: var(--marine)" onclick="runSearch()">SØK</button>
-                    <div id="p-search-results"></div>
-                </div>
-
-                <div id="p-form-box" class="p-box" style="display:none; margin-top: 20px; border-top-color: var(--gull);">
-                    <h3 id="p-display-name">Navn</h3>
-                    <p id="p-current-status"></p>
-                    <label>E-post *</label><input type="email" id="p-edit-email" class="name-in">
-                    <label>Mobilnummer *</label><input type="tel" id="p-edit-phone" class="name-in">
-                    <label>Periodekort (valgfritt)</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="date" id="p-start-date" class="name-in">
-                        <input type="date" id="p-end-date" class="name-in">
-                    </div>
-                    <button class="btn" onclick="saveMemberPassUpdate()">LAGRE ENDRINGER</button>
-                    <button class="btn" style="background:#95a5a6" onclick="cancelSelection()">AVBRYT</button>
-                </div>
-
-                <div id="p-new-member-box" class="p-box" style="display:none; margin-top: 20px; border-top-color: var(--marine);">
-                    <h3>Nytt Medlem</h3>
-                    <input type="text" id="n-fn" placeholder="Fornavn" class="name-in">
-                    <input type="text" id="n-en" placeholder="Etternavn" class="name-in">
-                    <input type="email" id="n-email" placeholder="E-post" class="name-in">
-                    <input type="tel" id="n-phone" placeholder="Mobil" class="name-in">
-                    <div style="display: flex; gap: 10px;">
-                        <input type="date" id="n-start" class="name-in">
-                        <input type="date" id="n-end" class="name-in">
-                    </div>
-                    <button class="btn" onclick="registerBrandNewMember()">LAGRE</button>
-                    <button class="btn" style="background:#95a5a6" onclick="cancelSelection()">AVBRYT</button>
-                </div>
-            </div>
-            <div style="flex: 1.5;">
-                <div class="p-box" style="border-top-color: var(--biljard-gronn);">
-                    <h3>Aktive Periodekort</h3>
-                    <table>
-                        <thead><tr><th>Navn</th><th>Mobil</th><th>Utløper</th><th>Dager</th></tr></thead>
-                        <tbody id="p-active-table-body"></tbody>
-                    </table>
-                </div>
+<!-- MODUL: SKAPLEIE -->
+<section id="mod-skap" class="module">
+    <h1>Skaputleie</h1>
+    <div class="p-container">
+        <!-- VENSTRE: Kartet over 100 skap -->
+        <div style="flex: 1;">
+            <div class="p-box" style="border-top-color: var(--marine);">
+                <h3>Oversikt (1-100)</h3>
+                <p style="font-size: 11px; color: #666; margin-bottom: 10px;">Grønn = Ledig | Rød = Opptatt</p>
+                <div class="locker-grid" id="locker-grid-visual"></div>
             </div>
         </div>
-    </div>
 
-    <!-- MODUL: SKAPLEIE -->
-    <div id="mod-skap" class="module">
-        <h1>Skaputleie</h1>
-        <div class="p-box">
-            <h3>Oversikt (1-100)</h3>
-            <div class="locker-grid" id="locker-grid-visual"></div>
+        <!-- HØYRE: Kontrollpanel for valgt skap -->
+        <div style="flex: 0.8;">
+            <div id="locker-panel" class="p-box" style="display:none; border-top-color: var(--gull);">
+                <h2 id="selected-locker-title" style="margin-top:0;">Skap X</h2>
+                
+                <!-- Skjema for utleie (vises når skapet er ledig) -->
+                <div id="locker-rent-form" style="display:none;">
+                    <label>Søk leietager (Mobil/Etternavn)</label>
+                    <input type="text" id="locker-search-input" class="name-in" onkeyup="searchMemberForLocker()">
+                    <div id="locker-search-results"></div>
+                    
+                    <div id="locker-final-fields" style="display:none; margin-top:15px; padding-top:15px; border-top:1px solid #eee;">
+                        <p id="locker-target-name" style="font-weight:bold; color:var(--marine);"></p>
+                        <div style="display:flex; gap:10px;">
+                            <div style="flex:1;"><label>Fra</label><input type="date" id="locker-start" class="name-in"></div>
+                            <div style="flex:1;"><label>Til</label><input type="date" id="locker-end" class="name-in"></div>
+                        </div>
+                        <label>Notater (viktig)</label>
+                        <input type="text" id="locker-note" class="name-in" placeholder="F.eks. Kø-merke, betaling...">
+                        <button class="btn" style="background:var(--biljard-gronn)" onclick="saveLockerLease()">BEKREFT UTLEIE</button>
+                    </div>
+                </div>
+
+                <!-- Info-panel (vises når skapet er opptatt) -->
+                <div id="locker-info-panel" style="display:none;">
+                    <div style="background:#fff5f5; padding:15px; border-radius:8px; border:1px solid #fed7d7; margin-bottom:15px;">
+                        <label>Leies av:</label>
+                        <div id="locker-info-name" style="font-size:18px; font-weight:bold;">-</div>
+                        <div id="locker-info-phone" style="color:#666; margin-bottom:10px;">-</div>
+                        <div id="locker-info-dates" style="font-size:13px;">-</div>
+                    </div>
+                    <label>Notater:</label>
+                    <p id="locker-info-note" style="background:#f9f9f9; padding:10px; border-radius:4px; font-style:italic; font-size:13px;"></p>
+                    <button class="btn" style="background:var(--advarsel); padding:15px; margin-top:10px;" onclick="releaseLocker()">FRIGJØR SKAP / TØM</button>
+                </div>
+            </div>
+            <p id="locker-msg" style="color:#999; text-align:center; margin-top:50px;">Klikk på et skap for å se detaljer.</p>
         </div>
     </div>
-</main>
-
-<!-- STOPP-MODAL (For bordene) -->
-<div id="modal-overlay">
-    <div class="modal-content">
-        <h2>BORD FERDIG</h2>
-        <div style="display:flex; align-items:baseline; justify-content:center; gap:5px; color:var(--advarsel);">
-            <span class="big-minutes" id="modal-minutes">0</span><span style="font-size:30px; font-weight:bold;">min</span>
-        </div>
-        <div id="modal-player" style="font-weight:bold; margin-bottom:20px;">👤 Spiller</div>
-        <button class="btn" style="background:var(--biljard-gronn)" onclick="confirmStop()">BEKREFT</button>
-        <button class="btn" style="background:#95a5a6" onclick="closeModal()">AVBRYT</button>
-    </div>
-</div>
+</section>
