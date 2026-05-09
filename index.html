@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oslo Biljardklubb - System</title>
-    <!-- Biblioteket som bevist fungerer -->
+    <!-- Biblioteket som er testet og fungerer -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -40,7 +40,8 @@
         .modal-content { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px; }
         .big-minutes { display: block; font-size: 80px; font-weight: 900; color: var(--advarsel); margin: 10px 0; }
         
-        #error-msg { color: red; font-weight: bold; background: white; padding: 10px; border-radius: 5px; display: none; margin-bottom: 15px; border: 1px solid red; }
+        /* SYNLEG FEILMELDING - VIKTIG FOR FEILSØKING */
+        #error-msg { color: red; font-weight: bold; background: white; padding: 15px; border-radius: 8px; display: none; margin-bottom: 15px; border: 2px solid red; }
     </style>
 </head>
 <body>
@@ -58,6 +59,7 @@
 </nav>
 
 <main>
+    <!-- Feilmeldinger vil vises her med stor rød skrift -->
     <div id="error-msg"></div>
 
     <div id="mod-bord" class="module active">
@@ -81,42 +83,67 @@
 </div>
 
 <script>
-    // === DINE DATA ER NÅ HARDKODET ===
     const SB_URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
-    // ================================
 
     let supabase;
     let tableData = [];
     let currentStoppingId = null;
 
-    // Starter systemet umiddelbart
+    // Viser feilen rett på skjermen slik at vi ser hva som skjer
+    function visFeil(melding) {
+        const el = document.getElementById('error-msg');
+        if (el) {
+            el.innerText = "⚠️ SYSTEMFEIL: " + melding;
+            el.style.display = "block";
+        }
+        console.error(melding);
+    }
+
     async function start() {
         try {
             if (!window.supabase) {
-                document.getElementById('error-msg').innerText = "Klarte ikke å laste Supabase-motoren. Vennligst oppdater siden.";
-                document.getElementById('error-msg').style.display = "block";
+                visFeil("Klarte ikke å laste ned Supabase-motoren fra nettet. Sjekk internettlinjen din.");
                 return;
             }
+            
+            // Initialiser tilkobling
             supabase = window.supabase.createClient(SB_URL, SB_KEY);
+            
+            // Hent dataene
             await loadData();
             
-            // Auto-oppdatering
-            setInterval(loadData, 8000); // Hent fra database hvert 8. sek
-            setInterval(render, 30000); // Oppdater klokker hvert 30. sek
+            // Auto-oppdatering hvert 10. sekund
+            setInterval(loadData, 10000); 
+            // Oppdater live-klokker hvert 30. sekund
+            setInterval(render, 30000); 
+            
         } catch (e) {
-            console.error("Init-feil:", e);
+            visFeil("Feil under oppstart av programmet: " + e.message);
         }
     }
 
     async function loadData() {
-        const { data, error } = await supabase.from('bord_status').select('*').order('bord_nummer');
-        if (error) {
-            document.getElementById('error-msg').innerText = "Database-feil: " + error.message;
-            document.getElementById('error-msg').style.display = "block";
-        } else {
+        try {
+            const { data, error } = await supabase.from('bord_status').select('*').order('bord_nummer');
+            
+            if (error) {
+                visFeil("Databasefeil ved henting av bord: " + error.message + " (Kode: " + error.code + ")");
+                return;
+            }
+            
+            if (!data || data.length === 0) {
+                visFeil("Tilkoblingen fungerer, men fant ingen rader i tabellen 'bord_status'.");
+                return;
+            }
+
             tableData = data;
+            // Skjul feilmeldingen hvis alt plutselig blir OK
+            document.getElementById('error-msg').style.display = "none";
             render();
+            
+        } catch (e) {
+            visFeil("Forespørselen til databasen feilet: " + e.message);
         }
     }
 
@@ -128,8 +155,6 @@
             const isActive = b.status === 'Opptatt';
             const startTime = b.start_tid ? new Date(b.start_tid) : null;
             const diffMin = startTime ? Math.floor((new Date() - startTime) / 60000) : 0;
-            
-            // Farger: 1-10 Blå, 11-16 Grå, 17-20 Gul
             const btnColor = b.bord_nummer <= 10 ? 'var(--biljard-blaa)' : (b.bord_nummer <= 16 ? '#6D8196' : '#CAC254');
 
             return `
@@ -151,14 +176,23 @@
     }
 
     async function startTable(id) {
-        const nameIn = document.getElementById(`name-${id}`);
-        const name = nameIn ? nameIn.value : "";
-        await supabase.from('bord_status').update({ 
-            status: 'Opptatt', 
-            start_tid: new Date().toISOString(),
-            kunde_navn: name 
-        }).eq('bord_nummer', id);
-        loadData();
+        try {
+            const nameIn = document.getElementById(`name-${id}`);
+            const name = nameIn ? nameIn.value : "";
+            const { error } = await supabase.from('bord_status').update({ 
+                status: 'Opptatt', 
+                start_tid: new Date().toISOString(),
+                kunde_navn: name 
+            }).eq('bord_nummer', id);
+            
+            if (error) {
+                visFeil("Klarte ikke å starte bordet i databasen: " + error.message);
+            } else {
+                loadData();
+            }
+        } catch (e) {
+            visFeil("Feil ved start av bord: " + e.message);
+        }
     }
 
     function openModal(id, startTime) {
@@ -170,11 +204,20 @@
     }
 
     async function confirmStop() {
-        await supabase.from('bord_status').update({ 
-            status: 'Ledig', start_tid: null, kunde_navn: null 
-        }).eq('bord_nummer', currentStoppingId);
-        closeModal();
-        loadData();
+        try {
+            const { error } = await supabase.from('bord_status').update({ 
+                status: 'Ledig', start_tid: null, kunde_navn: null 
+            }).eq('bord_nummer', currentStoppingId);
+            
+            if (error) {
+                visFeil("Klarte ikke å frigjøre bordet i databasen: " + error.message);
+            } else {
+                closeModal();
+                loadData();
+            }
+        } catch (e) {
+            visFeil("Feil ved stopping av bord: " + e.message);
+        }
     }
 
     function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
@@ -184,8 +227,8 @@
         document.getElementById('mod-' + id).classList.add('active');
     }
 
-    // Kjør ved oppstart
-    start();
+    // Vi bruker en sikrere oppstartsmetode for nettleseren
+    window.addEventListener('DOMContentLoaded', start);
 </script>
 </body>
 </html>
