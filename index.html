@@ -12,6 +12,9 @@
 <div id="sync-loader">Synkroniserer...</div>
 
 <nav>
+       <!-- Tittelen øverst -->
+    <h2 style="color:var(--gull); text-align:center; font-size:18px; margin-bottom:20px;">OBK SYSTEM</h2>
+    
     <div style="text-align: center; margin-bottom: 20px;">
         <img src="https://images.squarespace-cdn.com/content/v1/5f1ea20392e2991054b38d3f/1596796347854-Y9E9R9R6X9R9R9R9R9R9/logo.png" 
              style="width: 120px; height: auto;" onerror="this.style.display='none';">
@@ -19,6 +22,19 @@
     <button class="nav-btn active" id="btn-bord" onclick="showModule('bord')">🎱 BORDLEIE</button>
     <button class="nav-btn" id="btn-medlem" onclick="showModule('medlem')">👤 PERIODEKORT</button>
     <button class="nav-btn" id="btn-skap" onclick="showModule('skap')">🔐 SKAPLEIE</button>
+
+     <!-- Logoen flyttet hit til bunnen -->
+    <div class="logo-area">
+       <!-- Vi bytter ut den lange URL-en med navnet på filen du nettopp lastet opp -->
+        <img src="logoobk.png" 
+             alt="OBK Logo" 
+             style="width: 140px; height: auto;" 
+             onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';">
+        
+        <!-- En tekst som kun vises hvis bildet ikke skulle laste -->
+    <h2 id="logo-fallback" style="display:none; color:var(--gull); font-size:16px;">OSLO BILJARDKLUBB</h2>
+    </div>
+    
 </nav>
 
 <main>
