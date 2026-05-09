@@ -40,9 +40,9 @@
 
         /* ═══ DEN STORE RØDE POP-UPEN (MODAL) ═══ */
         #modal-overlay { 
-            display: none; /* Skjult som standard */
+            display: none; 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.9); /* Mørk gjennomsiktig bakgrunn */
+            background: rgba(0,0,0,0.92); 
             z-index: 10000; justify-content: center; align-items: center; 
         }
         .modal-content { 
@@ -50,7 +50,19 @@
             width: 90%; max-width: 450px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); 
         }
         .modal-title { font-size: 24px; color: #333; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-        .big-minutes { display: block; font-size: 110px; font-weight: 900; color: var(--advarsel); line-height: 1; margin: 20px 0; }
+        
+        /* Container for det store tallet og "min" */
+        .big-time-wrapper { 
+            color: var(--advarsel); 
+            margin: 15px 0; 
+            display: flex; 
+            align-items: baseline; 
+            justify-content: center; 
+            gap: 10px;
+        }
+        .big-minutes { font-size: 110px; font-weight: 900; line-height: 1; }
+        .min-label { font-size: 40px; font-weight: 700; }
+
         .modal-player { font-size: 20px; font-weight: bold; color: var(--marine); margin-bottom: 25px; }
         .modal-btns { display: flex; flex-direction: column; gap: 10px; }
         .btn-confirm { background: var(--biljard-gronn); font-size: 18px; padding: 18px; }
@@ -64,8 +76,13 @@
 <div id="modal-overlay">
     <div class="modal-content">
         <h2 class="modal-title" id="m-title">Bord 1</h2>
-        <p style="margin: 10px 0 0 0; color: #666;">Spilt i:</p>
-        <span class="big-minutes" id="m-minutes">0</span>
+        <p style="margin: 10px 0 0 0; color: #666;">Total tid brukt:</p>
+        
+        <div class="big-time-wrapper">
+            <span class="big-minutes" id="m-minutes">0</span>
+            <span class="min-label">min</span>
+        </div>
+
         <div class="modal-player" id="m-player">👤 Navn</div>
         <div class="modal-btns">
             <button class="btn btn-confirm" onclick="confirmStop()">BEKREFT OG FRIGJØR BORD</button>
@@ -86,7 +103,7 @@
 <main>
     <div id="error-log"></div>
     <div id="mod-bord" class="module active">
-        <h1 id="status-text">Laster bord...</h1>
+        <h1 id="status-text">Bordkontroll</h1>
         <div id="bord-grid" class="card-grid"></div>
     </div>
     <div id="mod-medlem" class="module"><h1>Medlemsregister</h1><p>Under konstruksjon...</p></div>
@@ -99,15 +116,15 @@
 
     let sbClient;
     let tableData = [];
-    let currentStoppingId = null; // Husker hvilket bord vi er i ferd med å stoppe
+    let currentStoppingId = null;
 
     async function startSystem() {
         try {
             if (!window.supabase) return;
             sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             await loadTables();
-            setInterval(loadTables, 8000); // Synkroniserer med database hvert 8. sek
-            setInterval(renderGrid, 30000); // Oppdaterer klokker hvert 30. sek
+            setInterval(loadTables, 8000); 
+            setInterval(renderGrid, 30000); 
         } catch (err) { showError(err.message); }
     }
 
@@ -119,7 +136,6 @@
 
     function renderGrid() {
         const grid = document.getElementById('bord-grid');
-        document.getElementById('status-text').innerText = "Bordoversikt";
         
         grid.innerHTML = tableData.map(b => {
             const isActive = b.status === 'Opptatt';
@@ -128,7 +144,6 @@
                 minutter = Math.floor((new Date() - new Date(b.start_tid)) / 60000);
             }
 
-            // Knappefarger: 1-10 Blå, 11-16 Grå, 17-20 Gull
             let startBtnColor = 'var(--biljard-blaa)';
             if(b.bord_nummer > 10 && b.bord_nummer <= 16) startBtnColor = '#6D8196';
             if(b.bord_nummer > 16) startBtnColor = '#CAC254';
@@ -138,7 +153,7 @@
                     <h3 style="margin:0;">Bord ${b.bord_nummer}</h3>
                     <div class="timer-text">${isActive ? minutter + ' min' : 'LEDIG'}</div>
                     <div class="name-display">${isActive ? '👤 ' + (b.kunde_navn || 'Anonym') : ''}</div>
-                    ${!isActive ? `<input type="text" id="name-in-${b.bord_nummer}" class="name-input" placeholder="Spillernavn valgfritt">` : ''}
+                    ${!isActive ? `<input type="text" id="name-in-${b.bord_nummer}" class="name-input" placeholder="Spiller valgfritt">` : ''}
                     <button class="btn" 
                         style="background:${isActive ? 'var(--advarsel)' : startBtnColor}" 
                         onclick="${isActive ? `openStopModal(${b.bord_nummer}, '${b.start_tid}', '${b.kunde_navn || 'Anonym'}')` : `startTable(${b.bord_nummer})`}">
@@ -158,12 +173,11 @@
         await loadTables();
     }
 
-    // --- NYTT I STEG 3: ÅPNE DEN STORE POP-UPEN ---
     function openStopModal(nummer, startTid, navn) {
         currentStoppingId = nummer;
         const start = new Date(startTid);
         const naa = new Date();
-        const diffMin = Math.max(1, Math.floor((naa - start) / 60000)); // Viser alltid minst 1 min
+        const diffMin = Math.max(1, Math.floor((naa - start) / 60000));
 
         document.getElementById('m-title').innerText = "Bord " + nummer;
         document.getElementById('m-minutes').innerText = diffMin;
@@ -176,20 +190,15 @@
         currentStoppingId = null;
     }
 
-    // --- NYTT I STEG 3: BEKREFT OG FRIGJØR ---
     async function confirmStop() {
         if (!currentStoppingId) return;
-
         const { error } = await sbClient
             .from('bord_status')
             .update({ status: 'Ledig', start_tid: null, kunde_navn: null })
             .eq('bord_nummer', currentStoppingId);
 
         if (error) showError(error.message);
-        else {
-            closeModal();
-            await loadTables();
-        }
+        else { closeModal(); await loadTables(); }
     }
 
     function showModule(id) {
