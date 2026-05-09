@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oslo Biljardklubb - System</title>
     
-    <!-- Supabase-biblioteket -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -15,6 +14,7 @@
             --biljard-gronn: #27ae60;
             --biljard-blaa: #2980b9;
             --krem: #f5f0e8;
+            --advarsel: #e74c3c;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; }
         
@@ -28,23 +28,51 @@
         .module.active { display: block; }
         
         /* Bord-kortene */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; }
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 8px solid #ddd; text-align: center; transition: 0.3s; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 8px solid #ddd; text-align: center; }
         .card.active { border-top-color: var(--biljard-gronn); background: #fafffa; }
         
-        /* Tid og navn styling */
-        .timer-text { font-size: 24px; font-weight: 900; color: var(--marine); margin: 10px 0; }
-        .name-display { font-weight: bold; color: var(--biljard-gronn); font-size: 14px; margin-bottom: 10px; height: 1.2em; }
-        
-        /* Inputfelt for navn */
-        .name-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; box-sizing: border-box; text-align: center; }
+        .timer-text { font-size: 24px; font-weight: 900; color: var(--marine); margin: 8px 0; }
+        .name-display { font-weight: bold; color: var(--biljard-gronn); font-size: 13px; margin-bottom: 8px; height: 1.2em; overflow: hidden; }
+        .name-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 8px; box-sizing: border-box; text-align: center; font-size: 12px; }
 
         .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
-        
-        #error-log { color: red; background: #ffdada; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; border: 1px solid red; }
+
+        /* ═══ DEN STORE RØDE POP-UPEN (MODAL) ═══ */
+        #modal-overlay { 
+            display: none; /* Skjult som standard */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); /* Mørk gjennomsiktig bakgrunn */
+            z-index: 10000; justify-content: center; align-items: center; 
+        }
+        .modal-content { 
+            background: white; padding: 40px; border-radius: 20px; text-align: center; 
+            width: 90%; max-width: 450px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); 
+        }
+        .modal-title { font-size: 24px; color: #333; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .big-minutes { display: block; font-size: 110px; font-weight: 900; color: var(--advarsel); line-height: 1; margin: 20px 0; }
+        .modal-player { font-size: 20px; font-weight: bold; color: var(--marine); margin-bottom: 25px; }
+        .modal-btns { display: flex; flex-direction: column; gap: 10px; }
+        .btn-confirm { background: var(--biljard-gronn); font-size: 18px; padding: 18px; }
+        .btn-cancel { background: #95a5a6; }
+
+        #error-log { color: red; background: #ffdada; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; }
     </style>
 </head>
 <body>
+
+<div id="modal-overlay">
+    <div class="modal-content">
+        <h2 class="modal-title" id="m-title">Bord 1</h2>
+        <p style="margin: 10px 0 0 0; color: #666;">Spilt i:</p>
+        <span class="big-minutes" id="m-minutes">0</span>
+        <div class="modal-player" id="m-player">👤 Navn</div>
+        <div class="modal-btns">
+            <button class="btn btn-confirm" onclick="confirmStop()">BEKREFT OG FRIGJØR BORD</button>
+            <button class="btn btn-cancel" onclick="closeModal()">AVBRYT</button>
+        </div>
+    </div>
+</div>
 
 <nav>
     <div style="text-align: center; margin-bottom: 20px;">
@@ -57,14 +85,12 @@
 
 <main>
     <div id="error-log"></div>
-    
     <div id="mod-bord" class="module active">
-        <h1 id="status-text">Kobler til bordkontroll...</h1>
+        <h1 id="status-text">Laster bord...</h1>
         <div id="bord-grid" class="card-grid"></div>
     </div>
-
-    <div id="mod-medlem" class="module"><h1>Medlemsregister</h1><p>Kommer i et senere steg...</p></div>
-    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Kommer i et senere steg...</p></div>
+    <div id="mod-medlem" class="module"><h1>Medlemsregister</h1><p>Under konstruksjon...</p></div>
+    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Under konstruksjon...</p></div>
 </main>
 
 <script>
@@ -72,79 +98,50 @@
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
 
     let sbClient;
-    let tableData = []; // Her lagrer vi informasjonen fra databasen lokalt i programmet
+    let tableData = [];
+    let currentStoppingId = null; // Husker hvilket bord vi er i ferd med å stoppe
 
     async function startSystem() {
         try {
             if (!window.supabase) return;
             sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            
-            // Vi henter data første gang
             await loadTables();
-
-            // --- NYTT I STEG 2: AUTO-OPPDATERING ---
-            // Vi henter nye data fra Supabase hvert 10. sekund (slik at alle skjermer er like)
-            setInterval(loadTables, 10000);
-
-            // Vi oppdaterer minuttene på skjermen hvert 30. sekund (uten å spørre databasen)
-            // Dette gjør at klokka tikker fremover selv om du ikke trykker på noe
-            setInterval(renderGrid, 30000);
-
-        } catch (err) {
-            showError(err.message);
-        }
+            setInterval(loadTables, 8000); // Synkroniserer med database hvert 8. sek
+            setInterval(renderGrid, 30000); // Oppdaterer klokker hvert 30. sek
+        } catch (err) { showError(err.message); }
     }
 
-    // Funksjon for å hente rådata fra Supabase
     async function loadTables() {
-        const { data, error } = await sbClient
-            .from('bord_status')
-            .select('*')
-            .order('bord_nummer', { ascending: true });
-
-        if (error) {
-            showError("Databasefeil: " + error.message);
-        } else {
-            tableData = data; // Lagre dataene i vår lokale liste
-            renderGrid();     // Tegn bordene på skjermen
-        }
+        const { data, error } = await sbClient.from('bord_status').select('*').order('bord_nummer');
+        if (error) showError(error.message);
+        else { tableData = data; renderGrid(); }
     }
 
-    // Funksjon for å tegne bordene (HTML) basert på informasjonen vi har
     function renderGrid() {
         const grid = document.getElementById('bord-grid');
         document.getElementById('status-text').innerText = "Bordoversikt";
         
         grid.innerHTML = tableData.map(b => {
             const isActive = b.status === 'Opptatt';
-            
-            // --- NYTT I STEG 2: TIDSBEREGNING ---
             let minutter = 0;
             if (isActive && b.start_tid) {
-                const start = new Date(b.start_tid);
-                const naa = new Date();
-                // Regner ut differansen i millisekunder og gjør om til hele minutter
-                minutter = Math.floor((naa - start) / 60000);
+                minutter = Math.floor((new Date() - new Date(b.start_tid)) / 60000);
             }
+
+            // Knappefarger: 1-10 Blå, 11-16 Grå, 17-20 Gull
+            let startBtnColor = 'var(--biljard-blaa)';
+            if(b.bord_nummer > 10 && b.bord_nummer <= 16) startBtnColor = '#6D8196';
+            if(b.bord_nummer > 16) startBtnColor = '#CAC254';
 
             return `
                 <div class="card ${isActive ? 'active' : ''}">
                     <h3 style="margin:0;">Bord ${b.bord_nummer}</h3>
-                    
-                    <div class="timer-text">
-                        ${isActive ? minutter + ' min' : 'LEDIG'}
-                    </div>
-
-                    <div class="name-display">
-                        ${isActive ? '👤 ' + (b.kunde_navn || 'Anonym') : ''}
-                    </div>
-                    
-                    <!-- Hvis ledig: Vis inputfelt. Hvis opptatt: Skjul det. -->
-                    ${!isActive ? `<input type="text" id="name-in-${b.bord_nummer}" class="name-input" placeholder="Spillernavn- valgfritt">` : ''}
-                    
+                    <div class="timer-text">${isActive ? minutter + ' min' : 'LEDIG'}</div>
+                    <div class="name-display">${isActive ? '👤 ' + (b.kunde_navn || 'Anonym') : ''}</div>
+                    ${!isActive ? `<input type="text" id="name-in-${b.bord_nummer}" class="name-input" placeholder="Spillernavn valgfritt">` : ''}
                     <button class="btn" 
-                        style="background:${isActive ? '#e74c3c' : '#2980b9'}" 
-                        onclick="${isActive ? `stopTable(${b.bord_nummer})` : `startTable(${b.bord_nummer})`}">
+                        style="background:${isActive ? 'var(--advarsel)' : startBtnColor}" 
+                        onclick="${isActive ? `openStopModal(${b.bord_nummer}, '${b.start_tid}', '${b.kunde_navn || 'Anonym'}')` : `startTable(${b.bord_nummer})`}">
                         ${isActive ? 'STOPP' : 'START'}
                     </button>
                 </div>
@@ -152,37 +149,47 @@
         }).join('');
     }
 
-    // --- NYTT I STEG 2: LAGRE NAVN VED START ---
     async function startTable(nummer) {
-        // Hent navnet fra tekstfeltet til det aktuelle bordet
         const nameField = document.getElementById('name-in-' + nummer);
         const kundenavn = nameField ? nameField.value.trim() : "";
-
-        const { error } = await sbClient
-            .from('bord_status')
-            .update({ 
-                status: 'Opptatt',
-                start_tid: new Date().toISOString(),
-                kunde_navn: kundenavn // Lagrer navnet i databasen
-            })
-            .eq('bord_nummer', nummer);
-
-        if (error) showError(error.message);
-        else await loadTables();
+        await sbClient.from('bord_status').update({ 
+            status: 'Opptatt', start_tid: new Date().toISOString(), kunde_navn: kundenavn 
+        }).eq('bord_nummer', nummer);
+        await loadTables();
     }
 
-    async function stopTable(nummer) {
+    // --- NYTT I STEG 3: ÅPNE DEN STORE POP-UPEN ---
+    function openStopModal(nummer, startTid, navn) {
+        currentStoppingId = nummer;
+        const start = new Date(startTid);
+        const naa = new Date();
+        const diffMin = Math.max(1, Math.floor((naa - start) / 60000)); // Viser alltid minst 1 min
+
+        document.getElementById('m-title').innerText = "Bord " + nummer;
+        document.getElementById('m-minutes').innerText = diffMin;
+        document.getElementById('m-player').innerText = "👤 " + navn;
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').style.display = 'none';
+        currentStoppingId = null;
+    }
+
+    // --- NYTT I STEG 3: BEKREFT OG FRIGJØR ---
+    async function confirmStop() {
+        if (!currentStoppingId) return;
+
         const { error } = await sbClient
             .from('bord_status')
-            .update({ 
-                status: 'Ledig',
-                start_tid: null,
-                kunde_navn: null 
-            })
-            .eq('bord_nummer', nummer);
+            .update({ status: 'Ledig', start_tid: null, kunde_navn: null })
+            .eq('bord_nummer', currentStoppingId);
 
         if (error) showError(error.message);
-        else await loadTables();
+        else {
+            closeModal();
+            await loadTables();
+        }
     }
 
     function showModule(id) {
