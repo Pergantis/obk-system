@@ -4,144 +4,158 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oslo Biljardklubb - System</title>
-    
-    <!-- 1. Vi henter biblioteket med en gang -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         :root {
-            --marine: #1a2f3c;
-            --gull: #c9a84c;
-            --biljard-gronn: #27ae60;
-            --krem: #f5f0e8;
+            --marine: #1a2f3c; --gull: #c9a84c; --biljard-gronn: #27ae60;
+            --biljard-blaa: #2980b9; --krem: #f5f0e8; --advarsel: #e74c3c;
         }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Meny til venstre */
         nav { width: 220px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); }
         .nav-btn { width: 100%; padding: 12px; margin: 10px 0; background: none; border: 1px solid var(--gull); color: white; cursor: pointer; border-radius: 8px; font-weight: bold; text-align: left; }
         .nav-btn:hover { background: var(--gull); color: var(--marine); }
 
-        /* Innhold */
         main { flex: 1; padding: 25px; overflow-y: auto; }
         .module { display: none; }
         .module.active { display: block; }
         
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 8px solid #ddd; text-align: center; }
         .card.active { border-top-color: var(--biljard-gronn); background: #fafffa; }
         
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; margin-top: 10px; }
-        #error-log { color: red; background: #ffdada; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; border: 1px solid red; }
-        #debug-info { font-size: 10px; color: #aaa; margin-top: 20px; }
+        .timer { font-size: 24px; font-weight: bold; color: var(--marine); margin: 10px 0; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
+        .name-in { width: 100%; padding: 6px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+
+        /* STOR RØD MODAL */
+        #modal-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; 
+        }
+        .modal-content { 
+            background: white; padding: 40px; border-radius: 20px; text-align: center; width: 400px; 
+        }
+        .big-minutes { display: block; font-size: 90px; font-weight: 900; color: var(--advarsel); margin: 10px 0; }
+        
+        #sync-loader { position: fixed; top: 10px; right: 20px; background: orange; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; display: none; }
     </style>
 </head>
 <body>
 
+<div id="sync-loader">Synkroniserer...</div>
+
 <nav>
-    <h2 style="color:var(--gull); margin-bottom: 30px;">OBK SYSTEM</h2>
+    <img src="https://images.squarespace-cdn.com/content/v1/5f1ea20392e2991054b38d3f/1596796347854-Y9E9R9R6X9R9R9R9R9R9/logo.png" style="width: 100%; margin-bottom: 20px;">
     <button class="nav-btn" onclick="showModule('bord')">🎱 BORDLEIE</button>
     <button class="nav-btn" onclick="showModule('medlem')">👤 MEDLEMMER</button>
     <button class="nav-btn" onclick="showModule('skap')">🔐 SKAPLEIE</button>
 </nav>
 
 <main>
-    <div id="error-log"></div>
-    
     <div id="mod-bord" class="module active">
-        <h1 id="status-text">Systemet våkner...</h1>
+        <h1 id="status-text">Bordkontroll</h1>
         <div id="bord-grid" class="card-grid"></div>
     </div>
-
-    <div id="mod-medlem" class="module"><h1>Medlemsregister</h1><p>Kommer snart...</p></div>
-    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Kommer snart...</p></div>
-
-    <div id="debug-info">Status: <span id="debug-status">Venter på skript...</span></div>
+    <!-- De andre modulene kommer etterhvert -->
 </main>
 
+<!-- STOPP-MODAL -->
+<div id="modal-overlay">
+    <div class="modal-content">
+        <h2 id="modal-title">BORD AVSLUTTET</h2>
+        <span class="big-minutes" id="modal-minutes">0</span>
+        <p style="font-size: 20px; font-weight: bold;">MINUTTER</p>
+        <button class="btn" style="background:var(--biljard-gronn); margin-bottom:10px;" onclick="confirmStop()">BEKREFT OG FRIGJØR</button>
+        <button class="btn" style="background:#95a5a6" onclick="closeModal()">AVBRYT</button>
+    </div>
+</div>
+
 <script>
-    // === VIKTIG: SJEKK AT DET IKKE ER MELLOMROM FØR ELLER ETTER NØKLENE ===
+    // === SETT INN DINE DATA HER ===
     const SUPABASE_URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
-    // ====================================================================
+    // ==============================
 
-    let sbClient;
-
-    async function startSystem() {
-        const debug = document.getElementById('debug-status');
-        const statusText = document.getElementById('status-text');
-
-        try {
-            debug.innerText = "Sjekker Supabase-bibliotek...";
-            
-            // Sjekk om Supabase er lastet i nettleseren
-            if (!window.supabase) {
-                showError("Klarte ikke å laste Supabase-motoren. Sjekk internettforbindelsen.");
-                return;
-            }
-
-            debug.innerText = "Kobler til Oslo Biljardklubb database...";
-            // Lag klienten
-            sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            
-            debug.innerText = "Henter bord fra tabellen...";
-            await loadTables();
-
-        } catch (err) {
-            showError("Noe gikk galt: " + err.message);
-        }
-    }
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let tableStates = [];
+    let currentStoppingId = null;
 
     async function loadTables() {
+        const { data, error } = await supabase.from('bord_status').select('*').order('bord_nummer');
+        if (data) {
+            tableStates = data;
+            render();
+        }
+    }
+
+    function render() {
         const grid = document.getElementById('bord-grid');
-        const statusText = document.getElementById('status-text');
-        
-        const { data, error } = await sbClient
-            .from('bord_status')
-            .select('*')
-            .order('bord_nummer', { ascending: true });
+        grid.innerHTML = tableStates.map(b => {
+            const isActive = b.status === 'Opptatt';
+            const startTime = b.start_tid ? new Date(b.start_tid) : null;
+            const diffMin = startTime ? Math.floor((new Date() - startTime) / 60000) : 0;
+            const btnColor = b.bord_nummer <= 10 ? 'var(--biljard-blaa)' : (b.bord_nummer <= 16 ? '#6D8196' : '#CAC254');
 
-        if (error) {
-            showError("Kunne ikke lese fra tabellen: " + error.message);
-            return;
-        }
-
-        if (!data || data.length === 0) {
-            showError("Tabellen 'bord_status' er tom. Husk å legge inn 20 rader i Supabase.");
-            return;
-        }
-
-        statusText.innerText = "Bordoversikt";
-        document.getElementById('debug-status').innerText = "Systemet er OK";
-
-        grid.innerHTML = data.map(b => `
-            <div class="card ${b.status === 'Opptatt' ? 'active' : ''}">
-                <h3>Bord ${b.bord_nummer}</h3>
-                <div style="font-size: 20px; font-weight: bold; margin: 10px 0;">
-                    ${b.status === 'Opptatt' ? 'I BRUK' : 'LEDIG'}
+            return `
+                <div class="card ${isActive ? 'active' : ''}">
+                    <h3>Bord ${b.bord_nummer}</h3>
+                    <div class="timer">${isActive ? diffMin + ' min' : 'LEDIG'}</div>
+                    ${isActive ? `<div style="font-size:12px; color:#27ae60; font-weight:bold; height:15px;">${b.kunde_navn || ''}</div>` : 
+                    `<input type="text" id="name-${b.bord_nummer}" class="name-in" placeholder="Kunde">`}
+                    
+                    <button class="btn" 
+                        style="background:${isActive ? 'var(--advarsel)' : btnColor}" 
+                        onclick="${isActive ? `openModal(${b.bord_nummer}, '${b.start_tid}')` : `startTable(${b.bord_nummer})`}">
+                        ${isActive ? 'STOPP' : 'START'}
+                    </button>
                 </div>
-                <button class="btn" style="background:${b.status === 'Opptatt' ? '#e74c3c' : '#2980b9'}">
-                    ${b.status === 'Opptatt' ? 'STOPP' : 'START'}
-                </button>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
-    function showModule(id) {
-        document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
-        document.getElementById('mod-' + id).classList.add('active');
+    async function startTable(id) {
+        const name = document.getElementById(`name-${id}`).value;
+        showLoader(true);
+        await supabase.from('bord_status').update({ 
+            status: 'Opptatt', 
+            start_tid: new Date().toISOString(),
+            kunde_navn: name 
+        }).eq('bord_nummer', id);
+        showLoader(false);
+        loadTables();
     }
 
-    function showError(msg) {
-        const log = document.getElementById('error-log');
-        log.innerText = msg;
-        log.style.display = 'block';
-        document.getElementById('debug-status').innerText = "Feilet";
+    function openModal(id, startTime) {
+        currentStoppingId = id;
+        const start = new Date(startTime);
+        const diff = Math.max(1, Math.round((new Date() - start) / 60000));
+        document.getElementById('modal-minutes').innerText = diff;
+        document.getElementById('modal-overlay').style.display = 'flex';
     }
 
-    // Start programmet når siden er helt ferdig lastet
-    window.addEventListener('load', startSystem);
+    async function confirmStop() {
+        showLoader(true);
+        await supabase.from('bord_status').update({ 
+            status: 'Ledig', 
+            start_tid: null,
+            kunde_navn: null 
+        }).eq('bord_nummer', currentStoppingId);
+        showLoader(false);
+        closeModal();
+        loadTables();
+    }
+
+    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+    function showLoader(show) { document.getElementById('sync-loader').style.display = show ? 'block' : 'none'; }
+    function showModule(id) { /* Kommer senere */ }
+
+    // Oppdater tallene hvert minutt
+    setInterval(render, 60000);
+    // Hent friske data fra databasen hvert 5. sekund (Sanntid!)
+    setInterval(loadTables, 5000);
+
+    loadTables();
 </script>
-
 </body>
 </html>
