@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oslo Biljardklubb - System</title>
     
-    <!-- Vi henter biblioteket (motoren) som gjør at JavaScript kan snakke med Supabase -->
+    <!-- Supabase-biblioteket -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -13,121 +13,135 @@
             --marine: #1a2f3c;
             --gull: #c9a84c;
             --biljard-gronn: #27ae60;
+            --biljard-blaa: #2980b9;
             --krem: #f5f0e8;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; }
         
-        /* Navigasjon til venstre */
-        nav { width: 220px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); }
+        /* Navigasjon */
+        nav { width: 220px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); flex-shrink: 0; }
         .nav-btn { width: 100%; padding: 12px; margin: 10px 0; background: none; border: 1px solid var(--gull); color: white; cursor: pointer; border-radius: 8px; font-weight: bold; text-align: left; }
-        .nav-btn:hover { background: var(--gull); color: var(--marine); }
-
-        /* Hovedområde hvor bordene vises */
+        
+        /* Hovedområde */
         main { flex: 1; padding: 25px; overflow-y: auto; }
         .module { display: none; }
         .module.active { display: block; }
         
-        /* Layout for bord-kortene */
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-        
-        /* Design på selve bord-kortet */
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 8px solid #ddd; text-align: center; }
-        
-        /* Hvis bordet er aktivt (Opptatt), gjør vi kanten grønn */
+        /* Bord-kortene */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 8px solid #ddd; text-align: center; transition: 0.3s; }
         .card.active { border-top-color: var(--biljard-gronn); background: #fafffa; }
         
-        /* Knapp-design */
-        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; margin-top: 10px; text-transform: uppercase; }
+        /* Tid og navn styling */
+        .timer-text { font-size: 24px; font-weight: 900; color: var(--marine); margin: 10px 0; }
+        .name-display { font-weight: bold; color: var(--biljard-gronn); font-size: 14px; margin-bottom: 10px; height: 1.2em; }
         
-        /* Feilmelding-boks */
+        /* Inputfelt for navn */
+        .name-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; box-sizing: border-box; text-align: center; }
+
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; }
+        
         #error-log { color: red; background: #ffdada; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; border: 1px solid red; }
-        
-        /* Debug-info nederst */
-        #debug-info { font-size: 10px; color: #aaa; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <nav>
-    <h2 style="color:var(--gull); margin-bottom: 30px;">OBK SYSTEM</h2>
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="color:var(--gull); margin:0;">OBK SYSTEM</h2>
+    </div>
     <button class="nav-btn" onclick="showModule('bord')">🎱 BORDLEIE</button>
     <button class="nav-btn" onclick="showModule('medlem')">👤 MEDLEMMER</button>
     <button class="nav-btn" onclick="showModule('skap')">🔐 SKAPLEIE</button>
 </nav>
 
 <main>
-    <!-- Her vises feilmeldinger hvis noe går galt -->
     <div id="error-log"></div>
     
     <div id="mod-bord" class="module active">
-        <h1 id="status-text">Systemet våkner...</h1>
+        <h1 id="status-text">Kobler til bordkontroll...</h1>
         <div id="bord-grid" class="card-grid"></div>
     </div>
 
-    <div id="mod-medlem" class="module"><h1>Medlemsregister</h1><p>Kommer snart...</p></div>
-    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Kommer snart...</p></div>
-
-    <div id="debug-info">Status: <span id="debug-status">Venter...</span></div>
+    <div id="mod-medlem" class="module"><h1>Medlemsregister</h1><p>Kommer i et senere steg...</p></div>
+    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Kommer i et senere steg...</p></div>
 </main>
 
 <script>
-    // === DINE SUPABASE-NØKLER (Behold disse som de er) ===
     const SUPABASE_URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
 
     let sbClient;
+    let tableData = []; // Her lagrer vi informasjonen fra databasen lokalt i programmet
 
-    // --- FUNKSJON 1: STARTE SYSTEMET ---
     async function startSystem() {
         try {
-            // Vi sjekker at biblioteket er lastet ordentlig
-            if (!window.supabase) {
-                showError("Klarte ikke å laste Supabase-motoren.");
-                return;
-            }
-
-            // Vi oppretter koblingen til din spesifikke database
+            if (!window.supabase) return;
             sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             
-            // Når koblingen er klar, henter vi bordene for første gang
+            // Vi henter data første gang
             await loadTables();
 
+            // --- NYTT I STEG 2: AUTO-OPPDATERING ---
+            // Vi henter nye data fra Supabase hvert 10. sekund (slik at alle skjermer er like)
+            setInterval(loadTables, 10000);
+
+            // Vi oppdaterer minuttene på skjermen hvert 30. sekund (uten å spørre databasen)
+            // Dette gjør at klokka tikker fremover selv om du ikke trykker på noe
+            setInterval(renderGrid, 30000);
+
         } catch (err) {
-            showError("Noe gikk galt under oppstart: " + err.message);
+            showError(err.message);
         }
     }
 
-    // --- FUNKSJON 2: HENTE BORD FRA DATABASEN ---
+    // Funksjon for å hente rådata fra Supabase
     async function loadTables() {
-        const grid = document.getElementById('bord-grid');
-        const statusText = document.getElementById('status-text');
-        
-        // Vi spør Supabase: "Gi meg alt fra tabellen bord_status, sortert etter nummer"
         const { data, error } = await sbClient
             .from('bord_status')
             .select('*')
             .order('bord_nummer', { ascending: true });
 
         if (error) {
-            showError("Kunne ikke lese fra databasen: " + error.message);
-            return;
+            showError("Databasefeil: " + error.message);
+        } else {
+            tableData = data; // Lagre dataene i vår lokale liste
+            renderGrid();     // Tegn bordene på skjermen
         }
+    }
 
-        statusText.innerText = "Bordoversikt";
-        document.getElementById('debug-status').innerText = "Koblet til OK (" + new Date().toLocaleTimeString() + ")";
-
-        // Her genererer vi HTML-koden for hvert bord basert på dataene vi fikk
-        grid.innerHTML = data.map(b => {
+    // Funksjon for å tegne bordene (HTML) basert på informasjonen vi har
+    function renderGrid() {
+        const grid = document.getElementById('bord-grid');
+        document.getElementById('status-text').innerText = "Bordoversikt";
+        
+        grid.innerHTML = tableData.map(b => {
             const isActive = b.status === 'Opptatt';
             
+            // --- NYTT I STEG 2: TIDSBEREGNING ---
+            let minutter = 0;
+            if (isActive && b.start_tid) {
+                const start = new Date(b.start_tid);
+                const naa = new Date();
+                // Regner ut differansen i millisekunder og gjør om til hele minutter
+                minutter = Math.floor((naa - start) / 60000);
+            }
+
             return `
                 <div class="card ${isActive ? 'active' : ''}">
-                    <h3>Bord ${b.bord_nummer}</h3>
-                    <div style="font-size: 18px; font-weight: bold; margin: 10px 0;">
-                        ${isActive ? 'I BRUK' : 'LEDIG'}
+                    <h3 style="margin:0;">Bord ${b.bord_nummer}</h3>
+                    
+                    <div class="timer-text">
+                        ${isActive ? minutter + ' min' : 'LEDIG'}
+                    </div>
+
+                    <div class="name-display">
+                        ${isActive ? '👤 ' + (b.kunde_navn || 'Anonym') : ''}
                     </div>
                     
-                    <!-- Her legger vi til onclick-funksjonen på knappen -->
+                    <!-- Hvis ledig: Vis inputfelt. Hvis opptatt: Skjul det. -->
+                    ${!isActive ? `<input type="text" id="name-in-${b.bord_nummer}" class="name-input" placeholder="Navn på kunde">` : ''}
+                    
                     <button class="btn" 
                         style="background:${isActive ? '#e74c3c' : '#2980b9'}" 
                         onclick="${isActive ? `stopTable(${b.bord_nummer})` : `startTable(${b.bord_nummer})`}">
@@ -138,64 +152,51 @@
         }).join('');
     }
 
-    // --- FUNKSJON 3: STARTE ET BORD (STEG 1 LOGIKK) ---
+    // --- NYTT I STEG 2: LAGRE NAVN VED START ---
     async function startTable(nummer) {
-        document.getElementById('debug-status').innerText = "Starter bord " + nummer + "...";
-        
-        // Vi ber Supabase endre statusen på raden som har riktig bord_nummer
+        // Hent navnet fra tekstfeltet til det aktuelle bordet
+        const nameField = document.getElementById('name-in-' + nummer);
+        const kundenavn = nameField ? nameField.value.trim() : "";
+
         const { error } = await sbClient
             .from('bord_status')
             .update({ 
                 status: 'Opptatt',
-                start_tid: new Date().toISOString() // Vi lagrer nåværende tidspunkt som starttid
+                start_tid: new Date().toISOString(),
+                kunde_navn: kundenavn // Lagrer navnet i databasen
             })
-            .eq('bord_nummer', nummer); // eq betyr "der bord_nummer er lik nummeret vi trykket på"
+            .eq('bord_nummer', nummer);
 
-        if (error) {
-            showError("Klarte ikke å starte bordet: " + error.message);
-        } else {
-            // Hvis alt gikk bra, henter vi bordene på nytt for å oppdatere skjermen
-            await loadTables();
-        }
+        if (error) showError(error.message);
+        else await loadTables();
     }
 
-    // --- FUNKSJON 4: STOPPE ET BORD (STEG 1 LOGIKK) ---
     async function stopTable(nummer) {
-        document.getElementById('debug-status').innerText = "Stopper bord " + nummer + "...";
-
         const { error } = await sbClient
             .from('bord_status')
             .update({ 
                 status: 'Ledig',
-                start_tid: null, // Vi tømmer starttiden
-                kunde_navn: null // Vi tømmer kundenavnet (forberedelse til Steg 2)
+                start_tid: null,
+                kunde_navn: null 
             })
             .eq('bord_nummer', nummer);
 
-        if (error) {
-            showError("Klarte ikke å stoppe bordet: " + error.message);
-        } else {
-            await loadTables();
-        }
+        if (error) showError(error.message);
+        else await loadTables();
     }
 
-    // Hjelpefunksjon for å bytte mellom de tre modulene dine
     function showModule(id) {
         document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
         document.getElementById('mod-' + id).classList.add('active');
     }
 
-    // Hjelpefunksjon for å vise feilmeldinger
     function showError(msg) {
         const log = document.getElementById('error-log');
         log.innerText = "FEIL: " + msg;
         log.style.display = 'block';
-        document.getElementById('debug-status').innerText = "Handling feilet";
     }
 
-    // Vi starter programmet når nettleseren har lastet ferdig alt innhold
     window.addEventListener('load', startSystem);
-
 </script>
 
 </body>
