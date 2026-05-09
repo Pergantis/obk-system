@@ -4,14 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oslo Biljardklubb - System</title>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Biblioteket som vi vet fungerer stabilt -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root {
             --marine: #1a2f3c; --gull: #c9a84c; --biljard-gronn: #27ae60;
             --biljard-blaa: #2980b9; --krem: #f5f0e8; --advarsel: #e74c3c;
             --hvit: #ffffff;
         }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
         /* Navigasjon */
         nav { width: 220px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); flex-shrink: 0; }
@@ -24,41 +27,26 @@
         .module { display: none; }
         .module.active { display: block; }
         
-        /* Kort og Grid */
-        .card { background: var(--hvit); padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-top: 6px solid #ddd; margin-bottom: 20px; }
+        /* Bord-kortene */
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+        .card { background: var(--hvit); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 8px solid #ddd; text-align: center; }
+        .card.active { border-top-color: var(--biljard-gronn); background: #fafffa; }
         
-        /* Medlems-modul spesifikk layout */
-        .medlem-layout { display: flex; gap: 25px; align-items: flex-start; }
-        .medlem-venstre { flex: 1; max-width: 450px; }
-        .medlem-hoyre { flex: 1.5; }
+        /* Medlemsmodul layout */
+        .medlem-container { display: flex; gap: 20px; }
+        .medlem-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
-        /* Skjema-elementer */
-        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
-        input[type="text"], input[type="email"], input[type="date"], input[type="tel"] { 
-            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; margin-bottom: 10px;
-        }
-        label { display: block; font-size: 12px; font-weight: bold; color: var(--marine); margin-bottom: 4px; text-transform: uppercase; }
-        
-        /* Tabell for aktive kort */
-        table { width: 100%; border-collapse: collapse; background: var(--hvit); font-size: 14px; }
-        th { background: var(--marine); color: var(--gull); text-align: left; padding: 12px; font-size: 12px; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
-        tr:hover { background: #f9f9f9; }
-
-        /* Dager igjen farger */
-        .dager-ok { color: var(--biljard-gronn); font-weight: bold; }
-        .dager-advarsel { color: #f39c12; font-weight: bold; }
-        .dager-utlopt { color: var(--advarsel); font-weight: bold; }
-
-        /* Knapper */
-        .btn { padding: 10px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; font-size: 13px; }
-        .btn-full { width: 100%; margin-top: 10px; }
+        /* Felles styling */
+        .timer-text { font-size: 22px; font-weight: 900; color: var(--marine); margin: 8px 0; }
+        .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; font-size: 13px; margin-top: 5px; }
+        .name-in { width: 100%; padding: 5px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; text-align: center; }
 
         /* MODAL */
         #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px; }
-        .big-minutes { display: block; font-size: 80px; font-weight: 900; color: var(--advarsel); margin: 10px 0; }
+        .modal-content { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 350px; color: #333; }
+        .big-minutes { display: block; font-size: 90px; font-weight: 900; color: var(--advarsel); margin: 15px 0; }
+
+        #error-log { color: red; background: #ffdada; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; border: 1px solid red; }
     </style>
 </head>
 <body>
@@ -66,141 +54,118 @@
 <nav>
     <div style="text-align: center; margin-bottom: 20px;">
         <img src="https://images.squarespace-cdn.com/content/v1/5f1ea20392e2991054b38d3f/1596796347854-Y9E9R9R6X9R9R9R9R9R9/logo.png" 
-             alt="OBK Logo" style="width: 120px; height: auto;" 
-             onerror="this.style.display='none';">
+             style="width: 120px; height: auto;" onerror="this.style.display='none';">
     </div>
-    <button class="nav-btn" id="btn-bord" onclick="showModule('bord')">🎱 BORDLEIE</button>
+    <button class="nav-btn active" id="btn-bord" onclick="showModule('bord')">🎱 BORDLEIE</button>
     <button class="nav-btn" id="btn-medlem" onclick="showModule('medlem')">👤 MEDLEMMER</button>
     <button class="nav-btn" id="btn-skap" onclick="showModule('skap')">🔐 SKAPLEIE</button>
 </nav>
 
 <main>
-    <!-- MODUL: BORDLEIE (Allerede ferdig) -->
+    <div id="error-log"></div>
+
+    <!-- MODUL: BORDLEIE -->
     <div id="mod-bord" class="module active">
-        <h1 id="headline">Bordkontroll</h1>
-        <div id="bord-grid" class="card-grid">Laster bord...</div>
+        <h1 id="status-text">Laster bordkontroll...</h1>
+        <div id="bord-grid" class="card-grid"></div>
     </div>
 
-    <!-- MODUL: MEDLEMMER (STEG 4 PUNKT 1) -->
+    <!-- MODUL: MEDLEMSREGISTER -->
     <div id="mod-medlem" class="module">
         <h1>Medlemsregister & Periodekort</h1>
-        
-        <div class="medlem-layout">
-            
-            <!-- Venstre side: Søk og Skjema -->
-            <div class="medlem-venstre">
-                <div class="card" style="border-top-color: var(--biljard-blaa)">
-                    <label>Søk på mobil eller etternavn</label>
-                    <div class="search-box">
-                        <input type="text" id="member-search-input" placeholder="Skriv her..." onkeypress="if(event.key==='Enter') searchMember()">
-                        <button class="btn" style="background: var(--marine)" onclick="searchMember()">SØK</button>
-                    </div>
-                    <div id="search-results-area"></div>
-                </div>
-
-                <!-- Skjema for Periodekort (Skjult til medlem er valgt) -->
-                <div id="pass-form-area" class="card" style="border-top-color: var(--gull); display: none;">
-                    <h3 id="form-title">Periodekort for Navn</h3>
-                    <label>Startdato</label>
-                    <input type="date" id="pass-start">
-                    <label>Sluttdato</label>
-                    <input type="date" id="pass-end">
-                    <button class="btn btn-full" style="background: var(--biljard-gronn)" onclick="savePass()">AKTIVER / FORNY KORT</button>
-                </div>
-
-                <!-- Skjema for Nytt Medlem (Skjult til man trykker "Ny") -->
-                <div id="new-member-area" class="card" style="border-top-color: var(--marine); display: none;">
-                    <h3>Registrer Nytt Medlem</h3>
-                    <input type="text" id="new-fn" placeholder="Fornavn">
-                    <input type="text" id="new-en" placeholder="Etternavn">
-                    <input type="email" id="new-email" placeholder="E-post">
-                    <input type="tel" id="new-phone" placeholder="Mobilnummer">
-                    <button class="btn btn-full" style="background: var(--marine)" onclick="createNewMember()">LAGRE MEDLEM</button>
-                </div>
+        <div class="medlem-container">
+            <div class="medlem-box" style="flex: 1;">
+                <h3>Søk Medlem</h3>
+                <input type="text" id="member-search" placeholder="Mobil eller etternavn..." class="name-in" style="text-align: left; padding: 10px;">
+                <button class="btn" style="background: var(--marine)" onclick="alert('Søkefunksjon kommer i neste steg')">SØK</button>
             </div>
-
-            <!-- Høyre side: Aktive Periodekort -->
-            <div class="medlem-hoyre">
-                <div class="card" style="border-top-color: var(--biljard-gronn)">
-                    <h3>Aktive Periodekort</h3>
-                    <div style="overflow-x: auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Navn</th>
-                                    <th>Mobil</th>
-                                    <th>Utløper</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="active-passes-table">
-                                <!-- Her fylles listen i neste punkt -->
-                                <tr><td colspan="4">Laster aktive kort...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="medlem-box" style="flex: 2;">
+                <h3>Aktive Periodekort</h3>
+                <p style="color: #666;">Listen vil vises her.</p>
             </div>
-
         </div>
     </div>
 
     <!-- MODUL: SKAP -->
-    <div id="mod-skap" class="module"><h1>Skapleie</h1><p>Kommer i Steg 5...</p></div>
+    <div id="mod-skap" class="module">
+        <h1>Skapleie</h1>
+        <p>Under utvikling...</p>
+    </div>
 </main>
 
-<!-- STOPP-MODAL (For bordleie) -->
+<!-- STOPP-MODAL -->
 <div id="modal-overlay">
     <div class="modal-content">
-        <h2 id="modal-title">BORD FERDIG</h2>
-        <div style="color: var(--advarsel); display: flex; align-items: baseline; justify-content: center; gap: 5px;">
+        <h2 style="margin:0;">BORD FERDIG</h2>
+        <div style="display: flex; align-items: baseline; justify-content: center; gap: 5px; color: var(--advarsel);">
             <span class="big-minutes" id="modal-minutes">0</span>
             <span style="font-size: 30px; font-weight: bold;">min</span>
         </div>
-        <div id="modal-player" style="font-weight: bold; margin-bottom: 20px;">👤 Navn</div>
-        <button class="btn btn-full" style="background:var(--biljard-gronn)" onclick="confirmStop()">BEKREFT OG FRIGJØR</button>
-        <button class="btn btn-full" style="background:#95a5a6" onclick="closeModal()">AVBRYT</button>
+        <div id="modal-player" style="font-weight: bold; margin-bottom: 20px;">👤 Spiller</div>
+        <button class="btn" style="background:var(--biljard-gronn); padding: 15px;" onclick="confirmStop()">BEKREFT OG LAGRE</button>
+        <button class="btn" style="background:#95a5a6" onclick="closeModal()">AVBRYT</button>
     </div>
 </div>
 
 <script>
     const SB_URL = "https://xsakmdmhpuqjebcqrony.supabase.co"; 
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzYWttZG1ocHVxamViY3Fyb255Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzAzNzYsImV4cCI6MjA5MzkwNjM3Nn0.E6s11F_894jwxfaQoE4rfSX8oPtgi1DSeYOsyON1DB4";
-    const supabase = window.supabase.createClient(SB_URL, SB_KEY);
 
+    let sbClient;
     let tableData = [];
     let currentStoppingId = null;
 
-    // --- GENERELLE FUNKSJONER ---
-    function showModule(id) {
-        document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('mod-' + id).classList.add('active');
-        document.getElementById('btn-' + id).classList.add('active');
-        if(id === 'bord') loadData();
-        if(id === 'medlem') loadActivePasses();
+    // --- 1. OPPSTART (Den stabile metoden) ---
+    async function startSystem() {
+        try {
+            if (!window.supabase) {
+                showError("Supabase-biblioteket ble ikke lastet.");
+                return;
+            }
+            sbClient = window.supabase.createClient(SB_URL, SB_KEY);
+            await loadTables();
+            
+            // Start rytmen
+            setInterval(loadTables, 10000);
+            setInterval(renderGrid, 30000);
+
+        } catch (err) {
+            showError("Feil ved oppstart: " + err.message);
+        }
     }
 
-    // --- BORDLEIE LOGIKK (Allerede testet) ---
-    async function loadData() {
-        const { data } = await supabase.from('bord_status').select('*').order('bord_nummer');
-        if (data) { tableData = data; renderGrid(); }
+    // --- 2. HENTE DATA ---
+    async function loadTables() {
+        const { data, error } = await sbClient.from('bord_status').select('*').order('bord_nummer');
+        if (error) {
+            showError("Databasefeil: " + error.message);
+        } else {
+            tableData = data;
+            document.getElementById('status-text').innerText = "Bordkontroll";
+            renderGrid();
+        }
     }
 
+    // --- 3. TEGNE BORDENE ---
     function renderGrid() {
         const grid = document.getElementById('bord-grid');
         if (!grid) return;
+        
         grid.innerHTML = tableData.map(b => {
             const isActive = b.status === 'Opptatt';
-            const diffMin = b.start_tid ? Math.floor((new Date() - new Date(b.start_tid)) / 60000) : 0;
+            const start = b.start_tid ? new Date(b.start_tid) : null;
+            const diff = start ? Math.floor((new Date() - start) / 60000) : 0;
             const btnColor = b.bord_nummer <= 10 ? 'var(--biljard-blaa)' : (b.bord_nummer <= 16 ? '#6D8196' : '#CAC254');
+
             return `
                 <div class="card ${isActive ? 'active' : ''}">
-                    <h3 style="margin:0; font-size:16px;">Bord ${b.bord_nummer}</h3>
-                    <div style="font-size:22px; font-weight:900; margin:10px 0; color:var(--marine)">${isActive ? diffMin + ' min' : 'LEDIG'}</div>
-                    ${isActive ? `<div style="font-size:11px; color:var(--biljard-gronn); font-weight:bold; height:18px;">👤 ${b.kunde_navn || 'Aktiv'}</div>` : 
-                    `<input type="text" id="name-${b.bord_nummer}" placeholder="Spiller valgfritt" style="width:100%; padding:5px; font-size:12px; border:1px solid #ddd; border-radius:4px; margin-bottom:5px;">`}
-                    <button class="btn btn-full" style="background:${isActive ? 'var(--advarsel)' : btnColor}" 
+                    <h3 style="margin:0; font-size:14px;">Bord ${b.bord_nummer}</h3>
+                    <div class="timer-text">${isActive ? diff + ' min' : 'LEDIG'}</div>
+                    ${isActive ? 
+                        `<div style="font-size:11px; color:var(--biljard-gronn); font-weight:bold; height:18px; overflow:hidden;">👤 ${b.kunde_navn || 'Aktiv'}</div>` : 
+                        `<input type="text" id="name-${b.bord_nummer}" class="name-in" placeholder="Spiller valgfritt">`
+                    }
+                    <button class="btn" style="background:${isActive ? 'var(--advarsel)' : btnColor}" 
                         onclick="${isActive ? `openModal(${b.bord_nummer}, '${b.start_tid}', '${b.kunde_navn}')` : `startTable(${b.bord_nummer})`}">
                         ${isActive ? 'STOPP' : 'START'}
                     </button>
@@ -209,10 +174,11 @@
         }).join('');
     }
 
+    // --- 4. HANDLINGER ---
     async function startTable(id) {
         const name = document.getElementById(`name-${id}`).value;
-        await supabase.from('bord_status').update({ status: 'Opptatt', start_tid: new Date().toISOString(), kunde_navn: name }).eq('bord_nummer', id);
-        loadData();
+        await sbClient.from('bord_status').update({ status: 'Opptatt', start_tid: new Date().toISOString(), kunde_navn: name }).eq('bord_nummer', id);
+        loadTables();
     }
 
     function openModal(id, start, name) {
@@ -224,20 +190,28 @@
     }
 
     async function confirmStop() {
-        await supabase.from('bord_status').update({ status: 'Ledig', start_tid: null, kunde_navn: null }).eq('bord_nummer', currentStoppingId);
-        document.getElementById('modal-overlay').style.display = 'none';
-        loadData();
+        await sbClient.from('bord_status').update({ status: 'Ledig', start_tid: null, kunde_navn: null }).eq('bord_nummer', currentStoppingId);
+        closeModal();
+        loadTables();
     }
 
     function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
 
-    // --- MEDLEMS-LOGIKK (PLAN LAGT - KODE KOMMER I NESTE PUNKT) ---
-    async function searchMember() { console.log("Søkestart..."); }
-    async function loadActivePasses() { console.log("Laster aktive kort..."); }
+    // --- 5. NAVIGASJON ---
+    function showModule(id) {
+        document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('mod-' + id).classList.add('active');
+        document.getElementById('btn-' + id).classList.add('active');
+    }
 
-    // Start
-    window.onload = () => { loadData(); showModule('bord'); };
-    setInterval(loadData, 10000);
+    function showError(msg) {
+        const el = document.getElementById('error-log');
+        el.innerText = msg;
+        el.style.display = 'block';
+    }
+
+    window.addEventListener('load', startSystem);
 </script>
 </body>
 </html>
