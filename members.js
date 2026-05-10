@@ -3,7 +3,6 @@
 async function runSearch() {
     const input = document.getElementById('p-search-input').value.trim();
     const resDiv = document.getElementById('p-search-results');
-    
     if (input.length < 2) return;
 
     cancelSelection(); 
@@ -14,22 +13,14 @@ async function runSearch() {
         .or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%`)
         .limit(5);
 
-    if (error) {
-        resDiv.innerHTML = "<span style='color:red;'>Søkefeil: " + error.message + "</span>";
-        return;
-    }
+    if (error) { resDiv.innerHTML = "Feil: " + error.message; return; }
 
     if (data.length === 0) {
         resDiv.innerHTML = `
             <div class="not-found-box">
-                <p style="color: var(--advarsel); font-weight: bold; margin: 0 0 10px 0;">
-                    ⚠️ Personen finnes ikke i registeret og må registreres.
-                </p>
-                <button class="btn" style="background:var(--marine); width:100%;" onclick="showNewMemberBox('${input}')">
-                    + REGISTRER NYTT MEDLEM
-                </button>
-            </div>
-        `;
+                <p style="color: var(--advarsel); font-weight: bold; margin: 0 0 10px 0;">⚠️ Personen finnes ikke.</p>
+                <button class="btn" style="background:var(--marine); width:100%;" onclick="showNewMemberBox('${input}')">+ REGISTRER NYTT MEDLEM</button>
+            </div>`;
         return;
     }
 
@@ -49,21 +40,42 @@ async function selectMemberForPass(id, name, epost, tlf) {
     document.getElementById('p-edit-email').value = epost || "";
     document.getElementById('p-edit-phone').value = tlf || "";
 
+    // Sjekk nåværende status på periodekort
     const { data } = await sb.from('periodekort')
         .select('slutt_dato')
         .eq('medlem_id', id)
         .order('slutt_dato', { ascending: false })
         .limit(1);
 
-    const st = document.getElementById('p-current-status');
+    const warnBox = document.getElementById('p-existing-warning');
+    const dateLabel = document.getElementById('p-date-label');
+    
+    // Nullstill datovelgere for sikkerhet
+    document.getElementById('p-start-date').value = "";
+    document.getElementById('p-end-date').value = "";
+
     if (data && data.length > 0) {
-        const ut = new Date(data[0].slutt_dato);
+        const utlop = new Date(data[0].slutt_dato);
         const iDag = new Date(); iDag.setHours(0,0,0,0);
-        st.innerText = "Nåværende kort utløper: " + ut.toLocaleDateString('no-NO');
-        st.style.color = ut >= iDag ? "green" : "red";
+        
+        if (utlop >= iDag) {
+            // MEDLEM HAR AKTIVT KORT - VIS TYDELIG GUL ADVARSEL
+            const datoStr = utlop.toLocaleDateString('no-NO');
+            warnBox.innerHTML = `⚠️ Dette medlemmet har allerede et aktivt kort som utløper <b>${datoStr}</b>.<br>Vil du forlenge dette?`;
+            warnBox.style.display = "block";
+            dateLabel.innerText = "Forlengelse (Velg nye datoer)";
+            
+            // SMART TIPS: Sett ny startdato til dagen etter forrige utløp
+            const dagenEtter = new Date(utlop);
+            dagenEtter.setDate(dagenEtter.getDate() + 1);
+            document.getElementById('p-start-date').value = dagenEtter.toISOString().split('T')[0];
+        } else {
+            warnBox.style.display = "none";
+            dateLabel.innerText = "Nytt periodekort (Kortet er utløpt)";
+        }
     } else {
-        st.innerText = "Ingen aktive kort funnet.";
-        st.style.color = "#666";
+        warnBox.style.display = "none";
+        dateLabel.innerText = "Første periodekort";
     }
 
     document.getElementById('p-form-box').style.display = 'block';
@@ -83,7 +95,7 @@ async function saveMemberPassUpdate() {
         await sb.from('medlemmer').update({ epost: em, tlf_mobil: ph }).eq('id', selectedMemberId);
         if (st && sl) {
             await sb.from('periodekort').insert({ medlem_id: selectedMemberId, start_dato: st, slutt_dato: sl });
-            alert("Lagret!");
+            alert("Informasjon og kort lagret!");
         } else {
             alert("Medlemsinfo oppdatert.");
         }
@@ -95,13 +107,11 @@ async function saveMemberPassUpdate() {
 
 function showNewMemberBox(input) {
     cancelSelection();
-    document.getElementById('p-search-results').innerHTML = "";
     document.getElementById('p-new-member-box').style.display = 'block';
     if (!isNaN(input)) document.getElementById('n-phone').value = input;
     else document.getElementById('n-en').value = input;
 }
 
-// --- OPPDATERT FUNKSJON MED DUPLIKATSJEKK ---
 async function registerBrandNewMember(isForced = false) {
     const fn = document.getElementById('n-fn').value.trim();
     const en = document.getElementById('n-en').value.trim();
@@ -110,96 +120,93 @@ async function registerBrandNewMember(isForced = false) {
     const st = document.getElementById('n-start').value;
     const sl = document.getElementById('n-end').value;
 
-    if (!fn || !en || !ep || !ph) { 
-        alert("Fornavn, Etternavn, E-post og Mobil er obligatoriske felt."); 
-        return; 
-    }
+    if (!fn || !en || !ep || !ph) { alert("Navn, E-post og Mobil er obligatorisk."); return; }
 
-    // STEG 1: Sjekk om mobilnummer finnes fra før (hvis bruker ikke allerede har tvunget lagring)
     if (!isForced) {
         showLoader(true);
-        // Vi leter i databasen etter dette mobilnummeret
-        const { data: eksisterende, error: sjekkFeil } = await sb
-            .from('medlemmer')
-            .select('fornavn, etternavn')
-            .eq('tlf_mobil', ph)
-            .limit(1); // Vi trenger bare å vite om ÉN person finnes
-
+        const { data: eksisterende } = await sb.from('medlemmer').select('fornavn, etternavn').eq('tlf_mobil', ph).limit(1);
         showLoader(false);
-
         if (eksisterende && eksisterende.length > 0) {
-            // Hvis vi fant noen: Vis advarsel og bytt knapper
             const navn = eksisterende[0].fornavn + " " + eksisterende[0].etternavn;
             const warningBox = document.getElementById('n-warning');
             warningBox.innerText = `Advarsel: ${navn} er allerede registrert med dette nummeret. Vil du virkelig opprette en duplikat?`;
             warningBox.style.display = "block";
-
-            document.getElementById('n-btn-save').style.display = "none"; // Skjul vanlig knapp
-            document.getElementById('n-btn-force').style.display = "block"; // Vis bekreft-knapp
-            return; // Stopp prosessen her
+            document.getElementById('n-btn-save').style.display = "none";
+            document.getElementById('n-btn-force').style.display = "block";
+            return;
         }
     }
 
-    // STEG 2: Lagre medlemmet (hvis ingen duplikater ELLER hvis tvunget lagring)
     showLoader(true);
     try {
-        const { data, error } = await sb.from('medlemmer')
-            .insert({ fornavn: fn, etternavn: en, epost: ep, tlf_mobil: ph })
-            .select();
-        
+        const { data, error } = await sb.from('medlemmer').insert({ fornavn: fn, etternavn: en, epost: ep, tlf_mobil: ph }).select();
         if (error) throw error;
-
         if (data && data.length > 0 && st && sl) {
             await sb.from('periodekort').insert({ medlem_id: data[0].id, start_dato: st, slutt_dato: sl });
-            alert("Medlem registrert med periodekort!");
-        } else {
-            alert("Medlem registrert uten periodekort.");
         }
-        
+        alert("Medlem lagret!");
         cancelSelection();
         loadActivePasses();
     } catch (err) { alert("Feil ved lagring: " + err.message); }
     showLoader(false);
 }
 
+// --- DEN VIKTIGSTE ENDRINGEN: KUN ÉN LINJE PER MEDLEM I LISTA ---
 async function loadActivePasses() {
     const today = new Date().toISOString().split('T')[0];
+    
+    // Vi henter ALLE rader som ikke er utløpt ennå
     const { data, error } = await sb.from('periodekort')
-        .select('slutt_dato, medlemmer(fornavn, etternavn, tlf_mobil)')
-        .gte('slutt_dato', today)
-        .order('slutt_dato', { ascending: true });
+        .select('slutt_dato, medlem_id, medlemmer(fornavn, etternavn, tlf_mobil)')
+        .gte('slutt_dato', today);
 
+    if (error) return;
     const tbody = document.getElementById('p-active-table-body');
     if (!tbody) return;
-    
-    if (error || !data || data.length === 0) {
+
+    if (!data || data.length === 0) {
         tbody.innerHTML = "<tr><td colspan='4'>Ingen aktive kort funnet.</td></tr>";
         return;
     }
 
-    tbody.innerHTML = data.map(p => {
+    // --- VASKE-LOGIKK (Keep only the latest pass per member) ---
+    const vasketListe = {};
+    
+    data.forEach(p => {
+        const id = p.medlem_id;
+        // Hvis vi ikke har sett dette medlemmet før, eller hvis denne datoen er senere enn den vi har lagret:
+        if (!vasketListe[id] || new Date(p.slutt_dato) > new Date(vasketListe[id].slutt_dato)) {
+            vasketListe[id] = p;
+        }
+    });
+
+    // Gjør om "vaske-maskinen" til en vanlig liste igjen og sorter den
+    const sortertListe = Object.values(vasketListe).sort((a, b) => new Date(a.slutt_dato) - new Date(b.slutt_dato));
+
+    tbody.innerHTML = sortertListe.map(p => {
         const slutt = new Date(p.slutt_dato);
         const dager = Math.ceil((slutt - new Date().setHours(0,0,0,0)) / 86400000);
         let kl = "dager-ok";
         if (dager <= 0) kl = "dager-utlopt";
         else if (dager <= 7) kl = "dager-advarsel";
-        return `<tr><td><strong>${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</strong></td><td>${p.medlemmer.tlf_mobil}</td><td>${slutt.toLocaleDateString('no-NO')}</td><td class="${kl}">${dager <= 0 ? 'Siste dag!' : dager + " dager"}</td></tr>`;
+        return `<tr>
+            <td><strong>${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</strong></td>
+            <td>${p.medlemmer.tlf_mobil}</td>
+            <td>${slutt.toLocaleDateString('no-NO')}</td>
+            <td class="${kl}">${dager <= 0 ? 'Siste dag!' : dager + " dager"}</td>
+        </tr>`;
     }).join('');
 }
 
 function cancelSelection() {
     document.getElementById('p-form-box').style.display = 'none';
     document.getElementById('p-new-member-box').style.display = 'none';
+    document.getElementById('p-existing-warning').style.display = "none";
     document.getElementById('p-search-results').innerHTML = ""; 
-    
-    // NYTT: Skjul advarselen og nullstill knappene
     document.getElementById('n-warning').style.display = "none";
     document.getElementById('n-btn-save').style.display = "block";
     document.getElementById('n-btn-force').style.display = "none";
-
     selectedMemberId = null;
-    const inputs = document.querySelectorAll('#p-new-member-box input');
-    inputs.forEach(i => i.value = "");
 }
 
 setInterval(loadActivePasses, 30000);
