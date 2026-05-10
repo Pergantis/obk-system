@@ -497,3 +497,64 @@ label {
     .print-table th { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
     .print-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--marine); padding-bottom: 10px; }
 }
+/* --- HJELPESIDE / ACCORDION STIL --- */
+.help-accordion {
+    margin-top: 20px;
+}
+
+.help-accordion details {
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: all 0.3s;
+}
+
+.help-accordion summary {
+    padding: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--marine);
+}
+
+.help-accordion summary::after {
+    content: '▶';
+    font-size: 12px;
+    transition: transform 0.3s;
+}
+
+.help-accordion details[open] {
+    background: white;
+    border-color: var(--gull);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.help-accordion details[open] summary {
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+}
+
+.help-accordion details[open] summary::after {
+    transform: rotate(90deg);
+}
+
+.help-content {
+    padding: 0 20px 20px 20px;
+    line-height: 1.6;
+}
+
+.help-content ul {
+    padding-left: 20px;
+}
+
+.help-content li {
+    margin-bottom: 10px;
+}
+
+.help-content strong {
+    color: var(--marine);
+}
