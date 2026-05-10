@@ -6,12 +6,9 @@ async function runSearch() {
     
     if (input.length < 2) return;
 
-    // Lukk alle åpne skjemaer før vi viser nye resultater
     cancelSelection(); 
-    
     resDiv.innerHTML = "<p style='color: #666; font-size: 13px;'>Søker...</p>";
     
-    // Vi henter data fra databasen
     const { data, error } = await sb.from('medlemmer')
         .select('*')
         .or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%`)
@@ -22,7 +19,6 @@ async function runSearch() {
         return;
     }
 
-    // Hvis ingen blir funnet: Vis rød boks med beskjed og registrerings-knapp
     if (data.length === 0) {
         resDiv.innerHTML = `
             <div class="not-found-box">
@@ -37,7 +33,6 @@ async function runSearch() {
         return;
     }
 
-    // Hvis treff: Vis de pene boksene (search-item)
     resDiv.innerHTML = data.map(m => `
         <div class="search-item" onclick="selectMemberForPass('${m.id}', '${m.fornavn} ${m.etternavn}', '${m.epost}', '${m.tlf_mobil}')">
             <strong>${m.fornavn} ${m.etternavn}</strong>
@@ -47,8 +42,6 @@ async function runSearch() {
 
 async function selectMemberForPass(id, name, epost, tlf) {
     selectedMemberId = id;
-    
-    // Skjul søkeresultater og Nytt Medlem-boksen
     document.getElementById('p-search-results').innerHTML = "";
     document.getElementById('p-new-member-box').style.display = 'none';
     
@@ -56,7 +49,6 @@ async function selectMemberForPass(id, name, epost, tlf) {
     document.getElementById('p-edit-email').value = epost || "";
     document.getElementById('p-edit-phone').value = tlf || "";
 
-    // Sjekk nåværende status på periodekort
     const { data } = await sb.from('periodekort')
         .select('slutt_dato')
         .eq('medlem_id', id)
@@ -66,25 +58,19 @@ async function selectMemberForPass(id, name, epost, tlf) {
     const st = document.getElementById('p-current-status');
     if (data && data.length > 0) {
         const ut = new Date(data[0].slutt_dato);
-        const iDag = new Date();
-        iDag.setHours(0,0,0,0);
+        const iDag = new Date(); iDag.setHours(0,0,0,0);
         st.innerText = "Nåværende kort utløper: " + ut.toLocaleDateString('no-NO');
         st.style.color = ut >= iDag ? "green" : "red";
     } else {
-        st.innerText = "Ingen aktive kort funnet på dette medlemmet.";
+        st.innerText = "Ingen aktive kort funnet.";
         st.style.color = "#666";
     }
 
-    // Vis selve skjemaet for oppdatering
     document.getElementById('p-form-box').style.display = 'block';
 }
 
 async function saveMemberPassUpdate() {
-    if (!selectedMemberId) {
-        alert("Feil: Vennligst søk og velg person på nytt.");
-        return;
-    }
-    
+    if (!selectedMemberId) return;
     const em = document.getElementById('p-edit-email').value.trim();
     const ph = document.getElementById('p-edit-phone').value.trim();
     const st = document.getElementById('p-start-date').value;
@@ -94,37 +80,25 @@ async function saveMemberPassUpdate() {
 
     showLoader(true);
     try {
-        // 1. Oppdater medlemsinformasjonen (E-post og Mobil)
         await sb.from('medlemmer').update({ epost: em, tlf_mobil: ph }).eq('id', selectedMemberId);
-        
-        // 2. Lagre nytt periodekort hvis datoene er fylt ut
         if (st && sl) {
             await sb.from('periodekort').insert({ medlem_id: selectedMemberId, start_dato: st, slutt_dato: sl });
-            alert("Informasjon og nytt periodekort er lagret!");
+            alert("Lagret!");
         } else {
-            alert("Medlemsinfo ble oppdatert (uten nytt periodekort).");
+            alert("Medlemsinfo oppdatert.");
         }
-        
         cancelSelection();
         loadActivePasses();
-    } catch (err) {
-        alert("Databasefeil: " + err.message);
-    }
+    } catch (err) { alert("Databasefeil: " + err.message); }
     showLoader(false);
 }
 
 function showNewMemberBox(input) {
-    cancelSelection(); // Lukker alt annet først
-    document.getElementById('p-search-results').innerHTML = ""; // Fjerner "Person finnes ikke"-meldingen
-    
+    cancelSelection();
+    document.getElementById('p-search-results').innerHTML = "";
     document.getElementById('p-new-member-box').style.display = 'block';
-    
-    // Fyller ut mobil hvis søket var et tall, eller etternavn hvis det var tekst
-    if (!isNaN(input)) {
-        document.getElementById('n-phone').value = input;
-    } else {
-        document.getElementById('n-en').value = input;
-    }
+    if (!isNaN(input)) document.getElementById('n-phone').value = input;
+    else document.getElementById('n-en').value = input;
 }
 
 async function registerBrandNewMember() {
@@ -132,7 +106,10 @@ async function registerBrandNewMember() {
     const en = document.getElementById('n-en').value.trim();
     const ep = document.getElementById('n-email').value.trim();
     const ph = document.getElementById('n-phone').value.trim();
+    const st = document.getElementById('n-start').value;
+    const sl = document.getElementById('n-end').value;
 
+    // KRAV: Fornavn, Etternavn, E-post og Mobil er obligatorisk
     if (!fn || !en || !ep || !ph) { 
         alert("Fornavn, Etternavn, E-post og Mobil er obligatoriske felt."); 
         return; 
@@ -145,13 +122,22 @@ async function registerBrandNewMember() {
             .select();
         
         if (error) throw error;
+
+        // Hvis datoer er fylt ut, lagre periodekortet i tillegg
+        if (data && data.length > 0 && st && sl) {
+            await sb.from('periodekort').insert({
+                medlem_id: data[0].id,
+                start_dato: st,
+                slutt_dato: sl
+            });
+            alert("Medlem registrert med periodekort!");
+        } else {
+            alert("Medlem registrert uten periodekort.");
+        }
         
-        alert("Nytt medlem registrert!");
         cancelSelection();
         loadActivePasses();
-    } catch (err) {
-        alert("Feil ved lagring: " + err.message);
-    }
+    } catch (err) { alert("Feil ved lagring: " + err.message); }
     showLoader(false);
 }
 
@@ -172,35 +158,19 @@ async function loadActivePasses() {
 
     tbody.innerHTML = data.map(p => {
         const slutt = new Date(p.slutt_dato);
-        const naa = new Date();
-        naa.setHours(0,0,0,0);
-        const dager = Math.ceil((slutt - naa) / 86400000);
-        
+        const dager = Math.ceil((slutt - new Date().setHours(0,0,0,0)) / 86400000);
         let kl = "dager-ok";
         if (dager <= 0) kl = "dager-utlopt";
         else if (dager <= 7) kl = "dager-advarsel";
-        
-        const dagerTekst = dager <= 0 ? "Siste dag!" : dager + " dager";
-
-        return `<tr>
-            <td><strong>${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</strong></td>
-            <td>${p.medlemmer.tlf_mobil}</td>
-            <td>${slutt.toLocaleDateString('no-NO')}</td>
-            <td class="${kl}">${dagerTekst}</td>
-        </tr>`;
+        return `<tr><td><strong>${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</strong></td><td>${p.medlemmer.tlf_mobil}</td><td>${slutt.toLocaleDateString('no-NO')}</td><td class="${kl}">${dager <= 0 ? 'Siste dag!' : dager + " dager"}</td></tr>`;
     }).join('');
 }
 
 function cancelSelection() {
     document.getElementById('p-form-box').style.display = 'none';
     document.getElementById('p-new-member-box').style.display = 'none';
-    document.getElementById('p-search-results').innerHTML = ""; // Tømmer søkeresultater
     selectedMemberId = null;
-    
-    // Tømmer feltene i Nytt Medlem-skjemaet
-    const inputs = document.querySelectorAll('#p-new-member-box input');
-    inputs.forEach(i => i.value = "");
+    document.querySelectorAll('#p-new-member-box input').forEach(i => i.value = "");
 }
 
-// Oppdaterer listen hvert 30. sekund
 setInterval(loadActivePasses, 30000);
