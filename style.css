@@ -654,3 +654,19 @@ label {
 .vakt-input {
     color: #000;
 }
+/* Gjør månedsvelgeren i vaktplanen større og fet */
+#vakt-month-picker {
+    font-size: 18px !important; /* Gjør teksten større */
+    font-weight: bold !important; /* Gjør teksten fet */
+    color: var(--marine); /* Bruker klubbens mørkeblå farge */
+    padding: 10px 15px !important; /* Gir litt mer luft inni feltet */
+    border: 2px solid var(--gull) !important; /* Litt tydeligere gullramme */
+    cursor: pointer;
+}
+
+/* Valgfritt: Gjør teksten "Måned:" ved siden av også litt tydeligere */
+.vakt-controls label {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--marine);
+}
