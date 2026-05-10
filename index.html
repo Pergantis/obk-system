@@ -141,6 +141,8 @@
             <div class="column-form">
                 <div class="admin-card card-marine">
                     <h3>Oversikt (1-100)</h3>
+                    <!-- KNAPP FOR UTSKRIFT -->
+                    <button class="btn" style="background: var(--marine); width: auto; padding: 5px 15px; margin-bottom: 10px; font-size: 11px;" onclick="generateExpiryPDF()">🖨️ LAST NED UTLØPSLISTE (PDF)</button>
                     <div class="locker-grid" id="locker-grid-visual">
                         <!-- JS genererer 100 bokser her -->
                     </div>
@@ -180,6 +182,7 @@
                         </div>
                         <label>Notat:</label>
                         <p id="locker-info-note" style="font-style:italic; font-size:14px; color:var(--tekst-lys); background:#f9f9f9; padding:10px; border-radius:5px;"></p>
+                        <button class="btn" style="background:var(--biljard-blaa); margin-bottom: 8px;" onclick="showRenewalForm()">➕ FORLENG LEIE</button>
                         <button class="btn" style="background:var(--advarsel)" onclick="releaseLocker()">FRIGJØR SKAP</button>
                     </div>
                 </div>
