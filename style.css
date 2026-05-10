@@ -302,9 +302,35 @@ td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
     font-size: 18px;
 }
 /* Spesifikke bakgrunnsfarger for ledige bord per sone */
-.bg-sone-blaa { background-color: #e3f2fd !important; border-color: #bbdefb; } /* Lys blå */
-.bg-sone-graa { background-color: #f5f5f5 !important; border-color: #e0e0e0; } /* Lys grå */
-.bg-sone-beige { background-color: #efebdc !important; border-color: #d7ccc8; } /* Mørk beige */
+/* Spesifikke bakgrunnsfarger for ledige bord per sone */
+.bg-sone-blaa { 
+    background-color: #1E90FF !important; 
+    color: white; 
+    border-color: #187bcd; 
+} 
+
+.bg-sone-graa { 
+    background-color: #708090 !important; 
+    color: white; 
+    border-color: #5f6d7a; 
+} 
+
+.bg-sone-beige { 
+    background-color: #F0E68C !important; 
+    color: #333; 
+    border-color: #e6dc7e; 
+}
+
+/* Sørger for at tekst og overskrifter blir hvite på blå og grå bakgrunn */
+.bg-sone-blaa h3, .bg-sone-graa h3, 
+.bg-sone-blaa .timer-text, .bg-sone-graa .timer-text {
+    color: white !important;
+}
+
+/* Gjør input-feltet litt gjennomsiktig hvitt så det matcher bakgrunnen */
+.bg-sone-blaa .input-field, .bg-sone-graa .input-field {
+    background: rgba(255, 255, 255, 0.9);
+}
 
 /* Sikre at aktive bord alltid er lysegrønne og overstyrer sone-fargen */
 .table-card.active { 
