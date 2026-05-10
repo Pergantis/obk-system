@@ -265,46 +265,7 @@ label {
     color: var(--advarsel);
 }
 
-/* --- TABELLER --- */
-/* --- NY KOMPAKT TABELL-STIL --- */
-.column-list table {
-    width: 100%;
-    border-collapse: collapse;
-    line-height: 1; /* Fjerner ekstra luft mellom linjer */
-}
 
-.column-list table th {
-    text-align: left;
-    padding: 8px 5px !important;
-    font-size: 11px;
-    text-transform: uppercase;
-    border-bottom: 2px solid var(--gull);
-    color: var(--tekst-lys);
-}
-
-.column-list table td {
-    padding: 4px 5px !important; /* Ekstremt tett padding */
-    border-bottom: 1px solid #eee;
-    font-size: 13px;
-    vertical-align: middle;
-}
-
-/* Fet skrift på navn */
-.member-name-cell {
-    font-weight: bold !important;
-    color: var(--marine);
-}
-
-/* Tvungen fargelegging av status */
-.status-utloper-snart { 
-    color: #B22222 !important; /* Rød */
-    font-weight: bold !important;
-}
-
-.status-aktiv-ok { 
-    color: #006400 !important; /* Grønn */
-    font-weight: bold !important;
-}
 
 /* --- SKAP-UTLEIE (GRID) --- */
 .locker-grid { 
@@ -430,4 +391,35 @@ label {
 .table-card {
     border: 1px solid #ddd;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+/* --- FEILSIKKER TABELL-STIL --- */
+
+/* Fjerner padding i selve boksen for å få mer plass */
+.column-list .admin-card {
+    padding: 10px !important;
+}
+
+/* Gjør tabellen ekstremt kompakt */
+#p-active-table-body td {
+    padding: 2px 5px !important; /* Minimal avstand */
+    line-height: 1.1 !important;
+    font-size: 13px !important;
+    border-bottom: 1px solid #eee !important;
+    height: 24px !important; /* Tvinger lav høyde */
+}
+
+/* Definer fargene med ekstremt enkle navn */
+.tekst-rod { 
+    color: #B22222 !important; 
+    font-weight: bold !important; 
+}
+
+.tekst-gronn { 
+    color: #006400 !important; 
+    font-weight: bold !important; 
+}
+
+.navn-fet { 
+    font-weight: bold !important; 
+    color: #1a2f3c !important; 
 }
