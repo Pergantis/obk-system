@@ -3,28 +3,22 @@ let lockerData = [];
 let selectedLockerNum = null;
 let lockerTargetMemberId = null;
 
-// Denne funksjonen tegner skapene med en gang programmet starter
+// Initialiserer rutenettet (1-100) med en gang siden lastes
 function initLockerGrid() {
     const grid = document.getElementById('locker-grid-visual');
     if (!grid) return;
-
     let html = "";
     for (let i = 1; i <= 100; i++) {
-        // Vi lager alle skapene grønne (ledige) som start-utgangspunkt
         html += `<div class="locker-box" id="locker-box-${i}" onclick="selectLocker(${i})">${i}</div>`;
     }
     grid.innerHTML = html;
-    console.log("Skap-grid initialisert");
 }
 
-// Henter data fra databasen og oppdaterer fargene
+// Henter all skapdata fra Supabase inkludert medlemsinfo
 async function loadLockers() {
     // Hvis grid-en ikke er tegnet ennå, gjør det nå
-    if (!document.getElementById('locker-box-1')) {
-        initLockerGrid();
-    }
+    if (!document.getElementById('locker-box-1')) initLockerGrid();
 
-    console.log("Henter skapdata fra Supabase...");
     const { data, error } = await sb
         .from('skapleie')
         .select('*, medlemmer(fornavn, etternavn, tlf_mobil)')
@@ -36,41 +30,53 @@ async function loadLockers() {
     }
 
     lockerData = data;
-    updateLockerColors();
+    updateLockerVisuals();
 }
 
-// Oppdaterer fargene på boksene basert på status i databasen
-function updateLockerColors() {
+// Oppdaterer fargene på alle 100 skap-boksene
+function updateLockerVisuals() {
+    const iDag = new Date();
+    iDag.setHours(0,0,0,0);
+
+    // Sett alle til ledig (grønn) først
+    for (let i = 1; i <= 100; i++) {
+        const box = document.getElementById(`locker-box-${i}`);
+        if (box) {
+            box.className = "locker-box"; // Reset klasser
+            if (selectedLockerNum === i) box.classList.add('selected');
+        }
+    }
+
+    // Oppdater basert på data fra databasen
     lockerData.forEach(skap => {
         const box = document.getElementById(`locker-box-${skap.skap_nummer}`);
-        if (box) {
-            if (skap.status === 'Opptatt') {
-                box.classList.add('occupied');
-            } else {
-                box.classList.remove('occupied');
-            }
+        if (!box) return;
 
-            // Marker hvis dette skapet er det som er valgt akkurat nå
-            if (selectedLockerNum === skap.skap_nummer) {
-                box.classList.add('selected');
+        if (skap.status === 'Opptatt') {
+            const utlop = new Date(skap.til_dato);
+            const dagerIgjen = Math.ceil((utlop - iDag) / (86400000));
+
+            if (dagerIgjen < 14) {
+                box.classList.add('warning'); // GUL (under 14 dager)
             } else {
-                box.classList.remove('selected');
+                box.classList.add('occupied'); // RØD
             }
         }
     });
 }
 
+// Håndterer klikk på et skap
 function selectLocker(num) {
     selectedLockerNum = num;
     const skap = lockerData.find(s => s.skap_nummer === num);
     
-    // Vis panelet
+    // UI-oppdatering
     document.getElementById('locker-msg').style.display = 'none';
     const panel = document.getElementById('locker-panel');
     panel.style.display = 'block';
     document.getElementById('selected-locker-title').innerText = "Skap " + num;
     
-    // Nullstill søk og skjemaer
+    // Nullstill skjemaer
     document.getElementById('locker-rent-form').style.display = 'none';
     document.getElementById('locker-info-panel').style.display = 'none';
     document.getElementById('locker-final-fields').style.display = 'none';
@@ -78,23 +84,32 @@ function selectLocker(num) {
     document.getElementById('locker-search-input').value = '';
 
     if (!skap || skap.status === 'Ledig') {
+        // VIS SKJEMA FOR UTLEIE
         document.getElementById('locker-rent-form').style.display = 'block';
-        // Sett datoer (1 år frem)
-        const iD = new Date();
-        const nA = new Date(); nA.setFullYear(iD.getFullYear() + 1);
-        document.getElementById('locker-start').value = iD.toISOString().split('T')[0];
-        document.getElementById('locker-end').value = nA.toISOString().split('T')[0];
+        
+        // Sett standarddatoer (I dag til +365 dager)
+        const iDag = new Date();
+        const nesteAar = new Date(); 
+        nesteAar.setFullYear(iDag.getFullYear() + 1);
+        
+        document.getElementById('locker-start').value = iDag.toISOString().split('T')[0];
+        document.getElementById('locker-end').value = nesteAar.toISOString().split('T')[0];
     } else {
+        // VIS INFO OM LEIETAKER
         document.getElementById('locker-info-panel').style.display = 'block';
-        document.getElementById('locker-info-name').innerText = skap.medlemmer ? skap.medlemmer.fornavn + ' ' + skap.medlemmer.etternavn : 'Ukjent';
-        document.getElementById('locker-info-phone').innerText = 'Mobil: ' + (skap.medlemmer ? skap.medlemmer.tlf_mobil : '-');
-        document.getElementById('locker-info-dates').innerText = 'Utløper: ' + new Date(skap.til_dato).toLocaleDateString('no-NO');
-        document.getElementById('locker-info-note').innerText = skap.notater || "Ingen notat.";
+        const m = skap.medlemmer;
+        document.getElementById('locker-info-name').innerText = m ? `${m.fornavn} ${m.etternavn}` : 'Ukjent';
+        document.getElementById('locker-info-phone').innerText = m ? `📱 ${m.tlf_mobil}` : '-';
+        
+        const utlop = new Date(skap.til_dato).toLocaleDateString('no-NO');
+        document.getElementById('locker-info-dates').innerText = `Leie utløper: ${utlop}`;
+        document.getElementById('locker-info-note').innerText = skap.notater || "Ingen notater registrert.";
     }
     
-    updateLockerColors();
+    updateLockerVisuals();
 }
 
+// Søkefunksjon inne i skap-modulen (gjenbruker stilen fra periodekort)
 async function searchMemberForLocker() {
     const q = document.getElementById('locker-search-input').value.trim();
     if (q.length < 2) return;
@@ -105,18 +120,24 @@ async function searchMemberForLocker() {
         .limit(3);
         
     document.getElementById('locker-search-results').innerHTML = data.map(m => `
-        <div class="search-item" onclick="prepareLockerLease('${m.id}', '${m.fornavn} ${m.etternavn}')">
-            <strong>${m.fornavn} ${m.etternavn}</strong><br><small>📱 ${m.tlf_mobil}</small>
+        <div class="search-result-item" onclick="prepareLockerLease('${m.id}', '${m.fornavn} ${m.etternavn}')">
+            <div class="search-item-icon">👤</div>
+            <div class="search-item-info">
+                <strong>${m.fornavn} ${m.etternavn}</strong>
+                <small>📱 ${m.tlf_mobil}</small>
+            </div>
         </div>`).join('');
 }
 
+// Når man velger et medlem fra søket
 function prepareLockerLease(id, name) {
     lockerTargetMemberId = id;
-    document.getElementById('locker-target-name').innerText = "👤 " + name;
+    document.getElementById('locker-target-name').innerText = "Valgt leietaker: " + name;
     document.getElementById('locker-final-fields').style.display = 'block';
     document.getElementById('locker-search-results').innerHTML = '';
 }
 
+// Lagrer utleie til Supabase
 async function saveLockerLease() {
     showLoader(true);
     const { error } = await sb.from('skapleie').update({
@@ -128,19 +149,25 @@ async function saveLockerLease() {
     }).eq('skap_nummer', selectedLockerNum);
 
     if (error) {
-        alert("Lagringsfeil: " + error.message);
+        alert("Feil ved lagring: " + error.message);
     } else {
         await loadLockers();
-        selectLocker(selectedLockerNum);
+        selectLocker(selectedLockerNum); // Oppdaterer panelet til "Info-modus"
     }
     showLoader(false);
 }
 
+// Frigjør skapet
 async function releaseLocker() {
-    if (!confirm("Tømme skapet og avslutte leien?")) return;
+    if (!confirm(`Er du sikker på at du vil frigjøre skap ${selectedLockerNum}?`)) return;
+    
     showLoader(true);
     const { error } = await sb.from('skapleie').update({
-        status: 'Ledig', medlem_id: null, fra_dato: null, til_dato: null, notater: null
+        status: 'Ledig', 
+        medlem_id: null, 
+        fra_dato: null, 
+        til_dato: null, 
+        notater: null
     }).eq('skap_nummer', selectedLockerNum);
 
     if (error) {
@@ -150,10 +177,10 @@ async function releaseLocker() {
         document.getElementById('locker-panel').style.display = 'none';
         document.getElementById('locker-msg').style.display = 'block';
         selectedLockerNum = null;
-        updateLockerColors();
+        updateLockerVisuals();
     }
     showLoader(false);
 }
 
-// Start grid med en gang filen lastes
+// Start grid med en gang
 initLockerGrid();
