@@ -301,3 +301,19 @@ td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
     margin: 0 0 10px 0;
     font-size: 18px;
 }
+/* Spesifikke bakgrunnsfarger for ledige bord per sone */
+.bg-sone-blaa { background-color: #e3f2fd !important; border-color: #bbdefb; } /* Lys blå */
+.bg-sone-graa { background-color: #f5f5f5 !important; border-color: #e0e0e0; } /* Lys grå */
+.bg-sone-beige { background-color: #efebdc !important; border-color: #d7ccc8; } /* Mørk beige */
+
+/* Sikre at aktive bord alltid er lysegrønne og overstyrer sone-fargen */
+.table-card.active { 
+    background-color: #f0fff4 !important; 
+    border: 2px solid var(--biljard-gronn) !important; 
+}
+
+/* Ramme og skygge for alle bord-fliser */
+.table-card {
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
