@@ -288,3 +288,16 @@ td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
     z-index: 10001; 
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
+/* Ekstra tydelig ramme for bord-flisene */
+.table-card {
+    border: 1px solid #ddd; /* Dette gir rammen rundt hele flisen */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 200px;
+}
+
+.table-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+}
