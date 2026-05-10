@@ -162,7 +162,6 @@ async function registerBrandNewMember(isForced = false) {
 async function loadActivePasses() {
     const today = new Date().toISOString().split('T')[0];
     
-    // Henter alle periodekort som ikke har gått ut
     const { data, error } = await sb.from('periodekort')
         .select('slutt_dato, medlem_id, medlemmer(fornavn, etternavn, tlf_mobil)')
         .gte('slutt_dato', today);
@@ -172,11 +171,11 @@ async function loadActivePasses() {
     if (!tbody) return;
 
     if (!data || data.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Ingen aktive kort funnet.</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='4'>Ingen aktive kort.</td></tr>";
         return;
     }
 
-    // Vaske-logikk: Behold kun det nyeste kortet per medlem
+    // Vaske-logikk
     const vasketListe = {};
     data.forEach(p => {
         const id = p.medlem_id;
@@ -185,26 +184,25 @@ async function loadActivePasses() {
         }
     });
 
-    // Sorter listen slik at de som går ut først ligger øverst
     const sortertListe = Object.values(vasketListe).sort((a, b) => new Date(a.slutt_dato) - new Date(b.slutt_dato));
 
     tbody.innerHTML = sortertListe.map(p => {
         const slutt = new Date(p.slutt_dato);
-        const iDag = new Date();
-        iDag.setHours(0, 0, 0, 0); // Nullstill klokkeslett for nøyaktig dags-beregning
+        const iDag = new Date(); iDag.setHours(0,0,0,0);
+        const dagerIgjen = Math.ceil((slutt - iDag) / (1000 * 60 * 60 * 24));
         
-        // Beregn antall dager igjen
-        const diffTid = slutt - iDag;
-        const dagerIgjen = Math.ceil(diffTid / (1000 * 60 * 60 * 24));
-        
-        // Din fargelogikk:
-        // Under 6 dager = Rød (#B22222)
-        // 6 dager eller mer = Grønn (#006400)
-        let statusKlasse = "status-aktiv-ok";
-        if (dagerIgjen < 6) {
-            statusKlasse = "status-utloper-snart";
-        }
+        // Sjekk grensen på 6 dager
+        const fargeKlasse = dagerIgjen < 6 ? "status-utloper-snart" : "status-aktiv-ok";
 
+        return `
+            <tr>
+                <td class="member-name-cell">${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</td>
+                <td>${p.medlemmer.tlf_mobil}</td>
+                <td>${slutt.toLocaleDateString('no-NO')}</td>
+                <td class="${fargeKlasse}">${dagerIgjen} dager</td>
+            </tr>`;
+    }).join('');
+}
         return `
             <tr>
                 <td class="member-name-cell">${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</td>
