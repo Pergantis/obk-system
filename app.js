@@ -15,7 +15,7 @@ function showModule(id) {
     if (id === 'bord') loadTables();
     if (id === 'medlem') loadActivePasses();
     if (id === 'skap') loadLockers();
-    if (id === 'vaktplan') renderVaktplanPrototype(); // Legg til denne linjen!
+    if (id === 'vaktplan') initVaktplan();
 }
 
 function showLoader(show) { document.getElementById('sync-loader').style.display = show ? 'block' : 'none'; }
@@ -97,3 +97,13 @@ showModule = function(id) {
     originalShowModule(id);
     if (id === 'vaktplan') renderVaktplanPrototype();
 };
+// Fyller datalisten for vaktplanen med alle medlemmer
+async function oppdaterSokeListe() {
+    const { data } = await sb.from('medlemmer').select('fornavn, etternavn, tlf_mobil');
+    const list = document.getElementById('medlem-liste');
+    if (list && data) {
+        list.innerHTML = data.map(m => `<option value="${m.fornavn} ${m.etternavn}">📱 ${m.tlf_mobil}</option>`).join('');
+    }
+}
+// Kjør denne når siden lastes
+window.addEventListener('load', oppdaterSokeListe);
