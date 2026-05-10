@@ -1,13 +1,28 @@
 async function runSearch() {
     const input = document.getElementById('p-search-input').value.trim();
-    if (input.length < 2) return;
-    const { data } = await sb.from('medlemmer').select('*').or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%`).limit(5);
     const resDiv = document.getElementById('p-search-results');
+    
+    if (input.length < 2) return;
+    
+    resDiv.innerHTML = "<p style='color: #666;'>Søker...</p>";
+    
+    const { data, error } = await sb.from('medlemmer')
+        .select('*')
+        .or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%`)
+        .limit(5);
+
     if (data.length === 0) {
-        resDiv.innerHTML = `<button class="btn" style="background:var(--marine)" onclick="showNewMemberBox('${input}')">+ NYTT MEDLEM</button>`;
+        resDiv.innerHTML = `<button class="btn" style="background:var(--marine); width:100%;" onclick="showNewMemberBox('${input}')">+ REGISTRER NYTT MEDLEM</button>`;
         return;
     }
-    resDiv.innerHTML = data.map(m => `<div class="search-item" onclick="selectMemberForPass('${m.id}', '${m.fornavn} ${m.etternavn}', '${m.epost}', '${m.tlf_mobil}')"><strong>${m.fornavn} ${m.etternavn}</strong><br><small>📱 ${m.tlf_mobil}</small></div>`).join('');
+
+    // Her bygger vi de pene boksene
+    resDiv.innerHTML = data.map(m => `
+        <div class="search-item" onclick="selectMemberForPass('${m.id}', '${m.fornavn} ${m.etternavn}', '${m.epost}', '${m.tlf_mobil}')">
+            <strong>${m.fornavn} ${m.etternavn}</strong>
+            <small>📱 ${m.tlf_mobil} | 📧 ${m.epost}</small>
+        </div>
+    `).join('');
 }
 
 async function selectMemberForPass(id, name, epost, tlf) {
