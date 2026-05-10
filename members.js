@@ -170,12 +170,7 @@ async function loadActivePasses() {
     const tbody = document.getElementById('p-active-table-body');
     if (!tbody) return;
 
-    if (!data || data.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='4'>Ingen aktive kort.</td></tr>";
-        return;
-    }
-
-    // Vaske-logikk
+    // Vaske-logikk (behold nyeste kort per medlem)
     const vasketListe = {};
     data.forEach(p => {
         const id = p.medlem_id;
@@ -191,24 +186,15 @@ async function loadActivePasses() {
         const iDag = new Date(); iDag.setHours(0,0,0,0);
         const dagerIgjen = Math.ceil((slutt - iDag) / (1000 * 60 * 60 * 24));
         
-        // Sjekk grensen på 6 dager
-        const fargeKlasse = dagerIgjen < 6 ? "status-utloper-snart" : "status-aktiv-ok";
+        // Bruker de nye, enkle fargeklassene
+        const fargeKlasse = dagerIgjen < 6 ? "tekst-rod" : "tekst-gronn";
 
         return `
             <tr>
-                <td class="member-name-cell">${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</td>
-                <td>${p.medlemmer.tlf_mobil}</td>
-                <td>${slutt.toLocaleDateString('no-NO')}</td>
-                <td class="${fargeKlasse}">${dagerIgjen} dager</td>
-            </tr>`;
-    }).join('');
-}
-        return `
-            <tr>
-                <td class="member-name-cell">${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</td>
+                <td class="navn-fet">${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</td>
                 <td style="color:#666;">${p.medlemmer.tlf_mobil}</td>
-                <td>${slutt.toLocaleDateString('no-NO')}</td>
-                <td class="${statusKlasse}">${dagerIgjen} dager</td>
+                <td style="color:#333;">${slutt.toLocaleDateString('no-NO')}</td>
+                <td class="${fargeKlasse}">${dagerIgjen} dager</td>
             </tr>`;
     }).join('');
 }
