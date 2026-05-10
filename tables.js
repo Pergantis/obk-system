@@ -21,19 +21,32 @@ function renderGrid() {
         const start = b.start_tid ? new Date(b.start_tid) : null;
         const diff = start ? Math.floor((new Date() - start) / 60000) : 0;
         
-        // Bestem farge basert på bordnummer
-        let borderClass = 'card-blue'; // 1-10
-        if (b.bord_nummer > 10 && b.bord_nummer <= 16) borderClass = 'card-marine'; // 11-16
-        if (b.bord_nummer > 16) borderClass = 'card-gold'; // 17-20
+        // Finn riktig sone-klasse og topp-kant farge
+        let soneClass = '';
+        let borderTopClass = '';
+
+        if (b.bord_nummer <= 10) {
+            soneClass = 'bg-sone-blaa';
+            borderTopClass = 'card-blue';
+        } else if (b.bord_nummer <= 16) {
+            soneClass = 'bg-sone-graa';
+            borderTopClass = 'card-marine';
+        } else {
+            soneClass = 'bg-sone-beige';
+            borderTopClass = 'card-gold';
+        }
+
+        // Hvis bordet er opptatt (active), bruker vi ikke sone-bakgrunnen
+        const applyClass = isActive ? 'active' : soneClass;
 
         return `
-            <div class="admin-card table-card ${borderClass} ${isActive ? 'active' : ''}">
+            <div class="admin-card table-card ${borderTopClass} ${applyClass}">
                 <h3>Bord ${b.bord_nummer}</h3>
                 <div class="timer-text">${isActive ? diff + ' min' : 'LEDIG'}</div>
                 
                 ${isActive ? 
                     `<div style="font-size:12px; color:var(--biljard-gronn); font-weight:bold; margin-bottom:10px; height:20px;">👤 ${b.kunde_navn || 'Anonym'}</div>` : 
-                    `<input type="text" id="name-${b.bord_nummer}" class="input-field" style="padding:5px; margin-bottom:5px; text-align:center;" placeholder="Spiller (valgfritt)">`
+                    `<input type="text" id="name-${b.bord_nummer}" class="input-field" style="padding:5px; margin-bottom:5px; text-align:center; background: rgba(255,255,255,0.5);" placeholder="Navn">`
                 }
                 
                 <button class="btn" 
