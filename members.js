@@ -162,7 +162,7 @@ async function registerBrandNewMember(isForced = false) {
 async function loadActivePasses() {
     const today = new Date().toISOString().split('T')[0];
     
-    // Vi henter ALLE rader som ikke er utløpt ennå
+    // Henter alle periodekort som ikke har gått ut
     const { data, error } = await sb.from('periodekort')
         .select('slutt_dato, medlem_id, medlemmer(fornavn, etternavn, tlf_mobil)')
         .gte('slutt_dato', today);
@@ -172,36 +172,46 @@ async function loadActivePasses() {
     if (!tbody) return;
 
     if (!data || data.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='4'>Ingen aktive kort funnet.</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; padding:20px;'>Ingen aktive kort funnet.</td></tr>";
         return;
     }
 
-    // --- VASKE-LOGIKK (Keep only the latest pass per member) ---
+    // Vaske-logikk: Behold kun det nyeste kortet per medlem
     const vasketListe = {};
-    
     data.forEach(p => {
         const id = p.medlem_id;
-        // Hvis vi ikke har sett dette medlemmet før, eller hvis denne datoen er senere enn den vi har lagret:
         if (!vasketListe[id] || new Date(p.slutt_dato) > new Date(vasketListe[id].slutt_dato)) {
             vasketListe[id] = p;
         }
     });
 
-    // Gjør om "vaske-maskinen" til en vanlig liste igjen og sorter den
+    // Sorter listen slik at de som går ut først ligger øverst
     const sortertListe = Object.values(vasketListe).sort((a, b) => new Date(a.slutt_dato) - new Date(b.slutt_dato));
 
     tbody.innerHTML = sortertListe.map(p => {
         const slutt = new Date(p.slutt_dato);
-        const dager = Math.ceil((slutt - new Date().setHours(0,0,0,0)) / 86400000);
-        let kl = "dager-ok";
-        if (dager <= 0) kl = "dager-utlopt";
-        else if (dager <= 7) kl = "dager-advarsel";
-        return `<tr>
-            <td><strong>${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</strong></td>
-            <td>${p.medlemmer.tlf_mobil}</td>
-            <td>${slutt.toLocaleDateString('no-NO')}</td>
-            <td class="${kl}">${dager <= 0 ? 'Siste dag!' : dager + " dager"}</td>
-        </tr>`;
+        const iDag = new Date();
+        iDag.setHours(0, 0, 0, 0); // Nullstill klokkeslett for nøyaktig dags-beregning
+        
+        // Beregn antall dager igjen
+        const diffTid = slutt - iDag;
+        const dagerIgjen = Math.ceil(diffTid / (1000 * 60 * 60 * 24));
+        
+        // Din fargelogikk:
+        // Under 6 dager = Rød (#B22222)
+        // 6 dager eller mer = Grønn (#006400)
+        let statusKlasse = "status-aktiv-ok";
+        if (dagerIgjen < 6) {
+            statusKlasse = "status-utloper-snart";
+        }
+
+        return `
+            <tr>
+                <td class="member-name-cell">${p.medlemmer.fornavn} ${p.medlemmer.etternavn}</td>
+                <td style="color:#666;">${p.medlemmer.tlf_mobil}</td>
+                <td>${slutt.toLocaleDateString('no-NO')}</td>
+                <td class="${statusKlasse}">${dagerIgjen} dager</td>
+            </tr>`;
     }).join('');
 }
 
