@@ -266,13 +266,45 @@ label {
 }
 
 /* --- TABELLER --- */
-table { width: 100%; border-collapse: collapse; }
-th { text-align: left; padding: 12px; border-bottom: 2px solid #eee; color: var(--tekst-lys); font-size: 11px; text-transform: uppercase; }
-td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+/* --- NY KOMPAKT TABELL-STIL --- */
+.column-list table {
+    width: 100%;
+    border-collapse: collapse;
+    line-height: 1; /* Fjerner ekstra luft mellom linjer */
+}
 
-.status-ok { color: var(--biljard-gronn); font-weight: bold; }
-.status-warn { color: #f39c12; font-weight: bold; }
-.status-crit { color: var(--advarsel); font-weight: bold; }
+.column-list table th {
+    text-align: left;
+    padding: 8px 5px !important;
+    font-size: 11px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--gull);
+    color: var(--tekst-lys);
+}
+
+.column-list table td {
+    padding: 4px 5px !important; /* Ekstremt tett padding */
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+/* Fet skrift på navn */
+.member-name-cell {
+    font-weight: bold !important;
+    color: var(--marine);
+}
+
+/* Tvungen fargelegging av status */
+.status-utloper-snart { 
+    color: #B22222 !important; /* Rød */
+    font-weight: bold !important;
+}
+
+.status-aktiv-ok { 
+    color: #006400 !important; /* Grønn */
+    font-weight: bold !important;
+}
 
 /* --- SKAP-UTLEIE (GRID) --- */
 .locker-grid { 
