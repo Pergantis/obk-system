@@ -7,11 +7,15 @@ let selectedMemberId = null;
 function showModule(id) {
     document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    
     document.getElementById('mod-' + id).classList.add('active');
     document.getElementById('btn-' + id).classList.add('active');
+    
+    // Spesifikke lastinger per modul
     if (id === 'bord') loadTables();
     if (id === 'medlem') loadActivePasses();
     if (id === 'skap') loadLockers();
+    if (id === 'vaktplan') renderVaktplanPrototype(); // Legg til denne linjen!
 }
 
 function showLoader(show) { document.getElementById('sync-loader').style.display = show ? 'block' : 'none'; }
@@ -33,13 +37,13 @@ function toggleEditMode() {
     if (section.classList.contains('edit-locked')) {
         section.classList.remove('edit-locked');
         btn.innerText = "🔒 LÅS FOR REDIGERING";
-        btn.classList.add('btn-gold');
         status.innerText = "🔓 REDIGERINGSMODUS AKTIV";
+        status.className = "alert-box alert-warning";
     } else {
         section.classList.add('edit-locked');
         btn.innerText = "🔓 ÅPNE FOR REDIGERING";
-        btn.classList.remove('btn-gold');
         status.innerText = "🔒 VISNINGSMODUS (LÅST)";
+        status.className = "alert-box alert-danger";
     }
 }
 
