@@ -101,7 +101,8 @@ function showNewMemberBox(input) {
     else document.getElementById('n-en').value = input;
 }
 
-async function registerBrandNewMember() {
+// --- OPPDATERT FUNKSJON MED DUPLIKATSJEKK ---
+async function registerBrandNewMember(isForced = false) {
     const fn = document.getElementById('n-fn').value.trim();
     const en = document.getElementById('n-en').value.trim();
     const ep = document.getElementById('n-email').value.trim();
@@ -109,12 +110,37 @@ async function registerBrandNewMember() {
     const st = document.getElementById('n-start').value;
     const sl = document.getElementById('n-end').value;
 
-    // KRAV: Fornavn, Etternavn, E-post og Mobil er obligatorisk
     if (!fn || !en || !ep || !ph) { 
         alert("Fornavn, Etternavn, E-post og Mobil er obligatoriske felt."); 
         return; 
     }
 
+    // STEG 1: Sjekk om mobilnummer finnes fra før (hvis bruker ikke allerede har tvunget lagring)
+    if (!isForced) {
+        showLoader(true);
+        // Vi leter i databasen etter dette mobilnummeret
+        const { data: eksisterende, error: sjekkFeil } = await sb
+            .from('medlemmer')
+            .select('fornavn, etternavn')
+            .eq('tlf_mobil', ph)
+            .limit(1); // Vi trenger bare å vite om ÉN person finnes
+
+        showLoader(false);
+
+        if (eksisterende && eksisterende.length > 0) {
+            // Hvis vi fant noen: Vis advarsel og bytt knapper
+            const navn = eksisterende[0].fornavn + " " + eksisterende[0].etternavn;
+            const warningBox = document.getElementById('n-warning');
+            warningBox.innerText = `Advarsel: ${navn} er allerede registrert med dette nummeret. Vil du virkelig opprette en duplikat?`;
+            warningBox.style.display = "block";
+
+            document.getElementById('n-btn-save').style.display = "none"; // Skjul vanlig knapp
+            document.getElementById('n-btn-force').style.display = "block"; // Vis bekreft-knapp
+            return; // Stopp prosessen her
+        }
+    }
+
+    // STEG 2: Lagre medlemmet (hvis ingen duplikater ELLER hvis tvunget lagring)
     showLoader(true);
     try {
         const { data, error } = await sb.from('medlemmer')
@@ -123,13 +149,8 @@ async function registerBrandNewMember() {
         
         if (error) throw error;
 
-        // Hvis datoer er fylt ut, lagre periodekortet i tillegg
         if (data && data.length > 0 && st && sl) {
-            await sb.from('periodekort').insert({
-                medlem_id: data[0].id,
-                start_dato: st,
-                slutt_dato: sl
-            });
+            await sb.from('periodekort').insert({ medlem_id: data[0].id, start_dato: st, slutt_dato: sl });
             alert("Medlem registrert med periodekort!");
         } else {
             alert("Medlem registrert uten periodekort.");
@@ -169,8 +190,16 @@ async function loadActivePasses() {
 function cancelSelection() {
     document.getElementById('p-form-box').style.display = 'none';
     document.getElementById('p-new-member-box').style.display = 'none';
+    document.getElementById('p-search-results').innerHTML = ""; 
+    
+    // NYTT: Skjul advarselen og nullstill knappene
+    document.getElementById('n-warning').style.display = "none";
+    document.getElementById('n-btn-save').style.display = "block";
+    document.getElementById('n-btn-force').style.display = "none";
+
     selectedMemberId = null;
-    document.querySelectorAll('#p-new-member-box input').forEach(i => i.value = "");
+    const inputs = document.querySelectorAll('#p-new-member-box input');
+    inputs.forEach(i => i.value = "");
 }
 
 setInterval(loadActivePasses, 30000);
