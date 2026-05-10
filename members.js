@@ -6,28 +6,35 @@ async function runSearch() {
     if (input.length < 2) return;
 
     cancelSelection(); 
-    resDiv.innerHTML = "<p style='color: #666; font-size: 13px;'>Søker...</p>";
+    resDiv.innerHTML = "<p style='color: #666; font-size: 13px; text-align:center;'>Søker etter medlem...</p>";
     
     const { data, error } = await sb.from('medlemmer')
         .select('*')
         .or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%`)
         .limit(5);
 
-    if (error) { resDiv.innerHTML = "Feil: " + error.message; return; }
+    if (error) { 
+        resDiv.innerHTML = `<div class="alert-box alert-danger">Feil: ${error.message}</div>`; 
+        return; 
+    }
 
     if (data.length === 0) {
         resDiv.innerHTML = `
-            <div class="not-found-box">
-                <p style="color: var(--advarsel); font-weight: bold; margin: 0 0 10px 0;">⚠️ Personen finnes ikke.</p>
-                <button class="btn" style="background:var(--marine); width:100%;" onclick="showNewMemberBox('${input}')">+ REGISTRER NYTT MEDLEM</button>
+            <div class="alert-box alert-danger" style="margin-top:15px;">
+                <p style="margin-bottom: 10px;">⚠️ Personen finnes ikke i registeret.</p>
+                <button class="btn" style="background:var(--marine)" onclick="showNewMemberBox('${input}')">+ REGISTRER NYTT MEDLEM</button>
             </div>`;
         return;
     }
 
+    // Her bygger vi de pene boksene
     resDiv.innerHTML = data.map(m => `
-        <div class="search-item" onclick="selectMemberForPass('${m.id}', '${m.fornavn} ${m.etternavn}', '${m.epost}', '${m.tlf_mobil}')">
-            <strong>${m.fornavn} ${m.etternavn}</strong>
-            <small>📱 ${m.tlf_mobil} | 📧 ${m.epost || 'Ingen e-post'}</small>
+        <div class="search-result-item" onclick="selectMemberForPass('${m.id}', '${m.fornavn} ${m.etternavn}', '${m.epost}', '${m.tlf_mobil}')">
+            <div class="search-item-icon">👤</div>
+            <div class="search-item-info">
+                <strong>${m.fornavn} ${m.etternavn}</strong>
+                <small>📱 ${m.tlf_mobil} ${m.epost ? ` | 📧 ${m.epost}` : ''}</small>
+            </div>
         </div>`).join('');
 }
 
