@@ -1,35 +1,61 @@
+// --- BORDKONTROLL LOGIKK ---
 let tableData = [];
 let currentStoppingId = null;
 
+// Henter status på alle 20 bordene fra Supabase
 async function loadTables() {
     const { data, error } = await sb.from('bord_status').select('*').order('bord_nummer');
-    if (!error) { tableData = data; renderGrid(); }
+    if (!error) { 
+        tableData = data; 
+        renderGrid(); 
+    }
 }
 
+// Tegner opp bordene i rutenettet
 function renderGrid() {
     const grid = document.getElementById('bord-grid');
     if (!grid) return;
+
     grid.innerHTML = tableData.map(b => {
         const isActive = b.status === 'Opptatt';
         const start = b.start_tid ? new Date(b.start_tid) : null;
         const diff = start ? Math.floor((new Date() - start) / 60000) : 0;
-        const btnColor = b.bord_nummer <= 10 ? 'var(--biljard-blaa)' : (b.bord_nummer <= 16 ? '#6D8196' : '#CAC254');
-        return `<div class="card ${isActive ? 'active' : ''}">
-            <h3>Bord ${b.bord_nummer}</h3>
-            <div class="timer-text">${isActive ? diff + ' min' : 'LEDIG'}</div>
-            ${isActive ? `<div style="font-size:11px; color:var(--biljard-gronn); font-weight:bold; height:18px;">👤 ${b.kunde_navn || ''}</div>` : 
-            `<input type="text" id="name-${b.bord_nummer}" class="name-in" style="font-size:12px; margin-bottom:5px;" placeholder="Spiller valgfritt">`}
-            <button class="btn" style="background:${isActive ? 'var(--advarsel)' : btnColor}" 
-                onclick="${isActive ? `openModal(${b.bord_nummer}, '${b.start_tid}', '${b.kunde_navn}')` : `startTable(${b.bord_nummer})` }">${isActive ? 'STOPP' : 'START'}</button>
-        </div>`;
+        
+        // Bestem farge basert på bordnummer
+        let borderClass = 'card-blue'; // 1-10
+        if (b.bord_nummer > 10 && b.bord_nummer <= 16) borderClass = 'card-marine'; // 11-16
+        if (b.bord_nummer > 16) borderClass = 'card-gold'; // 17-20
+
+        return `
+            <div class="admin-card table-card ${borderClass} ${isActive ? 'active' : ''}">
+                <h3>Bord ${b.bord_nummer}</h3>
+                <div class="timer-text">${isActive ? diff + ' min' : 'LEDIG'}</div>
+                
+                ${isActive ? 
+                    `<div style="font-size:12px; color:var(--biljard-gronn); font-weight:bold; margin-bottom:10px; height:20px;">👤 ${b.kunde_navn || 'Anonym'}</div>` : 
+                    `<input type="text" id="name-${b.bord_nummer}" class="input-field" style="padding:5px; margin-bottom:5px; text-align:center;" placeholder="Spiller (valgfritt)">`
+                }
+                
+                <button class="btn" 
+                    style="background:${isActive ? 'var(--advarsel)' : 'var(--marine)'}" 
+                    onclick="${isActive ? `openModal(${b.bord_nummer}, '${b.start_tid}', '${b.kunde_navn}')` : `startTable(${b.bord_nummer})` }">
+                    ${isActive ? 'STOPP' : 'START'}
+                </button>
+            </div>`;
     }).join('');
 }
 
 async function startTable(id) {
-    const name = document.getElementById(`name-${id}`).value;
+    const nameInput = document.getElementById(`name-${id}`);
+    const name = nameInput ? nameInput.value : "";
     showLoader(true);
-    await sb.from('bord_status').update({ status: 'Opptatt', start_tid: new Date().toISOString(), kunde_navn: name }).eq('bord_nummer', id);
-    showLoader(false); loadTables();
+    await sb.from('bord_status').update({ 
+        status: 'Opptatt', 
+        start_tid: new Date().toISOString(), 
+        kunde_navn: name 
+    }).eq('bord_nummer', id);
+    showLoader(false); 
+    loadTables();
 }
 
 function openModal(id, start, name) {
@@ -42,10 +68,19 @@ function openModal(id, start, name) {
 
 async function confirmStop() {
     showLoader(true);
-    await sb.from('bord_status').update({ status: 'Ledig', start_tid: null, kunde_navn: null }).eq('bord_nummer', currentStoppingId);
+    await sb.from('bord_status').update({ 
+        status: 'Ledig', 
+        start_tid: null, 
+        kunde_navn: null 
+    }).eq('bord_nummer', currentStoppingId);
     document.getElementById('modal-overlay').style.display = 'none';
-    showLoader(false); loadTables();
+    showLoader(false); 
+    loadTables();
 }
 
-function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+function closeModal() { 
+    document.getElementById('modal-overlay').style.display = 'none'; 
+}
+
+// Oppdaterer hvert 10. sekund
 setInterval(loadTables, 10000);
