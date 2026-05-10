@@ -38,6 +38,7 @@
         <h1>Periodekort Administrasjon</h1>
         <div class="p-container">
             <div style="flex: 1;">
+                <!-- Søkeboks -->
                 <div class="p-box" style="border-top-color: var(--biljard-blaa);">
                     <h3>Finn Medlem</h3>
                     <input type="text" id="p-search-input" placeholder="Mobil eller etternavn..." class="name-in" onkeyup="if(event.key==='Enter') runSearch()">
@@ -45,49 +46,54 @@
                     <div id="p-search-results" style="margin-top:10px;"></div>
                 </div>
 
+                <!-- Skjema for eksisterende medlem -->
                 <div id="p-form-box" class="p-box" style="display:none; margin-top: 20px; border-top-color: var(--gull);">
                     <h3 id="p-display-name">Navn</h3>
-                    <p id="p-current-status"></p>
+                    
+                    <!-- VELDIG TYDELIG ADVARSEL OM EKSISTERENDE KORT -->
+                    <div id="p-existing-warning" style="display:none; background: #fff3cd; border: 2px solid #ffeeba; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; font-size: 14px; text-align: center;">
+                        ⚠️ Melding
+                    </div>
+
                     <label>E-post <span class="req">*</span></label><input type="email" id="p-edit-email" class="name-in">
                     <label>Mobilnummer <span class="req">*</span></label><input type="tel" id="p-edit-phone" class="name-in">
-                    <div style="background: #fff9e6; padding: 10px; border-radius: 8px;">
-                        <label>Nytt periodekort (valgfritt)</label>
+                    
+                    <div style="background: #fff9e6; padding: 10px; border-radius: 8px; border: 1px solid #ffe4b3;">
+                        <label id="p-date-label">Nytt periodekort</label>
                         <div style="display: flex; gap: 10px;">
                             <div style="flex:1"><label>Start</label><input type="date" id="p-start-date" class="name-in"></div>
                             <div style="flex:1"><label>Slutt</label><input type="date" id="p-end-date" class="name-in"></div>
                         </div>
                     </div>
-                    <button class="btn" style="background: var(--biljard-gronn); width:100%; margin-top:15px; padding:15px;" onclick="saveMemberPassUpdate()">LAGRE ENDRINGER</button>
+                    <button class="btn" style="background: var(--biljard-gronn); width:100%; margin-top:15px; padding:15px;" onclick="saveMemberPassUpdate()">LAGRE ENDRINGER & KORT</button>
                     <button class="btn" style="background: #95a5a6; width:100%;" onclick="cancelSelection()">AVBRYT</button>
                 </div>
 
+                <!-- Skjema for NYTT medlem -->
                 <div id="p-new-member-box" class="p-box" style="display:none; margin-top: 20px; border-top-color: var(--marine);">
                     <h3>Registrer Nytt Medlem</h3>
-                    
-                    <!-- Varselsfelt for duplikater -->
                     <div id="n-warning" style="display:none; color: var(--advarsel); background: #fee; padding: 10px; border: 1px solid var(--advarsel); border-radius: 8px; margin-bottom: 10px; font-size: 13px; font-weight: bold;"></div>
-
+                    
                     <label>Fornavn <span class="req">*</span></label><input type="text" id="n-fn" class="name-in">
                     <label>Etternavn <span class="req">*</span></label><input type="text" id="n-en" class="name-in">
                     <label>E-post <span class="req">*</span></label><input type="email" id="n-email" class="name-in">
                     <label>Mobilnummer <span class="req">*</span></label><input type="tel" id="n-phone" class="name-in">
                     
-                    <div style="background: #eef7ff; padding: 10px; border-radius: 8px; border: 1px solid #cfe3ff; margin-top: 10px;">
+                    <div style="background: #eef7ff; padding: 10px; border-radius: 8px; border: 1px solid #cfe3ff;">
                         <label>Periodekort (valgfritt)</label>
                         <div style="display: flex; gap: 10px;">
-                            <div style="flex:1"><label>Start</label><input type="date" id="n-start" class="name-in"></div>
-                            <div style="flex:1"><label>Slutt</label><input type="date" id="n-end" class="name-in"></div>
+                            <div style="flex:1"><input type="date" id="n-start" class="name-in"></div>
+                            <div style="flex:1"><input type="date" id="n-end" class="name-in"></div>
                         </div>
                     </div>
                     
-                    <!-- Knapper for lagring -->
                     <button class="btn" id="n-btn-save" style="background: var(--marine); width:100%; margin-top:15px; padding:15px;" onclick="registerBrandNewMember()">LAGRE NYTT MEDLEM</button>
                     <button class="btn" id="n-btn-force" style="display:none; background: var(--advarsel); width:100%; margin-top:15px; padding:15px;" onclick="registerBrandNewMember(true)">JA, JEG ER SIKKER - LAGRE LIKEVEL</button>
-                    
                     <button class="btn" style="background: #95a5a6; width:100%;" onclick="cancelSelection()">AVBRYT</button>
                 </div>
             </div>
 
+            <!-- Høyre side: Liste -->
             <div style="flex: 1.5;">
                 <div class="p-box" style="border-top-color: var(--biljard-gronn);">
                     <h3>Aktive Periodekort</h3>
