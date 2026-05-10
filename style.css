@@ -1,73 +1,290 @@
+/* --- GLOBALE VARIABLER OG RESET --- */
 :root {
-    --marine: #1a2f3c; --gull: #c9a84c; --biljard-gronn: #27ae60;
-    --biljard-blaa: #2980b9; --krem: #f5f0e8; --advarsel: #e74c3c;
+    --marine: #1a2f3c;
+    --gull: #c9a84c;
+    --biljard-gronn: #27ae60;
+    --biljard-blaa: #2980b9;
+    --krem: #f5f0e8;
+    --advarsel: #e74c3c;
+    --advarsel-lys: #fee;
+    --info-gul: #fff3cd;
+    --info-gul-kant: #ffeeba;
     --hvit: #ffffff;
+    --tekst-mork: #333;
+    --tekst-lys: #666;
 }
 
-body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--krem); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+* { box-sizing: border-box; }
 
-/* Menyen til venstre */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: var(--krem); 
+    margin: 0; 
+    display: flex; 
+    height: 100vh; 
+    overflow: hidden; 
+    color: var(--tekst-mork);
+}
+
+/* --- NAVIGASJON (Sidefelt) --- */
 nav { 
-    width: 220px; background: var(--marine); color: white; padding: 20px; border-right: 4px solid var(--gull); flex-shrink: 0; 
-    display: flex; flex-direction: column; height: 100vh; box-sizing: border-box;
+    width: 240px; 
+    background: var(--marine); 
+    color: white; 
+    padding: 20px; 
+    border-right: 4px solid var(--gull); 
+    flex-shrink: 0; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh;
 }
-.nav-btn { width: 100%; padding: 12px; margin: 10px 0; background: none; border: 1px solid var(--gull); color: white; cursor: pointer; border-radius: 8px; font-weight: bold; text-align: left; }
-.nav-btn:hover, .nav-btn.active { background: var(--gull); color: var(--marine); }
-.logo-area { margin-top: auto; padding-top: 20px; text-align: center; }
 
-/* Hovedområde */
-main { flex: 1; padding: 25px; overflow-y: auto; position: relative; }
-.module { display: none; }
+.nav-logo-top { text-align: center; margin-bottom: 25px; }
+.nav-logo-bottom { margin-top: auto; padding-top: 20px; text-align: center; }
+
+.nav-btn { 
+    width: 100%; 
+    padding: 14px; 
+    margin: 8px 0; 
+    background: none; 
+    border: 1px solid rgba(201, 168, 76, 0.3); 
+    color: white; 
+    cursor: pointer; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    text-align: left; 
+    transition: all 0.2s;
+}
+
+.nav-btn:hover, .nav-btn.active { 
+    background: var(--gull); 
+    color: var(--marine); 
+    border-color: var(--gull);
+}
+
+/* --- HOVEDOMRÅDE --- */
+main { 
+    flex: 1; 
+    padding: 30px; 
+    overflow-y: auto; 
+    position: relative; 
+}
+
+.module { display: none; animation: fadeIn 0.3s; }
 .module.active { display: block; }
 
-/* Kort-design */
-.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; }
-.card { background: var(--hvit); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 8px solid #ddd; text-align: center; }
-.card.active { border-top-color: var(--biljard-gronn); background: #fafffa; }
-
-/* Periodekort Layout */
-.p-container { display: flex; gap: 20px; }
-.p-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #eee; }
-
-/* Styling for Søkeresultater (Boksene du ønsket) */
-.search-item { 
-    background-color: white; padding: 15px; border: 1px solid #ddd; border-radius: 10px; 
-    margin-top: 10px; cursor: pointer; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-    transition: all 0.2s ease; display: block;
-}
-.search-item:hover { border-color: var(--gull); background-color: #fdfaf0; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-.search-item strong { color: var(--marine); display: block; font-size: 16px; margin-bottom: 3px; }
-.search-item small { color: #666; font-size: 13px; }
-
-/* Feilmelding-boks når person ikke finnes */
-.not-found-box {
-    padding: 15px; background: #fff5f5; border: 1px solid var(--advarsel); 
-    border-radius: 10px; margin-top: 15px; text-align: center;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Tabell, knapper og input */
-.timer-text { font-size: 24px; font-weight: 900; color: var(--marine); margin: 8px 0; }
-.btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; text-transform: uppercase; font-size: 13px; margin-top: 5px; }
-.name-in { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; margin-bottom: 10px; font-size: 14px; }
-label { display: block; font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; }
+h1 { margin-top: 0; color: var(--marine); font-size: 28px; }
+
+/* --- LAYOUT KOMPONENTER --- */
+/* Brukes for å dele skjermen i to (f.eks. Medlemmer og Skap) */
+.split-container { 
+    display: flex; 
+    gap: 25px; 
+    align-items: flex-start;
+}
+
+.column-form { flex: 1; }
+.column-list { flex: 1.5; }
+.column-side { flex: 0.8; }
+
+/* Standard hvit boks (Card) */
+.admin-card { 
+    background: var(--hvit); 
+    padding: 20px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+    margin-bottom: 20px;
+    border-top: 6px solid #ddd;
+}
+
+/* Fargevarianter for boks-topper */
+.card-marine { border-top-color: var(--marine); }
+.card-gold { border-top-color: var(--gull); }
+.card-green { border-top-color: var(--biljard-gronn); }
+.card-blue { border-top-color: var(--biljard-blaa); }
+
+/* --- BORDUTLEIE (GRID) --- */
+.bord-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+    gap: 20px; 
+}
+
+.table-card { 
+    text-align: center; 
+    transition: transform 0.2s;
+}
+.table-card.active { background: #f0fff4; border-top-color: var(--biljard-gronn); }
+
+.timer-text { 
+    font-size: 26px; 
+    font-weight: 900; 
+    color: var(--marine); 
+    margin: 10px 0; 
+}
+
+/* --- SKJEMA-ELEMENTER --- */
+label { 
+    display: block; 
+    font-size: 11px; 
+    font-weight: bold; 
+    color: var(--tekst-lys); 
+    text-transform: uppercase; 
+    margin-bottom: 5px; 
+}
+
 .req { color: var(--advarsel); }
 
-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th { text-align: left; padding: 12px; border-bottom: 2px solid #eee; color: #666; font-size: 11px; text-transform: uppercase; }
-td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-.dager-ok { color: var(--biljard-gronn); font-weight: bold; }
-.dager-advarsel { color: #f39c12; font-weight: bold; }
-.dager-utlopt { color: var(--advarsel); font-weight: bold; }
+.input-field { 
+    width: 100%; 
+    padding: 12px; 
+    border: 1px solid #ddd; 
+    border-radius: 8px; 
+    margin-bottom: 15px; 
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
 
-/* Skap-design */
-.locker-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
-.locker-box { aspect-ratio: 1/1; background: var(--biljard-gronn); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; border-radius: 4px; cursor: pointer; transition: 0.1s; }
+.input-field:focus {
+    outline: none;
+    border-color: var(--biljard-blaa);
+}
+
+.btn { 
+    width: 100%; 
+    padding: 12px; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    color: white; 
+    text-transform: uppercase; 
+    font-size: 14px; 
+    transition: opacity 0.2s;
+}
+
+.btn:hover { opacity: 0.9; }
+
+/* --- SØKERESULTATER OG MELDINGER --- */
+.search-result-item { 
+    background-color: white; 
+    padding: 15px; 
+    border: 1px solid #eee; 
+    border-radius: 10px; 
+    margin-top: 10px; 
+    cursor: pointer; 
+    transition: all 0.2s;
+}
+
+.search-result-item:hover { 
+    border-color: var(--gull); 
+    background-color: #fffdf5; 
+    transform: translateX(5px);
+}
+
+/* Advarselsbokser (Gule/Røde) */
+.alert-box {
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.alert-warning {
+    background: var(--info-gul);
+    border: 1px solid var(--info-gul-kant);
+    color: #856404;
+}
+
+.alert-danger {
+    background: var(--advarsel-lys);
+    border: 1px solid var(--advarsel);
+    color: var(--advarsel);
+}
+
+/* --- TABELLER --- */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 12px; border-bottom: 2px solid #eee; color: var(--tekst-lys); font-size: 11px; text-transform: uppercase; }
+td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+
+.status-ok { color: var(--biljard-gronn); font-weight: bold; }
+.status-warn { color: #f39c12; font-weight: bold; }
+.status-crit { color: var(--advarsel); font-weight: bold; }
+
+/* --- SKAP-UTLEIE (GRID) --- */
+.locker-grid { 
+    display: grid; 
+    grid-template-columns: repeat(10, 1fr); 
+    gap: 8px; 
+}
+
+.locker-box { 
+    aspect-ratio: 1/1; 
+    background: var(--biljard-gronn); 
+    color: white; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-weight: bold; 
+    font-size: 12px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    transition: all 0.1s; 
+}
+
 .locker-box.occupied { background: var(--advarsel); }
-.locker-box.selected { border: 2px solid black; transform: scale(1.1); }
+.locker-box.selected { 
+    box-shadow: 0 0 0 3px var(--tekst-mork);
+    transform: scale(1.1);
+    z-index: 10;
+}
 
-/* Popup (Modal) */
-#modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 10000; justify-content: center; align-items: center; }
-.modal-content { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 400px; }
-.big-minutes { font-size: 110px; font-weight: 900; color: var(--advarsel); line-height: 1; }
+/* --- MODAL / POPUP --- */
+#modal-overlay { 
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.85); 
+    z-index: 10000; 
+    justify-content: center; 
+    align-items: center; 
+}
 
-#sync-loader { position: fixed; top: 10px; right: 20px; background: orange; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; display: none; z-index: 10001; }
+.modal-content { 
+    background: white; 
+    padding: 40px; 
+    border-radius: 20px; 
+    text-align: center; 
+    width: 90%;
+    max-width: 450px; 
+}
+
+.big-number { 
+    font-size: 100px; 
+    font-weight: 900; 
+    color: var(--advarsel); 
+    line-height: 1; 
+}
+
+/* --- SYNC LOADER --- */
+#sync-loader { 
+    position: fixed; 
+    top: 15px; 
+    right: 20px; 
+    background: var(--gull); 
+    color: var(--marine); 
+    padding: 6px 18px; 
+    border-radius: 20px; 
+    font-size: 12px; 
+    font-weight: bold;
+    display: none; 
+    z-index: 10001; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
