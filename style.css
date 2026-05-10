@@ -56,3 +56,34 @@ td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
 .dager-ok { color: var(--biljard-gronn); font-weight: bold; }
 .dager-advarsel { color: #f39c12; font-weight: bold; }
 .dager-utlopt { color: var(--advarsel); font-weight: bold; }
+/* Denne lager den pene boksen rundt hvert søkeresultat */
+.search-item { 
+    background-color: white;
+    padding: 15px; 
+    border: 1px solid #ddd; 
+    border-radius: 10px; 
+    margin-top: 10px; 
+    cursor: pointer; 
+    text-align: left; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Gir den "boks"-utseende */
+    transition: all 0.2s ease;
+}
+
+.search-item:hover { 
+    border-color: var(--gull); 
+    background-color: #fdfaf0; 
+    transform: translateY(-2px); /* Løfter boksen litt når man holder over */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.search-item strong {
+    color: var(--marine);
+    display: block;
+    font-size: 16px;
+    margin-bottom: 3px;
+}
+
+.search-item small {
+    color: #666;
+    font-size: 13px;
+}
