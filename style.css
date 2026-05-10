@@ -558,3 +558,46 @@ label {
 .help-content strong {
     color: var(--marine);
 }
+/* --- VAKTPLAN PROTOTYPE STIL --- */
+.vakt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.edit-lock-status { font-size: 12px; font-weight: bold; color: var(--biljard-gronn); background: #eafff0; padding: 5px 15px; border-radius: 20px; border: 1px solid var(--biljard-gronn); }
+.edit-locked .edit-lock-status { color: var(--advarsel); background: #fff0f0; border-color: var(--advarsel); }
+
+.vakt-toolbar { 
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; 
+    background: #e9ecef; padding: 12px 20px; border-radius: 50px; margin-bottom: 20px; gap: 15px;
+}
+.vakt-controls { display: flex; align-items: center; gap: 10px; }
+.input-field-inline { padding: 8px; border-radius: 20px; border: 1px solid var(--gull); }
+
+.vakt-rule-badge { 
+    background: #0a2b3e; color: #f7e5b5; padding: 8px 18px; border-radius: 40px; font-size: 13px; font-weight: 500;
+}
+
+.btn-vakt { background: #0a2b3e; color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+.btn-gold { background: var(--gull); color: var(--marine); }
+
+/* Tabell-design */
+.vakt-scroll { overflow-x: auto; }
+.vakt-table { width: 100%; border-collapse: collapse; border: 2px solid #3a8c5a; }
+.vakt-table th { background: #0a2b3e; color: #f7e5b5; padding: 12px; border: 1px solid #3a8c5a; }
+.vakt-table th.th-weekend { background: #5a1e2e; color: #ffe0e7; }
+.vakt-table td { border: 1px solid #3a8c5a; padding: 5px; vertical-align: top; background: white; min-width: 110px; }
+.vakt-table td.td-weekend { background: #ffe0e7; }
+
+/* Celledesign */
+.vakt-cell { display: flex; flex-direction: column; gap: 4px; min-height: 70px; }
+.vakt-date { font-size: 11px; font-weight: bold; color: black; margin-bottom: 2px; }
+.vakt-input { 
+    width: 100%; padding: 4px 8px; border: 1px solid #ccb38c; border-radius: 12px; 
+    font-size: 12px; outline: none; transition: 0.2s;
+}
+.vakt-input:focus { border-color: var(--gull); background: #fffdf5; }
+
+/* Låse-modus: Skjuler rammer på inputs når låst */
+.edit-locked .vakt-input { border-color: transparent; background: transparent; pointer-events: none; color: black; font-weight: 500; }
+.edit-locked .score-input { border: none; background: transparent; pointer-events: none; }
+
+/* Poengtabell */
+.score-table { width: 100%; margin-top: 10px; }
+.score-input { width: 60px; padding: 5px; border-radius: 10px; border: 1px solid var(--gull); text-align: center; }
