@@ -393,22 +393,66 @@ label {
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 /* --- FEILSIKKER TABELL-STIL --- */
+/* --- OPPDATERT TABELL-STIL (Kolonne-justering) --- */
 
-/* Fjerner padding i selve boksen for å få mer plass */
+/* Gjør selve kortet litt romsligere */
 .column-list .admin-card {
     padding: 10px !important;
 }
 
-/* Gjør tabellen ekstremt kompakt */
-#p-active-table-body td {
-    padding: 2px 5px !important; /* Minimal avstand */
-    line-height: 1.1 !important;
-    font-size: 13px !important;
-    border-bottom: 1px solid #eee !important;
-    height: 24px !important; /* Tvinger lav høyde */
+.column-list table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
-/* Definer fargene med ekstremt enkle navn */
+/* Felles innstillinger for alle celler i tabellen */
+.column-list th, 
+.column-list td {
+    padding: 4px 8px !important; /* Beholder den tette stilen */
+    font-size: 13px !important;
+    border-bottom: 1px solid #eee !important;
+    line-height: 1.2 !important;
+}
+
+/* --- HER STYRER VI KOLONNENE --- */
+
+/* Kolonne 1: NAVN (Venstrestilt) */
+.column-list th:nth-child(1),
+.column-list td:nth-child(1) {
+    text-align: left !important;
+    width: 45%; /* Gir navnet mest plass */
+}
+
+/* Kolonne 2: MOBIL (Midtstilt) */
+.column-list th:nth-child(2),
+.column-list td:nth-child(2) {
+    text-align: center !important;
+    width: 20%;
+}
+
+/* Kolonne 3: UTLØPER (Midtstilt) */
+.column-list th:nth-child(3),
+.column-list td:nth-child(3) {
+    text-align: center !important;
+    width: 15%;
+}
+
+/* Kolonne 4: STATUS (Høyrestilt) */
+.column-list th:nth-child(4),
+.column-list td:nth-child(4) {
+    text-align: right !important;
+    width: 20%;
+}
+
+/* Overskriftene (TH) trenger litt ekstra tydelighet */
+.column-list th {
+    font-size: 11px !important;
+    color: var(--tekst-lys) !important;
+    text-transform: uppercase;
+    background: #fcfcfc;
+}
+
+/* --- DINE FARGE-KLASSER (IKKE ENDRE DISSE) --- */
 .tekst-rod { 
     color: #B22222 !important; 
     font-weight: bold !important; 
