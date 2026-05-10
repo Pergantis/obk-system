@@ -472,3 +472,16 @@ label {
     background-color: #f1c40f !important; 
     color: #333 !important; 
 }
+/* Styling for utskrift (PDF) */
+@media print {
+    nav, .nav-btn, .btn, .locker-grid, .column-form, h1, #sync-loader { display: none !important; }
+    main { padding: 0 !important; margin: 0 !important; }
+    .column-side { width: 100% !important; flex: none !important; }
+    .admin-card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+    #locker-panel { display: none !important; }
+    
+    .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .print-table th, .print-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+    .print-table th { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
+    .print-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--marine); padding-bottom: 10px; }
+}
