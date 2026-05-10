@@ -39,8 +39,20 @@ nav {
     height: 100vh;
 }
 
-.nav-logo-top { text-align: center; margin-bottom: 25px; }
-.nav-logo-bottom { margin-top: auto; padding-top: 20px; text-align: center; }
+.nav-logo-top {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.2); /* En tynn gull-linje under logoen */
+}
+
+.main-logo {
+    max-width: 100%; /* Sørger for at den ikke går utenfor menyen */
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); /* Gir logoen litt dybde */
+}
 
 .nav-btn { 
     width: 100%; 
