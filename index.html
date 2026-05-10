@@ -20,6 +20,7 @@
     <button class="nav-btn active" id="btn-bord" onclick="showModule('bord')">🎱 BORDLEIE</button>
     <button class="nav-btn" id="btn-medlem" onclick="showModule('medlem')">👤 PERIODEKORT</button>
     <button class="nav-btn" id="btn-skap" onclick="showModule('skap')">🔐 SKAPLEIE</button>
+    <button class="nav-btn" id="btn-hjelp" onclick="showModule('hjelp')" style="margin-top: auto; border-color: rgba(255,255,255,0.2);">❓ HJELP</button>
     
 </nav>
 
@@ -187,6 +188,86 @@
             </div>
         </div>
     </section>
+    <!-- MODUL: HJELP / VEILEDNING -->
+<section id="mod-hjelp" class="module">
+    <h1>Brukerveiledning - OBK Admin</h1>
+    
+    <div class="admin-card card-marine">
+        <p>Velkommen til administrasjonssystemet for Oslo Biljardklubb. Her finner du detaljert informasjon om hvordan du bruker de ulike modulene.</p>
+        
+        <div class="help-accordion">
+            <details>
+                <summary>🎱 Bordleie og Tidskontroll</summary>
+                <div class="help-content">
+                    <p>Denne modulen brukes for å starte og stoppe tid på biljardbordene. Systemet er fargekodet etter bordsonene i lokalet.</p>
+                    <ul>
+                        <li><strong>Starte et bord:</strong> Finn riktig bordnummer. Skriv inn navnet på spilleren i tekstfeltet (valgfritt, men anbefalt for oversikt). Trykk på den blå/grå knappen "START". Bordet vil nå skifte farge til lysegrønt, og klokken begynner å telle.</li>
+                        <li><strong>Stoppe et bord:</strong> Trykk på den røde "STOPP"-knappen. En stor popup (modal) vil vises på skjermen.</li>
+                        <li><strong>Bord ferdig-vinduet:</strong> Dette vinduet viser nøyaktig spilt tid i minutter med store tall. Navnet på spilleren vises under. Dette bildet kan vises til kunden for å bekrefte prisen. Trykk "BEKREFT & FRIGJØR" for å gjøre bordet ledig igjen.</li>
+                        <li><strong>Fargekoder (Ledig status):</strong>
+                            <ul>
+                                <li><span style="color:#1E90FF; font-weight:bold;">Blå:</span> Bord 1-10 (Matchbord).</li>
+                                <li><span style="color:#708090; font-weight:bold;">Grå:</span> Bord 11-16 (Standardbord).</li>
+                                <li><span style="color:#B8860B; font-weight:bold;">Beige:</span> Bord 17-20 (Snooker/spesialbord).</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </details>
+
+            <details>
+                <summary>👤 Periodekort og Medlemshåndtering</summary>
+                <div class="help-content">
+                    <p>Her administrerer du klubbens medlemmer og deres aktive periodekort.</p>
+                    <ul>
+                        <li><strong>Søk etter medlem:</strong> Skriv inn minst to bokstaver av etternavnet eller deler av mobilnummeret i søkefeltet og trykk "SØK" (eller Enter). Resultatene vises som klikkbare bokser.</li>
+                        <li><strong>Registrere nytt periodekort:</strong> Velg et medlem fra søket. Skjemaet "Lagre endringer & kort" dukker opp. Velg startdato og sluttdato. Systemet lagrer både oppdatert medlemsinfo (epost/mobil) og det nye kortet samtidig.</li>
+                        <li><strong>Fornyelse:</strong> Hvis du velger et medlem som allerede har et aktivt kort, vil en gul boks advare deg. Systemet vil automatisk foreslå at det nye kortet starter dagen etter at det gamle går ut.</li>
+                        <li><strong>Registrere helt nytt medlem:</strong> Hvis søket ikke gir treff, trykk på den blå knappen "+ REGISTRER NYTT MEDLEM". Fyll ut alle obligatoriske felt (merket med *). Systemet sjekker automatisk om mobilnummeret er i bruk fra før for å hindre duplikater.</li>
+                        <li><strong>Statuslisten (Høyre side):</strong> Viser alle aktive kort i klubben.
+                            <ul>
+                                <li><span style="color:#006400; font-weight:bold;">Mørkegrønn:</span> Kortet er aktivt og har mer enn 6 dager igjen.</li>
+                                <li><span style="color:#B22222; font-weight:bold;">Mørkerød:</span> Kortet utløper innen 6 dager eller i dag. Kontakt medlemmet for fornyelse.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </details>
+
+            <details>
+                <summary>🔐 Skapleie og Utstyrsoppbevaring</summary>
+                <div class="help-content">
+                    <p>Modul for oversikt over klubbens 100 utleieskap.</p>
+                    <ul>
+                        <li><strong>Oversiktskartet:</strong> Hver boks representerer et fysisk skapnummer.
+                            <ul>
+                                <li><span style="color:#27ae60; font-weight:bold;">Grønn:</span> Skapet er ledig.</li>
+                                <li><span style="color:#e74c3c; font-weight:bold;">Rød:</span> Skapet er utleid.</li>
+                                <li><span style="color:#f1c40f; font-weight:bold;">Gul:</span> Skapet utløper innen 14 dager eller har allerede gått ut.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Leie ut skap:</strong> Klikk på et grønt skap. Søk opp medlemmet (samme metode som under Periodekort). Velg medlemmet, legg inn eventuelle notater (f.eks. "Nøkkel A-12") og trykk lagre. Systemet foreslår automatisk 1 års leieperiode.</li>
+                        <li><strong>Forlenge leie:</strong> Klikk på et rødt/gult skap. Trykk på den blå knappen "➕ FORLENG LEIE". Systemet henter automatisk nåværende leietaker og setter ny sluttdato 12 måneder frem i tid fra forrige utløp.</li>
+                        <li><strong>Frigjøre skap:</strong> Når et medlem leverer tilbake nøkkelen, trykk "FRIGJØR SKAP". Dette sletter leieforholdet og gjør skapet grønt (ledig) igjen.</li>
+                        <li><strong>PDF-utløpsliste:</strong> Trykk på "🖨️ LAST NED UTLØPSLISTE". Dette genererer en oversikt over alle som må kontaktes for fornyelse eller tømming.</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details>
+                <summary>⚙️ Generelle tips og Feilsøking</summary>
+                <div class="help-content">
+                    <p>Nyttig informasjon for daglig drift av systemet.</p>
+                    <ul>
+                        <li><strong>Automatisk lagring:</strong> Alt du gjør lagres umiddelbart i nettskyen (Supabase). Du trenger ikke lete etter en "lagre alt"-knapp.</li>
+                        <li><strong>Synkronisering:</strong> En oransje boks øverst til høyre viser når systemet snakker med databasen. Hvis denne ikke forsvinner, sjekk internettforbindelsen.</li>
+                        <li><strong>Tving oppdatering:</strong> Hvis du har gjort endringer som ikke vises, eller hvis logoen/farger ser rare ut, hold inne <strong>CTRL</strong> og trykk <strong>F5</strong>. Dette tvinger nettleseren til å laste inn den nyeste versjonen av koden fra GitHub.</li>
+                    </ul>
+                </div>
+            </details>
+        </div>
+    </div>
+</section>
 </main>
 
 <!-- MODAL: BORD FERDIG -->
