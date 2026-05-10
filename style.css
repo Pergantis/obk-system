@@ -633,6 +633,24 @@ label {
 /* Modus for låst visning */
 .edit-locked .vakt-input { border: transparent; background: transparent; pointer-events: none; color: black; font-weight: bold; }
 .edit-locked .input-field { border: none; background: transparent; pointer-events: none; }
+
 /* Poengtabell */
 .score-table { width: 100%; margin-top: 10px; }
 .score-input { width: 60px; padding: 5px; border-radius: 10px; border: 1px solid var(--gull); text-align: center; }
+
+/* Sørger for at placeholder-teksten (Hoved/Ekstra) er falmet */
+.vakt-input::placeholder {
+    color: #999 !important;
+    font-weight: normal !important;
+    opacity: 0.7;
+}
+
+/* Spesifikk fiks for låst modus: Hvis feltet er tomt, skal ingenting vises */
+.edit-locked .vakt-input:placeholder-shown {
+    opacity: 0;
+}
+
+/* Sørger for at vanlig tekst i vaktplanen er tydelig sort */
+.vakt-input {
+    color: #000;
+}
