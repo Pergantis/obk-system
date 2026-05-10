@@ -467,3 +467,8 @@ label {
     font-weight: bold !important; 
     color: #1a2f3c !important; 
 }
+/* Gul farge for skap som utløper om under 14 dager */
+.locker-box.warning { 
+    background-color: #f1c40f !important; 
+    color: #333 !important; 
+}
