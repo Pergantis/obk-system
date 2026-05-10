@@ -28,18 +28,20 @@
 <main>
    <!-- MODUL: VAKTPLAN (PROTOTYPE) -->
 <section id="mod-vaktplan" class="module">
-    <div class="vakt-header">
+    <div class="vakt-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h1>🎱 Bak disken – Vaktplan</h1>
-        <div class="edit-lock-status" id="lock-status-indicator">🔓 REDIGERINGSMODUS AKTIV</div>
+        <div id="lock-status-indicator" class="alert-box alert-warning" style="margin: 0; padding: 5px 15px; font-size: 12px; font-weight: bold;">
+            🔓 REDIGERINGSMODUS AKTIV
+        </div>
     </div>
 
     <!-- Verktøylinje -->
     <div class="vakt-toolbar">
-        <div class="vakt-controls">
+        <div class="vakt-controls" style="display: flex; align-items: center; gap: 10px;">
             <label>Måned:</label>
-            <input type="month" id="vakt-month-picker" value="2026-05" class="input-field-inline">
-            <button class="btn-vakt" onclick="alert('Dette vil laste data fra Supabase i neste fase')">🔄 LAST / OPPDATER</button>
-            <button class="btn-vakt btn-gold" id="btn-toggle-edit" onclick="toggleEditMode()">🔒 LÅS FOR REDIGERING</button>
+            <input type="month" id="vakt-month-picker" value="2026-05" class="input-field" style="width: auto; margin: 0; padding: 8px;">
+            <button class="btn" style="background: var(--marine); width: auto;" onclick="alert('Laster data...')">🔄 LAST / OPPDATER</button>
+            <button class="btn" style="background: var(--gull); color: var(--marine); width: auto;" id="btn-toggle-edit" onclick="toggleEditMode()">🔒 LÅS FOR REDIGERING</button>
         </div>
         <div class="vakt-rule-badge">
             🎯 Regel: 1 vakt = 1 poeng | Bruk poeng til gratis spill når det passer
@@ -47,57 +49,57 @@
     </div>
 
     <!-- Vaktmatrise -->
-    <div class="vakt-container admin-card">
-        <div class="vakt-scroll">
-            <table class="vakt-table" id="vakt-table-prototype">
+    <div class="admin-card card-marine" style="padding: 10px; overflow-x: auto;">
+        <table class="vakt-table" id="vakt-table-prototype">
+            <thead>
+                <tr>
+                    <th>Uke</th>
+                    <th>Mandag</th>
+                    <th>Tirsdag</th>
+                    <th>Onsdag</th>
+                    <th>Torsdag</th>
+                    <th>Fredag</th>
+                    <th class="th-weekend">Lørdag</th>
+                    <th class="th-weekend">Søndag</th>
+                </tr>
+            </thead>
+            <tbody id="vakt-body-prototype">
+                <!-- Genereres av JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Poengoversikt (Nå med rammer og formatering lik medlemslisten) -->
+    <div class="admin-card card-green" style="margin-top: 30px;">
+        <h3>📊 Frivillige – Poengoversikt</h3>
+        <div class="column-list"> <!-- Gjenbruker kolonne-stilen fra medlemslisten -->
+            <table style="border: 1px solid #ddd;">
                 <thead>
                     <tr>
-                        <th>Uke</th>
-                        <th>Mandag</th>
-                        <th>Tirsdag</th>
-                        <th>Onsdag</th>
-                        <th>Torsdag</th>
-                        <th>Fredag</th>
-                        <th class="th-weekend">Lørdag</th>
-                        <th class="th-weekend">Søndag</th>
+                        <th>Frivillig</th>
+                        <th>Poeng opptjent</th>
+                        <th>Poeng benyttet</th>
+                        <th>Poeng til gode</th>
                     </tr>
                 </thead>
-                <tbody id="vakt-body-prototype">
-                    <!-- Her genereres kalenderen via JavaScript -->
+                <tbody id="vakt-score-body">
+                    <tr>
+                        <td class="navn-fet">Maria</td>
+                        <td style="text-align: center;">16</td>
+                        <td style="text-align: center;"><input type="number" value="0" class="input-field" style="width: 60px; margin: 0; padding: 2px; text-align: center;"></td>
+                        <td class="tekst-gronn" style="text-align: right;">16</td>
+                    </tr>
+                    <tr>
+                        <td class="navn-fet">Pergantis</td>
+                        <td style="text-align: center;">48</td>
+                        <td style="text-align: center;"><input type="number" value="0" class="input-field" style="width: 60px; margin: 0; padding: 2px; text-align: center;"></td>
+                        <td class="tekst-gronn" style="text-align: right;">48</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
-
-    <!-- Poengoversikt -->
-    <div class="admin-card card-green" style="margin-top: 30px;">
-        <h3>📊 Frivillige – Poengoversikt</h3>
-        <table class="score-table">
-            <thead>
-                <tr>
-                    <th>Frivillig</th>
-                    <th>Poeng opptjent</th>
-                    <th>Poeng benyttet</th>
-                    <th>Poeng til gode</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Maria</td>
-                    <td><strong>16</strong></td>
-                    <td><input type="number" value="0" class="score-input"></td>
-                    <td class="status-ok">16</td>
-                </tr>
-                <tr>
-                    <td>Pergantis</td>
-                    <td><strong>48</strong></td>
-                    <td><input type="number" value="0" class="score-input"></td>
-                    <td class="status-ok">48</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</section> 
+</section>
     <div id="error-log" class="alert-box alert-danger" style="display:none;"></div>
 
     <!-- MODUL: BORDLEIE -->
