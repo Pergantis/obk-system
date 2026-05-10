@@ -133,27 +133,48 @@ async function lagreVakt(dato, dagIndeks, type, verdi) {
     showLoader(false);
 }
 
-// 5. Automatisk poengberegning
+// 5. Automatisk poengberegning (KUN for vakter i fortiden)
 async function beregnOgVisPoeng() {
-    // 1. Tell alle vakter i hele databasen (uavhengig av måned)
-    const { data: alleVakter } = await sb.from('vaktplan').select('hoved_vakt_id, ekstra_vakt_id');
+    // 1. Hent ALLE vakter, men vi må inkludere dato og måned for å sjekke mot "I dag"
+    const { data: alleVakter } = await sb.from('vaktplan')
+        .select('maaned, dato, hoved_vakt_id, ekstra_vakt_id');
     
+    if (!alleVakter) return;
+
+    const iDag = new Date();
+    iDag.setHours(23, 59, 59, 999); // Vi inkluderer hele dagen i dag
+
     const teller = {};
+    
     alleVakter.forEach(v => {
-        if (v.hoved_vakt_id) teller[v.hoved_vakt_id] = (teller[v.hoved_vakt_id] || 0) + 1;
-        if (v.ekstra_vakt_id) teller[v.ekstra_vakt_id] = (teller[v.ekstra_vakt_id] || 0) + 1;
+        // Lag en dato-gjenstand for vakten for å sammenligne
+        const [year, month] = v.maaned.split('-').map(Number);
+        const vaktDato = new Date(year, month - 1, v.dato);
+
+        // KUN tell poenget hvis datoen er i dag eller tidligere
+        if (vaktDato <= iDag) {
+            if (v.hoved_vakt_id) teller[v.hoved_vakt_id] = (teller[v.hoved_vakt_id] || 0) + 1;
+            if (v.ekstra_vakt_id) teller[v.ekstra_vakt_id] = (teller[v.ekstra_vakt_id] || 0) + 1;
+        }
     });
 
-    // 2. Bygg tabellen
+    // 2. Oppdater tabellen i HTML
     const tbody = document.getElementById('vakt-score-body');
     tbody.innerHTML = "";
 
-    // Vi viser kun medlemmer som faktisk har opptjent poeng eller har benyttet poeng
-    alleMedlemmerCache.forEach(m => {
+    // Sorter listen slik at de med flest poeng står øverst
+    const sortertListe = [...alleMedlemmerCache].sort((a, b) => {
+        const poengA = teller[a.id] || 0;
+        const poengB = teller[b.id] || 0;
+        return poengB - poengA;
+    });
+
+    sortertListe.forEach(m => {
         const opptjent = teller[m.id] || 0;
         const benyttet = m.poeng_benyttet || 0;
         const saldo = opptjent - benyttet;
 
+        // Vis kun de som enten har jobbet eller har benyttet poeng
         if (opptjent > 0 || benyttet > 0) {
             tbody.innerHTML += `
                 <tr>
@@ -164,12 +185,11 @@ async function beregnOgVisPoeng() {
                                style="width: 60px; margin: 0; padding: 2px; text-align: center;"
                                onchange="oppdaterBenyttedePoeng('${m.id}', this.value)">
                     </td>
-                    <td class="tekst-gronn" style="text-align: right;">${saldo}</td>
+                    <td class="tekst-gronn" style="text-align: right; font-weight: bold;">${saldo}</td>
                 </tr>`;
         }
     });
 }
-
 // 6. Lagre manuelle poengendringer
 async function oppdaterBenyttedePoeng(medlemId, verdi) {
     showLoader(true);
