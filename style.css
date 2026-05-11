@@ -732,7 +732,36 @@ label {
 
 /* --- REGLER FOR MOBIL (Skjerm under 1024px) --- */
 @media (max-width: 1024px) {
-    body { flex-direction: column; }
+    body { flex-direction: column; 
+         /* --- SPESIFIKK FIKS FOR SKAPLEIE PÅ MOBIL --- */
+    
+    #mod-skap .split-container {
+        flex-direction: column !important; /* Stabler matrise og panel oppå hverandre */
+    }
+
+    #mod-skap .column-form, 
+    #mod-skap .column-side {
+        width: 100% !important; /* Lar begge bruke hele bredden */
+        margin-bottom: 20px;
+    }
+
+    /* Gjør skap-rutene litt mindre på mobil så 10 stk får plass i bredden */
+    .locker-grid {
+        grid-template-columns: repeat(10, 1fr) !important;
+        gap: 4px !important; /* Mindre mellomrom på mobil */
+    }
+
+    .locker-box {
+        font-size: 10px !important; /* Mindre tall inni boksene */
+        padding: 2px !important;
+    }
+
+    /* Flytter info-panelet (høyre side) under matrisen */
+    #locker-panel {
+        margin-top: 10px;
+        border-top: 5px solid var(--gull);
+    } 
+         }
     .mobile-header { display: flex; } /* Viser burger på mobil */
 
     nav {
