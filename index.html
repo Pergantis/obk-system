@@ -31,35 +31,24 @@
 <main>
    <!-- MODUL: VAKTPLAN (PROTOTYPE) -->
 <section id="mod-vaktplan" class="module">
-   <section id="mod-vaktplan" class="module">
     <div class="vakt-header">
         <h1>🎱 Bak disken – Vaktplan</h1>
-        <div id="lock-status-indicator" class="alert-box alert-warning">🔓 REDIGERINGSMODUS</div>
     </div>
 
-    <!-- Verktøylinjen ligger nå i en egen div som håndterer bredden bedre -->
+    <!-- Verktøylinjen med knapper -->
     <div class="vakt-toolbar">
         <div class="vakt-controls">
             <label>Måned:</label>
-            <input type="month" id="vakt-month-picker" value="2026-05" class="input-field">
+            <input type="month" id="vakt-month-picker" value="2026-05">
             <button class="btn" style="background: var(--marine);" onclick="initVaktplan()">🔄 LAST / OPPDATER</button>
-            <button class="btn" style="background: var(--gull); color: var(--marine);" id="btn-toggle-edit" onclick="toggleEditMode()">🔒 LÅS</button>
+            <button class="btn" id="btn-toggle-edit" style="background: var(--gull); color: var(--marine);" onclick="toggleEditMode()">🔒 LÅS FOR REDIGERING</button>
         </div>
         <div class="vakt-rule-badge">
             🎯 Regel: 1 vakt = 1 poeng | 3 poeng = 1 måned gratis spill
         </div>
     </div>
 
-    <div class="admin-card card-marine">
-        <!-- Tabellen ligger inni her og vil nå scrolle sidelengs -->
-        <table class="vakt-table" id="vakt-table-prototype">
-            ...
-        </table>
-    </div>
-</section>
-
-    <!-- Vaktmatrise -->
-    <div class="admin-card card-marine" style="padding: 10px; overflow-x: auto;">
+    <div class="admin-card card-marine" style="overflow-x: auto;">
         <table class="vakt-table" id="vakt-table-prototype">
             <thead>
                 <tr>
@@ -73,11 +62,11 @@
                     <th class="th-weekend">Søndag</th>
                 </tr>
             </thead>
-            <tbody id="vakt-body-prototype">
-                <!-- Genereres av JS -->
-            </tbody>
+            <tbody id="vakt-body-prototype"></tbody>
         </table>
     </div>
+    
+    <!-- Poengtabellen din fortsetter herunder... -->
 
     <!-- Poengoversikt (Nå med rammer og formatering lik medlemslisten) -->
     <div class="admin-card card-green" style="margin-top: 30px;">
