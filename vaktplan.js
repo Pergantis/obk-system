@@ -208,58 +208,64 @@ function getWeekNumber(d) {
     return weekNo;
 }
 // --- PIN-KODE LOGIKK FOR VAKTPLAN ---
-const VAKT_EDIT_PIN = "1234"; // <--- Du kan endre denne til ønsket kode
+const VAKT_EDIT_PIN = "1234"; // <--- Din pinkode
 
+// Denne funksjonen kjøres når man trykker på hovedknappen (Lås/Åpne)
 function toggleEditMode() {
     const section = document.getElementById('mod-vaktplan');
-    const btn = document.getElementById('btn-toggle-edit');
-    const status = document.getElementById('lock-status-indicator');
-    
-    // Hvis planen allerede er åpen, låser vi den bare (trenger ikke kode for å låse)
-    if (!section.classList.contains('edit-locked')) {
-        section.classList.add('edit-locked');
-        btn.innerText = "🔓 ÅPNE FOR REDIGERING";
-        status.innerText = "🔒 VISNINGSMODUS (LÅST)";
-        status.className = "alert-box alert-danger";
-        return;
-    }
+    const erLaast = section.classList.contains('edit-locked');
 
-    // Hvis den er låst, åpner vi PIN-vinduet (Modalen)
-    document.getElementById('vakt-pin-modal').style.display = 'flex';
-    document.getElementById('vakt-pin-input').value = "";
-    document.getElementById('vakt-pin-input').focus();
-    document.getElementById('vakt-pin-error').style.display = 'none';
+    if (!erLaast) {
+        // SCENARIO: Planen er åpen -> Vi låser den nå (trenger ikke PIN)
+        section.classList.add('edit-locked');
+        oppdaterGrensesnitt(true);
+    } else {
+        // SCENARIO: Planen er låst -> Vi må vise PIN-vinduet
+        document.getElementById('vakt-pin-modal').style.display = 'flex';
+        document.getElementById('vakt-pin-input').value = "";
+        document.getElementById('vakt-pin-input').focus();
+        document.getElementById('vakt-pin-error').style.display = 'none';
+    }
 }
+
+// Denne funksjonen kjøres når man trykker "LÅS OPP" inni PIN-vinduet
 function verifyVaktPin() {
     const input = document.getElementById('vakt-pin-input').value;
-    const section = document.getElementById('mod-vaktplan');
-    const btn = document.getElementById('btn-toggle-edit');
-    const status = document.getElementById('lock-status-indicator');
-
+    
     if (input === VAKT_EDIT_PIN) {
-        // 1. RIKTIG KODE: Fjern låse-klassen fra vaktplanen
+        // 1. RIKTIG KODE: Fjern låsen
+        const section = document.getElementById('mod-vaktplan');
         section.classList.remove('edit-locked');
         
-        // 2. Oppdater knappen og status-linjen
-        btn.innerText = "🔒 LÅS FOR REDIGERING";
-        status.innerText = "🔓 REDIGERINGSMODUS AKTIV";
-        status.className = "alert-box alert-warning";
-
-        // 3. TVING vinduet til å lukke seg
-        closeVaktPin();
+        // 2. Oppdater tekst på knapper og status
+        oppdaterGrensesnitt(false);
         
-        console.log("Vaktplan låst opp!"); // En liten beskjed i bakgrunnen for feilsøking
+        // 3. Lukk vinduet umiddelbart
+        closeVaktPin();
     } else {
-        // FEIL KODE: Vis rød tekst og riste litt på feltet (valgfritt)
+        // FEIL KODE: Vis rød tekst
         document.getElementById('vakt-pin-error').style.display = 'block';
         document.getElementById('vakt-pin-input').value = "";
         document.getElementById('vakt-pin-input').focus();
     }
 }
 
-function closeVaktPin() {
-    const modal = document.getElementById('vakt-pin-modal');
-    if (modal) {
-        modal.style.display = 'none';
+// Hjelpefunksjon for å sikre at tekstene alltid er korrekte
+function oppdaterGrensesnitt(laast) {
+    const btn = document.getElementById('btn-toggle-edit');
+    const status = document.getElementById('lock-status-indicator');
+    
+    if (laast) {
+        btn.innerText = "🔓 ÅPNE FOR REDIGERING";
+        status.innerText = "🔒 VISNINGSMODUS (LÅST)";
+        status.className = "alert-box alert-danger";
+    } else {
+        btn.innerText = "🔒 LÅS FOR REDIGERING";
+        status.innerText = "🔓 REDIGERINGSMODUS AKTIV";
+        status.className = "alert-box alert-warning";
     }
+}
+
+function closeVaktPin() {
+    document.getElementById('vakt-pin-modal').style.display = 'none';
 }
