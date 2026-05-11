@@ -672,87 +672,93 @@ label {
 }
 /* --- MOBIL-NAVIGASJON (RESPONSIVITET) --- */
 
-/* Skjul mobil-header på store skjermer (PC) */
-.mobile-header {
-    display: none;
-    background: var(--marine);
-    color: white;
-    padding: 10px 20px;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 2px solid var(--gull);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
+/* --- FORBEDRET MOBIL-NAVIGASJON OG LANDSKAPSMODUS --- */
 
-.menu-btn {
-    background: var(--gull);
-    color: var(--marine);
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.mobile-logo-text {
-    font-weight: bold;
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* --- REGLER FOR MOBIL (Skjermer under 768px) --- */
-@media (max-width: 768px) {
+/* Øker grensen til 1024px for å fange opp nettbrett og mobiler i liggende modus */
+@media (max-width: 1024px) {
     body {
-        flex-direction: column; /* Legger header over main i stedet for ved siden av */
-        overflow: auto;
+        flex-direction: column;
+        overflow-x: hidden; /* Hindrer hele siden i å vugge sidelengs */
     }
 
     .mobile-header {
-        display: flex; /* Viser topplinjen kun på mobil */
+        display: flex;
+        position: sticky;
+        top: 0;
+        z-index: 1001;
     }
 
-    /* Flytt hovedmenyen ut av skjermen til venstre */
     nav {
         position: fixed;
-        left: -250px; /* Gjemmer menyen */
+        left: -260px; /* Litt mer margin for sikkerhet */
         top: 0;
-        height: 100vh;
-        z-index: 9999; /* Legger den helt øverst */
-        transition: left 0.3s ease-in-out; /* Gjør at den sklir pent inn */
-        box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+        height: 100%;
+        width: 250px;
+        z-index: 9999;
+        transition: left 0.3s ease;
+        overflow-y: auto; /* Gjør at du kan scrolle inni menyen hvis skjermen er lav */
+        background: var(--marine);
     }
 
-    /* Når menyen har klassen 'open', sklir den inn */
     nav.open {
         left: 0;
     }
 
-    /* Sørg for at innholdet bruker hele bredden på mobil */
     main {
+        width: 100%;
+        padding: 10px;
+        margin: 0;
+    }
+
+    /* --- FIKS FOR VAKTPLAN VERKTØYLINJE --- */
+    .vakt-toolbar {
+        flex-direction: column; /* Stabler elementene oppå hverandre */
+        align-items: stretch; /* Lar knappene fylle bredden */
+        border-radius: 15px; /* Mindre rund på mobil */
         padding: 15px;
+        gap: 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .vakt-controls {
+        flex-direction: column;
+        gap: 8px;
         width: 100%;
     }
 
-    /* Gjør alle tabeller og grids scrollbare sidelengs så de ikke ødelegger layouten */
-    .admin-card, .vakt-container, .bord-grid {
+    .vakt-controls .btn, .vakt-controls .input-field {
+        width: 100% !important; /* Knapper og velger tar full bredde */
+        margin: 0;
+    }
+
+    .vakt-rule-badge {
+        text-align: center;
+        width: 100%;
+        font-size: 11px;
+    }
+
+    /* --- TABELL-KONTROLL --- */
+    /* Dette sørger for at tabeller kan scroller sidelengs inni kortene sine */
+    .admin-card {
+        width: 100%;
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        padding: 10px !important;
+        box-sizing: border-box;
     }
 
-    /* Tilpass vaktplanen spesielt for mobil */
     .vakt-table {
-        min-width: 600px; /* Tvinger frem scroll i stedet for å klemme den flat */
+        min-width: 800px; /* Tvinger tabellen til å beholde størrelsen så man må scrolle */
     }
 
-    /* Gjør split-containers (som i Skap og Medlem) til en enkel kolonne */
-    .split-container {
-        flex-direction: column;
-    }
+    /* Skjuler unødvendig luft på mobil */
+    h1 { font-size: 20px; margin-bottom: 10px; }
+}
 
-    .column-form, .column-list, .column-side {
-        width: 100% !important;
+/* Spesialfiks for VELDIG lave skjermer (f.eks. iPhone i liggende modus) */
+@media (max-height: 500px) and (max-width: 1024px) {
+    nav {
+        padding-top: 60px; /* Gir plass til hamburgeren øverst */
     }
+    .nav-logo-top { display: none; } /* Skjuler logo i menyen for å spare plass i høyden */
 }
