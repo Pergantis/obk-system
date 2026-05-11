@@ -206,3 +206,50 @@ function getWeekNumber(d) {
     var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     return weekNo;
 }
+// --- PIN-KODE LOGIKK FOR VAKTPLAN ---
+const VAKT_EDIT_PIN = "1234"; // <--- Du kan endre denne til ønsket kode
+
+function toggleEditMode() {
+    const section = document.getElementById('mod-vaktplan');
+    const btn = document.getElementById('btn-toggle-edit');
+    const status = document.getElementById('lock-status-indicator');
+    
+    // Hvis planen allerede er åpen, låser vi den bare (trenger ikke kode for å låse)
+    if (!section.classList.contains('edit-locked')) {
+        section.classList.add('edit-locked');
+        btn.innerText = "🔓 ÅPNE FOR REDIGERING";
+        status.innerText = "🔒 VISNINGSMODUS (LÅST)";
+        status.className = "alert-box alert-danger";
+        return;
+    }
+
+    // Hvis den er låst, åpner vi PIN-vinduet (Modalen)
+    document.getElementById('vakt-pin-modal').style.display = 'flex';
+    document.getElementById('vakt-pin-input').value = "";
+    document.getElementById('vakt-pin-input').focus();
+    document.getElementById('vakt-pin-error').style.display = 'none';
+}
+
+function verifyVaktPin() {
+    const input = document.getElementById('vakt-pin-input').value;
+    const section = document.getElementById('mod-vaktplan');
+    const btn = document.getElementById('btn-toggle-edit');
+    const status = document.getElementById('lock-status-indicator');
+
+    if (input === VAKT_EDIT_PIN) {
+        // RIKTIG KODE: Lås opp for redigering
+        section.classList.remove('edit-locked');
+        btn.innerText = "🔒 LÅS FOR REDIGERING";
+        status.innerText = "🔓 REDIGERINGSMODUS AKTIV";
+        status.className = "alert-box alert-warning";
+        closeVaktPin();
+    } else {
+        // FEIL KODE: Vis rød tekst
+        document.getElementById('vakt-pin-error').style.display = 'block';
+        document.getElementById('vakt-pin-input').value = "";
+    }
+}
+
+function closeVaktPin() {
+    document.getElementById('vakt-pin-modal').style.display = 'none';
+}
