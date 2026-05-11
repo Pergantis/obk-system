@@ -28,24 +28,7 @@ window.addEventListener('load', () => {
 });
 // --- VAKTPLAN PROTOTYPE LOGIKK ---
 
-// Funksjon for å skifte mellom Låst og Åpen modus (Prototype)
-function toggleEditMode() {
-    const section = document.getElementById('mod-vaktplan');
-    const btn = document.getElementById('btn-toggle-edit');
-    const status = document.getElementById('lock-status-indicator');
-    
-    if (section.classList.contains('edit-locked')) {
-        section.classList.remove('edit-locked');
-        btn.innerText = "🔒 LÅS FOR REDIGERING";
-        status.innerText = "🔓 REDIGERINGSMODUS AKTIV";
-        status.className = "alert-box alert-warning";
-    } else {
-        section.classList.add('edit-locked');
-        btn.innerText = "🔓 ÅPNE FOR REDIGERING";
-        status.innerText = "🔒 VISNINGSMODUS (LÅST)";
-        status.className = "alert-box alert-danger";
-    }
-}
+
 
 // Genererer en test-kalender for Mai 2026
 function renderVaktplanPrototype() {
