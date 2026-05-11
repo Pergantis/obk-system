@@ -230,7 +230,6 @@ function toggleEditMode() {
     document.getElementById('vakt-pin-input').focus();
     document.getElementById('vakt-pin-error').style.display = 'none';
 }
-
 function verifyVaktPin() {
     const input = document.getElementById('vakt-pin-input').value;
     const section = document.getElementById('mod-vaktplan');
@@ -238,19 +237,29 @@ function verifyVaktPin() {
     const status = document.getElementById('lock-status-indicator');
 
     if (input === VAKT_EDIT_PIN) {
-        // RIKTIG KODE: Lås opp for redigering
+        // 1. RIKTIG KODE: Fjern låse-klassen fra vaktplanen
         section.classList.remove('edit-locked');
+        
+        // 2. Oppdater knappen og status-linjen
         btn.innerText = "🔒 LÅS FOR REDIGERING";
         status.innerText = "🔓 REDIGERINGSMODUS AKTIV";
         status.className = "alert-box alert-warning";
+
+        // 3. TVING vinduet til å lukke seg
         closeVaktPin();
+        
+        console.log("Vaktplan låst opp!"); // En liten beskjed i bakgrunnen for feilsøking
     } else {
-        // FEIL KODE: Vis rød tekst
+        // FEIL KODE: Vis rød tekst og riste litt på feltet (valgfritt)
         document.getElementById('vakt-pin-error').style.display = 'block';
         document.getElementById('vakt-pin-input').value = "";
+        document.getElementById('vakt-pin-input').focus();
     }
 }
 
 function closeVaktPin() {
-    document.getElementById('vakt-pin-modal').style.display = 'none';
+    const modal = document.getElementById('vakt-pin-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
