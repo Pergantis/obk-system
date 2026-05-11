@@ -16,17 +16,16 @@
 </header>
 <div id="sync-loader">Synkroniserer...</div>
 
-<nav>
+<nav id="main-nav">
     <div class="nav-logo-top">
-       <img src="logoobk.png" alt="Oslo Biljardklubb Logo" class="main-logo">
+        <img src="logo.png" alt="OBK Logo" class="main-logo">
     </div>
     
-    <button class="nav-btn active" id="btn-bord" onclick="showModule('bord')">🎱 BORDLEIE</button>
-    <button class="nav-btn" id="btn-medlem" onclick="showModule('medlem')">👤 PERIODEKORT</button>
-    <button class="nav-btn" id="btn-skap" onclick="showModule('skap')">🔐 SKAPLEIE</button>
-    <button class="nav-btn" id="btn-vaktplan" onclick="showModule('vaktplan')">📅 VAKTPLAN</button>
-    <button class="nav-btn" id="btn-hjelp" onclick="showModule('hjelp')" style="margin-top: auto; border-color: rgba(255,255,255,0.2);">❓ HJELP</button>
-    
+    <button class="nav-btn active" id="btn-bord" onclick="showModule('bord'); toggleMenu('close')">🎱 BORDLEIE</button>
+    <button class="nav-btn" id="btn-medlem" onclick="showModule('medlem'); toggleMenu('close')">👤 PERIODEKORT</button>
+    <button class="nav-btn" id="btn-skap" onclick="showModule('skap'); toggleMenu('close')">🔐 SKAPLEIE</button>
+    <button class="nav-btn" id="btn-vaktplan" onclick="showModule('vaktplan'); toggleMenu('close')">📅 VAKTPLAN</button>
+    <button class="nav-btn" id="btn-hjelp" onclick="showModule('hjelp'); toggleMenu('close')" style="margin-top: auto;">❓ VEILEDNING</button>
 </nav>
 
 <main>
