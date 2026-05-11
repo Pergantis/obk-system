@@ -5,6 +5,7 @@ let alleMedlemmerCache = []; // For raskt søk
 // 1. Initialisering: Kjøres når admin klikker på Vaktplan-fanen
 async function initVaktplan() {
     document.getElementById('mod-vaktplan').classList.add('edit-locked');
+    oppdaterGrensesnitt(true); // Tvinger knappen til å vise "Åpne" med en gang
     showLoader(true);
     // Hent alle medlemmer én gang for å bruke i søk (raskere enn å spørre databasen hver gang)
     const { data } = await sb.from('medlemmer').select('id, fornavn, etternavn, tlf_mobil, poeng_benyttet');
