@@ -670,3 +670,89 @@ label {
     font-weight: bold;
     color: var(--marine);
 }
+/* --- MOBIL-NAVIGASJON (RESPONSIVITET) --- */
+
+/* Skjul mobil-header på store skjermer (PC) */
+.mobile-header {
+    display: none;
+    background: var(--marine);
+    color: white;
+    padding: 10px 20px;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--gull);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.menu-btn {
+    background: var(--gull);
+    color: var(--marine);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.mobile-logo-text {
+    font-weight: bold;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- REGLER FOR MOBIL (Skjermer under 768px) --- */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column; /* Legger header over main i stedet for ved siden av */
+        overflow: auto;
+    }
+
+    .mobile-header {
+        display: flex; /* Viser topplinjen kun på mobil */
+    }
+
+    /* Flytt hovedmenyen ut av skjermen til venstre */
+    nav {
+        position: fixed;
+        left: -250px; /* Gjemmer menyen */
+        top: 0;
+        height: 100vh;
+        z-index: 9999; /* Legger den helt øverst */
+        transition: left 0.3s ease-in-out; /* Gjør at den sklir pent inn */
+        box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+    }
+
+    /* Når menyen har klassen 'open', sklir den inn */
+    nav.open {
+        left: 0;
+    }
+
+    /* Sørg for at innholdet bruker hele bredden på mobil */
+    main {
+        padding: 15px;
+        width: 100%;
+    }
+
+    /* Gjør alle tabeller og grids scrollbare sidelengs så de ikke ødelegger layouten */
+    .admin-card, .vakt-container, .bord-grid {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Tilpass vaktplanen spesielt for mobil */
+    .vakt-table {
+        min-width: 600px; /* Tvinger frem scroll i stedet for å klemme den flat */
+    }
+
+    /* Gjør split-containers (som i Skap og Medlem) til en enkel kolonne */
+    .split-container {
+        flex-direction: column;
+    }
+
+    .column-form, .column-list, .column-side {
+        width: 100% !important;
+    }
+}
