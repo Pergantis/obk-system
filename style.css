@@ -673,16 +673,55 @@ label {
 /* --- MOBIL-NAVIGASJON (RESPONSIVITET) --- */
 
 /* --- FORBEDRET MOBIL-NAVIGASJON OG LANDSKAPSMODUS --- */
+/* --- 1. NULLSTILLING FOR PC (Sørger for at ting er normalt her) --- */
+.mobile-header {
+    display: none !important; /* Tvinger den bort på PC */
+}
 
-/* Øker grensen til 1024px for å fange opp nettbrett og mobiler i liggende modus */
+/* Sørger for at vaktplan-verktøylinjen alltid er synlig og ryddig på PC */
+.vakt-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #e9ecef;
+    padding: 10px 20px;
+    border-radius: 50px;
+    margin-bottom: 20px;
+    gap: 15px;
+}
+
+.vakt-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* --- 2. BURGER-KNAPPEN (Med din gull-farge) --- */
+.menu-btn {
+    background-color: var(--gull) !important;
+    color: var(--marine) !important;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* --- 3. REGLER FOR MOBIL OG NETTBRETT (Under 1024px) --- */
 @media (max-width: 1024px) {
     body {
         flex-direction: column;
-        overflow-x: hidden; /* Hindrer hele siden i å vugge sidelengs */
     }
 
     .mobile-header {
-        display: flex;
+        display: flex !important; /* Viser den bare på mobil */
+        background: var(--marine);
+        color: white;
+        padding: 12px 20px;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid var(--gull);
         position: sticky;
         top: 0;
         z-index: 1001;
@@ -690,14 +729,15 @@ label {
 
     nav {
         position: fixed;
-        left: -260px; /* Litt mer margin for sikkerhet */
+        left: -280px;
         top: 0;
-        height: 100%;
-        width: 250px;
+        height: 100vh;
+        width: 260px;
         z-index: 9999;
-        transition: left 0.3s ease;
-        overflow-y: auto; /* Gjør at du kan scrolle inni menyen hvis skjermen er lav */
+        transition: left 0.3s ease-in-out;
         background: var(--marine);
+        box-shadow: 5px 0 15px rgba(0,0,0,0.4);
+        display: flex !important; /* Sikrer at menyen ikke forsvinner */
     }
 
     nav.open {
@@ -705,60 +745,45 @@ label {
     }
 
     main {
-        width: 100%;
-        padding: 10px;
-        margin: 0;
+        width: 100% !important;
+        padding: 15px !important;
     }
 
-    /* --- FIKS FOR VAKTPLAN VERKTØYLINJE --- */
+    /* FIKS FOR VAKTPLAN-KNAPPER PÅ MOBIL */
     .vakt-toolbar {
-        flex-direction: column; /* Stabler elementene oppå hverandre */
-        align-items: stretch; /* Lar knappene fylle bredden */
-        border-radius: 15px; /* Mindre rund på mobil */
-        padding: 15px;
-        gap: 10px;
-        width: 100%;
-        box-sizing: border-box;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        border-radius: 15px !important;
+        width: 100% !important;
+        display: flex !important; /* Tvinger frem visning */
     }
 
     .vakt-controls {
-        flex-direction: column;
-        gap: 8px;
-        width: 100%;
+        flex-direction: column !important;
+        width: 100% !important;
+        display: flex !important; /* Tvinger frem visning */
     }
 
-    .vakt-controls .btn, .vakt-controls .input-field {
-        width: 100% !important; /* Knapper og velger tar full bredde */
-        margin: 0;
+    /* Tvinger knappene i vaktplanen til å være synlige og ha full bredde på mobil */
+    .vakt-controls .btn {
+        width: 100% !important;
+        display: block !important;
+        margin-bottom: 5px;
+    }
+
+    .vakt-controls .input-field {
+        width: 100% !important;
+        margin: 5px 0 !important;
     }
 
     .vakt-rule-badge {
+        width: 100%;
         text-align: center;
-        width: 100%;
-        font-size: 11px;
+        margin-top: 5px;
     }
 
-    /* --- TABELL-KONTROLL --- */
-    /* Dette sørger for at tabeller kan scroller sidelengs inni kortene sine */
+    /* Tabell-scroll */
     .admin-card {
-        width: 100%;
-        overflow-x: auto;
-        padding: 10px !important;
-        box-sizing: border-box;
+        overflow-x: auto !important;
     }
-
-    .vakt-table {
-        min-width: 800px; /* Tvinger tabellen til å beholde størrelsen så man må scrolle */
-    }
-
-    /* Skjuler unødvendig luft på mobil */
-    h1 { font-size: 20px; margin-bottom: 10px; }
-}
-
-/* Spesialfiks for VELDIG lave skjermer (f.eks. iPhone i liggende modus) */
-@media (max-height: 500px) and (max-width: 1024px) {
-    nav {
-        padding-top: 60px; /* Gir plass til hamburgeren øverst */
-    }
-    .nav-logo-top { display: none; } /* Skjuler logo i menyen for å spare plass i høyden */
 }
