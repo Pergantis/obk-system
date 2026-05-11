@@ -671,61 +671,69 @@ label {
     color: var(--marine);
 }
 /* --- MOBIL-NAVIGASJON (RESPONSIVITET) --- */
-
-/* --- FORBEDRET MOBIL-NAVIGASJON OG LANDSKAPSMODUS --- */
-/* --- 1. NULLSTILLING FOR PC (Sørger for at ting er normalt her) --- */
+/* --- MOBIL-MENY OG TOPPLINJE --- */
 .mobile-header {
-    display: none !important; /* Tvinger den bort på PC */
-}
-
-/* Sørger for at vaktplan-verktøylinjen alltid er synlig og ryddig på PC */
-.vakt-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #e9ecef;
+    display: none; /* Skjult på PC */
+    background: var(--marine);
+    color: white;
     padding: 10px 20px;
-    border-radius: 50px;
-    margin-bottom: 20px;
-    gap: 15px;
-}
-
-.vakt-controls {
-    display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--gull);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
-/* --- 2. BURGER-KNAPPEN (Med din gull-farge) --- */
 .menu-btn {
     background-color: var(--gull) !important;
     color: var(--marine) !important;
     border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
+    padding: 8px 15px;
+    border-radius: 5px;
     font-weight: bold;
     cursor: pointer;
-    font-size: 16px;
 }
 
-/* --- 3. REGLER FOR MOBIL OG NETTBRETT (Under 1024px) --- */
-@media (max-width: 1024px) {
-    body {
-        flex-direction: column;
-    }
+/* --- VAKTPLAN VERKTØYLINJE (FIKS FOR KNAPPER) --- */
+.vakt-toolbar {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e9ecef !important;
+    padding: 15px 20px !important;
+    border-radius: 40px !important;
+    margin-bottom: 25px !important;
+    gap: 15px;
+}
 
-    .mobile-header {
-        display: flex !important; /* Viser den bare på mobil */
-        background: var(--marine);
-        color: white;
-        padding: 12px 20px;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 2px solid var(--gull);
-        position: sticky;
-        top: 0;
-        z-index: 1001;
-    }
+.vakt-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+/* Gjør at knappene i vaktplanen ikke forsvinner */
+.vakt-controls .btn {
+    width: auto !important;
+    min-width: 130px;
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+#vakt-month-picker {
+    font-size: 18px !important;
+    font-weight: bold !important;
+    padding: 8px !important;
+    border: 2px solid var(--gull) !important;
+    border-radius: 10px !important;
+}
+
+/* --- REGLER FOR MOBIL (Skjerm under 1024px) --- */
+@media (max-width: 1024px) {
+    body { flex-direction: column; }
+    .mobile-header { display: flex; } /* Viser burger på mobil */
 
     nav {
         position: fixed;
@@ -734,56 +742,21 @@ label {
         height: 100vh;
         width: 260px;
         z-index: 9999;
-        transition: left 0.3s ease-in-out;
+        transition: left 0.3s ease;
         background: var(--marine);
-        box-shadow: 5px 0 15px rgba(0,0,0,0.4);
-        display: flex !important; /* Sikrer at menyen ikke forsvinner */
     }
 
-    nav.open {
-        left: 0;
-    }
+    nav.open { left: 0; } /* Sklir inn når man trykker Meny */
 
-    main {
-        width: 100% !important;
-        padding: 15px !important;
-    }
+    main { width: 100%; padding: 15px; }
 
-    /* FIKS FOR VAKTPLAN-KNAPPER PÅ MOBIL */
-    .vakt-toolbar {
+    /* Stabler knappene i vaktplanen på mobil */
+    .vakt-toolbar, .vakt-controls {
         flex-direction: column !important;
         align-items: stretch !important;
-        border-radius: 15px !important;
+    }
+
+    .vakt-controls .btn, #vakt-month-picker {
         width: 100% !important;
-        display: flex !important; /* Tvinger frem visning */
-    }
-
-    .vakt-controls {
-        flex-direction: column !important;
-        width: 100% !important;
-        display: flex !important; /* Tvinger frem visning */
-    }
-
-    /* Tvinger knappene i vaktplanen til å være synlige og ha full bredde på mobil */
-    .vakt-controls .btn {
-        width: 100% !important;
-        display: block !important;
-        margin-bottom: 5px;
-    }
-
-    .vakt-controls .input-field {
-        width: 100% !important;
-        margin: 5px 0 !important;
-    }
-
-    .vakt-rule-badge {
-        width: 100%;
-        text-align: center;
-        margin-top: 5px;
-    }
-
-    /* Tabell-scroll */
-    .admin-card {
-        overflow-x: auto !important;
     }
 }
