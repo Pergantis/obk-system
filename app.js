@@ -107,3 +107,21 @@ async function oppdaterSokeListe() {
 }
 // Kjør denne når siden lastes
 window.addEventListener('load', oppdaterSokeListe);
+// --- MOBIL-MENY LOGIKK ---
+
+/**
+ * Åpner eller lukker hovedmenyen på mobil.
+ * @param {string} action - Hvis 'close', vil menyen alltid lukkes.
+ */
+function toggleMenu(action) {
+    const nav = document.getElementById('main-nav');
+    if (!nav) return;
+
+    if (action === 'close') {
+        // Lukker menyen (brukes når man klikker på en modul-knapp)
+        nav.classList.remove('open');
+    } else {
+        // Skifter mellom åpen og lukket
+        nav.classList.toggle('open');
+    }
+}
