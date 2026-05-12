@@ -351,8 +351,7 @@ function getWeekNumber(d) {
 }
 
 // 7. Fikset toggleEditMode
-const VAKT_EDIT_PIN = "0555";
-
+// const VAKT_EDIT_PIN = "0555";
 function toggleEditMode() {
     const section = document.getElementById('mod-vaktplan');
     const erLaast = section.classList.contains('edit-locked');
@@ -361,27 +360,52 @@ function toggleEditMode() {
         section.classList.add('edit-locked');
         oppdaterGrensesnitt(true);
     } else {
-        document.getElementById('vakt-pin-modal').style.display = 'flex';
-        document.getElementById('vakt-pin-input').value = "";
-        document.getElementById('vakt-pin-input').focus();
-        document.getElementById('vakt-pin-error').style.display = 'none';
+        // Bruk ny PIN-modal for vaktplan-redigering
+        visVaktplanPinModal();
     }
 }
 
-function verifyVaktPin() {
-    const input = document.getElementById('vakt-pin-input').value;
+function visVaktplanPinModal() {
+    // Fjern eksisterende
+    const eksisterende = document.getElementById('vaktplan-pin-overlay');
+    if (eksisterende) eksisterende.remove();
     
-    if (input === VAKT_EDIT_PIN) {
+    const modal = document.createElement('div');
+    modal.id = 'vaktplan-pin-overlay';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(26,47,60,0.95);z-index:30000;display:flex;justify-content:center;align-items:center;';
+    modal.innerHTML = `
+        <div style="background:white;border-radius:32px;padding:40px;text-align:center;max-width:300px;width:90%;">
+            <h3 style="color:#1a2f3c;">🔒 Vaktplan</h3>
+            <p style="font-size:13px;color:#666;">Tast PIN for redigering</p>
+            <input type="password" id="vaktplan-pin-input" style="background:#f5f0e8;border:2px solid #c9a84c;border-radius:60px;padding:12px;width:100%;text-align:center;font-size:24px;letter-spacing:5px;margin-bottom:15px;" maxlength="4" autofocus>
+            <div id="vaktplan-pin-error" style="color:#e74c3c;font-size:12px;margin-bottom:15px;display:none;">Feil kode!</div>
+            <button style="background:#c9a84c;color:#1a2f3c;border:none;padding:10px 20px;border-radius:60px;font-weight:bold;width:100%;margin-bottom:10px;" onclick="verifyVaktplanPin()">LÅS OPP</button>
+            <button style="background:#95a5a6;color:white;border:none;padding:10px 20px;border-radius:60px;width:100%;" onclick="lukkVaktplanPinModal()">AVBRYT</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('vaktplan-pin-input').focus();
+}
+
+function verifyVaktplanPin() {
+    const input = document.getElementById('vaktplan-pin-input').value;
+    if (input === "1989") { // Bruker de første 4 sifrene av hoved-PIN
         const section = document.getElementById('mod-vaktplan');
         section.classList.remove('edit-locked');
         oppdaterGrensesnitt(false);
-        closeVaktPin();
+        lukkVaktplanPinModal();
     } else {
-        document.getElementById('vakt-pin-error').style.display = 'block';
-        document.getElementById('vakt-pin-input').value = "";
-        document.getElementById('vakt-pin-input').focus();
+        document.getElementById('vaktplan-pin-error').style.display = 'block';
+        document.getElementById('vaktplan-pin-input').value = '';
+        document.getElementById('vaktplan-pin-input').focus();
     }
 }
+
+function lukkVaktplanPinModal() {
+    const modal = document.getElementById('vaktplan-pin-overlay');
+    if (modal) modal.remove();
+}
+
 
 function oppdaterGrensesnitt(laast) {
     const btn = document.getElementById('btn-toggle-edit');
