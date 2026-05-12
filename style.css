@@ -14,153 +14,232 @@
     --tekst-lys: #666;
 }
 
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
 body {
-    body.pin-inactive {
-    padding-top: 52px;
-}
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    background: var(--krem); 
-    margin: 0; 
-    display: flex; 
-    height: 100vh; 
-    overflow: hidden; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--krem);
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
     color: var(--tekst-mork);
 }
 
 /* --- NAVIGASJON (Sidefelt) --- */
-nav { 
-    width: 240px; 
-    background: var(--marine); 
-    color: white; 
-    padding: 20px; 
-    border-right: 4px solid var(--gull); 
-    flex-shrink: 0; 
-    display: flex; 
-    flex-direction: column; 
+nav {
+    width: 240px;
+    background: var(--marine);
+    color: white;
+    padding: 20px;
+    border-right: 4px solid var(--gull);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
     height: 100vh;
+    transition: left 0.3s ease;
 }
 
 .nav-logo-top {
     text-align: center;
     margin-bottom: 30px;
     padding-bottom: 20px;
-    border-bottom: 1px solid rgba(201, 168, 76, 0.2); /* En tynn gull-linje under logoen */
+    border-bottom: 1px solid rgba(201, 168, 76, 0.2);
 }
 
 .main-logo {
-    max-width: 100%; /* Sørger for at den ikke går utenfor menyen */
+    max-width: 100%;
     height: auto;
     display: block;
     margin: 0 auto;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); /* Gir logoen litt dybde */
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 
-.nav-btn { 
-    width: 100%; 
-    padding: 14px; 
-    margin: 8px 0; 
-    background: none; 
-    border: 1px solid rgba(201, 168, 76, 0.3); 
-    color: white; 
-    cursor: pointer; 
-    border-radius: 8px; 
-    font-weight: bold; 
-    text-align: left; 
+.nav-btn {
+    width: 100%;
+    padding: 14px;
+    margin: 8px 0;
+    background: none;
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    color: white;
+    cursor: pointer;
+    border-radius: 60px;
+    font-weight: bold;
+    text-align: left;
     transition: all 0.2s;
 }
 
-.nav-btn:hover, .nav-btn.active { 
-    background: var(--gull); 
-    color: var(--marine); 
+.nav-btn:hover,
+.nav-btn.active {
+    background: var(--gull);
+    color: var(--marine);
     border-color: var(--gull);
 }
 
 /* --- HOVEDOMRÅDE --- */
-main { 
-    flex: 1; 
-    padding: 30px; 
-    overflow-y: auto; 
-    position: relative; 
+main {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+    position: relative;
 }
 
-.module { display: none; animation: fadeIn 0.3s; }
-.module.active { display: block; }
+.module {
+    display: none;
+    animation: fadeIn 0.3s;
+}
+
+.module.active {
+    display: block;
+}
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-h1 { margin-top: 0; color: var(--marine); font-size: 28px; }
+h1 {
+    margin-top: 0;
+    color: var(--marine);
+    font-size: 28px;
+}
 
 /* --- LAYOUT KOMPONENTER --- */
-/* Brukes for å dele skjermen i to (f.eks. Medlemmer og Skap) */
-.split-container { 
-    display: flex; 
-    gap: 25px; 
+.split-container {
+    display: flex;
+    gap: 25px;
     align-items: flex-start;
 }
 
-.column-form { flex: 1; }
-.column-list { flex: 1.5; }
-.column-side { flex: 0.8; }
+.column-form {
+    flex: 1;
+}
 
-/* Standard hvit boks (Card) */
-.admin-card { 
-    background: var(--hvit); 
-    padding: 20px; 
-    border-radius: 12px; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+.column-list {
+    flex: 1.5;
+}
+
+.column-side {
+    flex: 0.8;
+}
+
+.admin-card {
+    background: var(--hvit);
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     margin-bottom: 20px;
     border-top: 6px solid #ddd;
 }
 
-/* Fargevarianter for boks-topper */
-.card-marine { border-top-color: var(--marine); }
-.card-gold { border-top-color: var(--gull); }
-.card-green { border-top-color: var(--biljard-gronn); }
-.card-blue { border-top-color: var(--biljard-blaa); }
-
-/* --- BORDUTLEIE (GRID) --- */
-.bord-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-    gap: 20px; 
+.card-marine {
+    border-top-color: var(--marine);
 }
 
-.table-card { 
-    text-align: center; 
+.card-gold {
+    border-top-color: var(--gull);
+}
+
+.card-green {
+    border-top-color: var(--biljard-gronn);
+}
+
+.card-blue {
+    border-top-color: var(--biljard-blaa);
+}
+
+/* --- BORDUTLEIE --- */
+.bord-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.table-card {
+    text-align: center;
     transition: transform 0.2s;
+    border: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 200px;
 }
-.table-card.active { background: #f0fff4; border-top-color: var(--biljard-gronn); }
 
-.timer-text { 
-    font-size: 26px; 
-    font-weight: 900; 
-    color: var(--marine); 
-    margin: 10px 0; 
+.table-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+}
+
+.table-card.active {
+    background: #f0fff4;
+    border-top-color: var(--biljard-gronn);
+}
+
+.timer-text {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--marine);
+    margin: 10px 0;
+}
+
+.bg-sone-blaa {
+    background-color: #1E90FF !important;
+    color: white;
+    border-color: #187bcd;
+}
+
+.bg-sone-graa {
+    background-color: #708090 !important;
+    color: white;
+    border-color: #5f6d7a;
+}
+
+.bg-sone-beige {
+    background-color: #F0E68C !important;
+    color: #333;
+    border-color: #e6dc7e;
+}
+
+.bg-sone-blaa h3,
+.bg-sone-graa h3,
+.bg-sone-blaa .timer-text,
+.bg-sone-graa .timer-text {
+    color: white !important;
+}
+
+.bg-sone-blaa .input-field,
+.bg-sone-graa .input-field {
+    background: rgba(255, 255, 255, 0.9);
 }
 
 /* --- SKJEMA-ELEMENTER --- */
-label { 
-    display: block; 
-    font-size: 11px; 
-    font-weight: bold; 
-    color: var(--tekst-lys); 
-    text-transform: uppercase; 
-    margin-bottom: 5px; 
+label {
+    display: block;
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--tekst-lys);
+    text-transform: uppercase;
+    margin-bottom: 5px;
 }
 
-.req { color: var(--advarsel); }
+.req {
+    color: var(--advarsel);
+}
 
-.input-field { 
-    width: 100%; 
-    padding: 12px; 
-    border: 1px solid #ddd; 
-    border-radius: 8px; 
-    margin-bottom: 15px; 
+.input-field {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    margin-bottom: 15px;
     font-size: 14px;
     transition: border-color 0.2s;
 }
@@ -170,54 +249,52 @@ label {
     border-color: var(--biljard-blaa);
 }
 
-.btn { 
-    width: 100%; 
-    padding: 12px; 
-    border: none; 
-    border-radius: 8px; 
-    font-weight: bold; 
-    cursor: pointer; 
-    color: white; 
-    text-transform: uppercase; 
-    font-size: 14px; 
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 60px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    text-transform: uppercase;
+    font-size: 14px;
     transition: opacity 0.2s;
 }
 
-.btn:hover { opacity: 0.9; }
+.btn:hover {
+    opacity: 0.9;
+}
 
-/* --- SØKERESULTATER OG MELDINGER --- */
-/* Container for alle søkeresultater */
+/* --- SØKERESULTATER --- */
 #p-search-results {
     margin-top: 15px;
     display: flex;
     flex-direction: column;
-    gap: 12px; /* Avstand mellom boksene */
+    gap: 12px;
 }
 
-/* Den enkelte medlems-boksen */
-.search-result-item { 
-    background: white; 
-    padding: 15px; 
-    border: 2px solid #eee; /* Tykkere, lys ramme */
-    border-radius: 12px; 
-    cursor: pointer; 
-    transition: all 0.2s ease-in-out; 
-    display: flex; 
-    align-items: center; 
+.search-result-item {
+    background: white;
+    padding: 15px;
+    border: 2px solid #eee;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
     gap: 15px;
     position: relative;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* Når man holder musa over boksen */
-.search-result-item:hover { 
-    border-color: var(--gull); /* Gull-ramme ved hover */
-    background-color: #fffdf5; 
-    transform: translateY(-3px); /* Løfter boksen litt opp */
-    box-shadow: 0 6px 15px rgba(0,0,0,0.1); /* Dypere skygge */
+.search-result-item:hover {
+    border-color: var(--gull);
+    background-color: #fffdf5;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* En liten pil til høyre som indikerer "klikk her" */
 .search-result-item::after {
     content: '→';
     position: absolute;
@@ -232,7 +309,6 @@ label {
     opacity: 1;
 }
 
-/* Ikon-sirkelen inne i boksen */
 .search-item-icon {
     background: var(--krem);
     width: 45px;
@@ -245,23 +321,22 @@ label {
     flex-shrink: 0;
 }
 
-/* Tekst-styling inne i boksen */
-.search-item-info strong { 
-    display: block; 
-    color: var(--marine); 
-    font-size: 16px; 
+.search-item-info strong {
+    display: block;
+    color: var(--marine);
+    font-size: 16px;
     margin-bottom: 2px;
 }
 
-.search-item-info small { 
-    color: var(--tekst-lys); 
+.search-item-info small {
+    color: var(--tekst-lys);
     font-size: 13px;
 }
 
-/* Advarselsbokser (Gule/Røde) */
+/* --- ALERT BOKSER --- */
 .alert-box {
     padding: 15px;
-    border-radius: 10px;
+    border-radius: 16px;
     margin-bottom: 15px;
     font-size: 14px;
     font-weight: 500;
@@ -280,137 +355,89 @@ label {
     color: var(--advarsel);
 }
 
-
-
-/* --- SKAP-UTLEIE (GRID) --- */
-.locker-grid { 
-    display: grid; 
-    grid-template-columns: repeat(10, 1fr); 
-    gap: 8px; 
+/* --- SKAPUTLEIE --- */
+.locker-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
 }
 
-.locker-box { 
-    aspect-ratio: 1/1; 
-    background: var(--biljard-gronn); 
-    color: white; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    font-weight: bold; 
-    font-size: 12px; 
-    border-radius: 6px; 
-    cursor: pointer; 
-    transition: all 0.1s; 
+.locker-box {
+    aspect-ratio: 1/1;
+    background: var(--biljard-gronn);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.1s;
 }
 
-.locker-box.occupied { background: var(--advarsel); }
-.locker-box.selected { 
+.locker-box.occupied {
+    background: var(--advarsel);
+}
+
+.locker-box.warning {
+    background-color: #f1c40f !important;
+    color: #333 !important;
+}
+
+.locker-box.selected {
     box-shadow: 0 0 0 3px var(--tekst-mork);
     transform: scale(1.1);
     z-index: 10;
 }
 
 /* --- MODAL / POPUP --- */
-#modal-overlay { 
-    display: none; 
-    position: fixed; 
-    top: 0; left: 0; width: 100%; height: 100%; 
-    background: rgba(0,0,0,0.85); 
-    z-index: 10000; 
-    justify-content: center; 
-    align-items: center; 
+#modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
 }
 
-.modal-content { 
-    background: white; 
-    padding: 40px; 
-    border-radius: 20px; 
-    text-align: center; 
+.modal-content {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
     width: 90%;
-    max-width: 450px; 
+    max-width: 450px;
 }
 
-.big-number { 
-    font-size: 100px; 
-    font-weight: 900; 
-    color: var(--advarsel); 
-    line-height: 1; 
+.big-number {
+    font-size: 100px;
+    font-weight: 900;
+    color: var(--advarsel);
+    line-height: 1;
 }
 
 /* --- SYNC LOADER --- */
-#sync-loader { 
-    position: fixed; 
-    top: 15px; 
-    right: 20px; 
-    background: var(--gull); 
-    color: var(--marine); 
-    padding: 6px 18px; 
-    border-radius: 20px; 
-    font-size: 12px; 
+#sync-loader {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    background: var(--gull);
+    color: var(--marine);
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 12px;
     font-weight: bold;
-    display: none; 
-    z-index: 10001; 
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
-/* Ekstra tydelig ramme for bord-flisene */
-.table-card {
-    border: 1px solid #ddd; /* Dette gir rammen rundt hele flisen */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 200px;
+    display: none;
+    z-index: 10001;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
-.table-card h3 {
-    margin: 0 0 10px 0;
-    font-size: 18px;
-}
-/* Spesifikke bakgrunnsfarger for ledige bord per sone */
-/* Spesifikke bakgrunnsfarger for ledige bord per sone */
-.bg-sone-blaa { 
-    background-color: #1E90FF !important; 
-    color: white; 
-    border-color: #187bcd; 
-} 
-
-.bg-sone-graa { 
-    background-color: #708090 !important; 
-    color: white; 
-    border-color: #5f6d7a; 
-} 
-
-.bg-sone-beige { 
-    background-color: #F0E68C !important; 
-    color: #333; 
-    border-color: #e6dc7e; 
-}
-
-/* Sørger for at tekst og overskrifter blir hvite på blå og grå bakgrunn */
-.bg-sone-blaa h3, .bg-sone-graa h3, 
-.bg-sone-blaa .timer-text, .bg-sone-graa .timer-text {
-    color: white !important;
-}
-
-/* Gjør input-feltet litt gjennomsiktig hvitt så det matcher bakgrunnen */
-.bg-sone-blaa .input-field, .bg-sone-graa .input-field {
-    background: rgba(255, 255, 255, 0.9);
-}
-
-/* Sikre at aktive bord alltid er lysegrønne og overstyrer sone-fargen */
-.table-card.active { 
-    background-color: #f0fff4 !important; 
-    border: 2px solid var(--biljard-gronn) !important; 
-}
-
-/* Ramme og skygge for alle bord-fliser */
-.table-card {
-    border: 1px solid #ddd;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-/* --- FEILSIKKER TABELL-STIL --- */
-/* --- OPPDATERT TABELL-STIL (Kolonne-justering) --- */
-
-/* Gjør selve kortet litt romsligere */
+/* --- TABELLER --- */
 .column-list .admin-card {
     padding: 10px !important;
 }
@@ -420,46 +447,38 @@ label {
     border-collapse: collapse;
 }
 
-/* Felles innstillinger for alle celler i tabellen */
-.column-list th, 
+.column-list th,
 .column-list td {
-    padding: 4px 8px !important; /* Beholder den tette stilen */
+    padding: 4px 8px !important;
     font-size: 13px !important;
     border-bottom: 1px solid #eee !important;
     line-height: 1.2 !important;
 }
 
-/* --- HER STYRER VI KOLONNENE --- */
-
-/* Kolonne 1: NAVN (Venstrestilt) */
 .column-list th:nth-child(1),
 .column-list td:nth-child(1) {
     text-align: left !important;
-    width: 45%; /* Gir navnet mest plass */
+    width: 45%;
 }
 
-/* Kolonne 2: MOBIL (Midtstilt) */
 .column-list th:nth-child(2),
 .column-list td:nth-child(2) {
     text-align: center !important;
     width: 20%;
 }
 
-/* Kolonne 3: UTLØPER (Midtstilt) */
 .column-list th:nth-child(3),
 .column-list td:nth-child(3) {
     text-align: center !important;
     width: 15%;
 }
 
-/* Kolonne 4: STATUS (Høyrestilt) */
 .column-list th:nth-child(4),
 .column-list td:nth-child(4) {
     text-align: right !important;
     width: 20%;
 }
 
-/* Overskriftene (TH) trenger litt ekstra tydelighet */
 .column-list th {
     font-size: 11px !important;
     color: var(--tekst-lys) !important;
@@ -467,371 +486,184 @@ label {
     background: #fcfcfc;
 }
 
-/* --- DINE FARGE-KLASSER (IKKE ENDRE DISSE) --- */
-.tekst-rod { 
-    color: #B22222 !important; 
-    font-weight: bold !important; 
+.tekst-rod {
+    color: #B22222 !important;
+    font-weight: bold !important;
 }
 
-.tekst-gronn { 
-    color: #006400 !important; 
-    font-weight: bold !important; 
+.tekst-gronn {
+    color: #006400 !important;
+    font-weight: bold !important;
 }
 
-.navn-fet { 
-    font-weight: bold !important; 
-    color: #1a2f3c !important; 
-}
-/* Gul farge for skap som utløper om under 14 dager */
-.locker-box.warning { 
-    background-color: #f1c40f !important; 
-    color: #333 !important; 
-}
-/* Styling for utskrift (PDF) */
-@media print {
-    nav, .nav-btn, .btn, .locker-grid, .column-form, h1, #sync-loader { display: none !important; }
-    main { padding: 0 !important; margin: 0 !important; }
-    .column-side { width: 100% !important; flex: none !important; }
-    .admin-card { border: none !important; box-shadow: none !important; padding: 0 !important; }
-    #locker-panel { display: none !important; }
-    
-    .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    .print-table th, .print-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
-    .print-table th { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
-    .print-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--marine); padding-bottom: 10px; }
-}
-/* --- HJELPESIDE / ACCORDION STIL --- */
-.help-accordion {
-    margin-top: 20px;
+.navn-fet {
+    font-weight: bold !important;
+    color: #1a2f3c !important;
 }
 
-.help-accordion details {
-    background: #f9f9f9;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    transition: all 0.3s;
-}
-
-.help-accordion summary {
-    padding: 15px;
-    font-weight: bold;
-    cursor: pointer;
-    list-style: none;
+/* --- VAKTPLAN PROTOTYPE STIL --- */
+.vakt-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: var(--marine);
+    margin-bottom: 15px;
 }
 
-.help-accordion summary::after {
-    content: '▶';
+.edit-lock-status {
     font-size: 12px;
-    transition: transform 0.3s;
+    font-weight: bold;
+    color: var(--biljard-gronn);
+    background: #eafff0;
+    padding: 5px 15px;
+    border-radius: 20px;
+    border: 1px solid var(--biljard-gronn);
 }
 
-.help-accordion details[open] {
-    background: white;
-    border-color: var(--gull);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+.edit-locked .edit-lock-status {
+    color: var(--advarsel);
+    background: #fff0f0;
+    border-color: var(--advarsel);
 }
 
-.help-accordion details[open] summary {
-    border-bottom: 1px solid #eee;
-    margin-bottom: 10px;
-}
-
-.help-accordion details[open] summary::after {
-    transform: rotate(90deg);
-}
-
-.help-content {
-    padding: 0 20px 20px 20px;
-    line-height: 1.6;
-}
-
-.help-content ul {
-    padding-left: 20px;
-}
-
-.help-content li {
-    margin-bottom: 10px;
-}
-
-.help-content strong {
-    color: var(--marine);
-}
-/* --- VAKTPLAN PROTOTYPE STIL --- */
-.vakt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.edit-lock-status { font-size: 12px; font-weight: bold; color: var(--biljard-gronn); background: #eafff0; padding: 5px 15px; border-radius: 20px; border: 1px solid var(--biljard-gronn); }
-.edit-locked .edit-lock-status { color: var(--advarsel); background: #fff0f0; border-color: var(--advarsel); }
-
-/* --- VAKTPLAN STIL --- */
-.vakt-toolbar { 
-    display: flex; 
-    flex-wrap: wrap; 
-    justify-content: space-between; 
-    align-items: center; 
-    background: #e9ecef; 
-    padding: 10px 20px; 
-    border-radius: 50px; 
-    margin-bottom: 20px; 
+.vakt-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    background: #e9ecef;
+    padding: 10px 20px;
+    border-radius: 50px;
+    margin-bottom: 20px;
     gap: 15px;
 }
 
-.vakt-rule-badge { 
-    background: #0a2b3e; 
-    color: #f7e5b5; 
-    padding: 8px 18px; 
-    border-radius: 40px; 
-    font-size: 13px; 
+.vakt-rule-badge {
+    background: #0a2b3e;
+    color: #f7e5b5;
+    padding: 8px 18px;
+    border-radius: 40px;
+    font-size: 13px;
     font-weight: 500;
 }
 
-/* Hovedtabellen for vakter */
-.vakt-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    border: 2px solid #3a8c5a; /* Grønn ramme rundt hele */
+.vakt-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 2px solid #3a8c5a;
 }
 
-.vakt-table th { 
-    background: #0a2b3e; 
-    color: #f7e5b5; 
-    padding: 10px; 
-    border: 1px solid #3a8c5a; 
+.vakt-table th {
+    background: #0a2b3e;
+    color: #f7e5b5;
+    padding: 10px;
+    border: 1px solid #3a8c5a;
     font-size: 13px;
 }
 
-.vakt-table th.th-weekend { 
-    background: #5a1e2e; 
-    color: #ffe0e7; 
+.vakt-table th.th-weekend {
+    background: #5a1e2e;
+    color: #ffe0e7;
 }
 
-.vakt-table td { 
-    border: 1px solid #3a8c5a; 
-    padding: 5px; 
-    vertical-align: top; 
-    background: white; 
-    min-width: 100px; 
+.vakt-table td {
+    border: 1px solid #3a8c5a;
+    padding: 5px;
+    vertical-align: top;
+    background: white;
+    min-width: 100px;
 }
 
-.vakt-table td.td-weekend { 
-    background: #ffe0e7 !important; 
+.vakt-table td.td-weekend {
+    background: #ffe0e7 !important;
 }
 
 .vakt-cell {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    min-width: 80px;
-    max-width: 120px;
+    min-height: 60px;
 }
-.vakt-date { font-size: 11px; font-weight: bold; color: black; }
 
-/* Inndatafelt i kalenderen */
+.vakt-date {
+    font-size: 11px;
+    font-weight: bold;
+    color: black;
+}
+
 .vakt-input {
     width: 100%;
     padding: 4px 6px;
     border: 1px solid #ccb38c;
     border-radius: 12px;
-    font-size: 11px;
+    font-size: 12px;
     outline: none;
-    white-space: nowrap;
-    overflow-x: auto;
-    text-overflow: clip;
 }
 
-/* Modus for låst visning */
-.edit-locked .vakt-input { border: transparent; background: transparent; pointer-events: none; color: black; font-weight: bold; }
-.edit-locked .input-field { border: none; background: transparent; pointer-events: none; }
-
-/* Poengtabell */
-.score-table { width: 100%; margin-top: 10px; }
-.score-input { width: 60px; padding: 5px; border-radius: 10px; border: 1px solid var(--gull); text-align: center; }
-
-/* Sørger for at placeholder-teksten (Hoved/Ekstra) er falmet */
-.vakt-input::placeholder {
-    color: #999 !important;
-    font-weight: normal !important;
-    opacity: 0.7;
-}
-
-/* Spesifikk fiks for låst modus: Hvis feltet er tomt, skal ingenting vises */
-.edit-locked .vakt-input:placeholder-shown {
-    opacity: 0;
-}
-
-/* Sørger for at vanlig tekst i vaktplanen er tydelig sort */
-.vakt-input {
-    color: #000;
-}
-/* Gjør månedsvelgeren i vaktplanen større og fet */
-#vakt-month-picker {
-    font-size: 18px !important; /* Gjør teksten større */
-    font-weight: bold !important; /* Gjør teksten fet */
-    color: var(--marine); /* Bruker klubbens mørkeblå farge */
-    padding: 10px 15px !important; /* Gir litt mer luft inni feltet */
-    border: 2px solid var(--gull) !important; /* Litt tydeligere gullramme */
-    cursor: pointer;
-}
-
-/* Valgfritt: Gjør teksten "Måned:" ved siden av også litt tydeligere */
-.vakt-controls label {
-    font-size: 16px;
+.edit-locked .vakt-input {
+    border: transparent;
+    background: transparent;
+    pointer-events: none;
+    color: black;
     font-weight: bold;
+}
+
+.edit-locked .input-field {
+    border: none;
+    background: transparent;
+    pointer-events: none;
+}
+
+/* --- STATUS BAR (PIN-lås) --- */
+.status-bar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    background: var(--marine);
+    padding: 8px 20px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+    z-index: 9999;
+    border-bottom: 2px solid var(--gull);
+}
+
+.status-badge {
+    background: #27ae60;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 60px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-timer {
+    color: var(--gull);
+    font-size: 13px;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.logout-btn {
+    background: none;
+    border: 1px solid var(--gull);
+    color: var(--gull);
+    padding: 5px 15px;
+    border-radius: 60px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.logout-btn:hover {
+    background: var(--gull);
     color: var(--marine);
 }
-/* --- MOBIL-NAVIGASJON (RESPONSIVITET) --- */
-/* --- MOBIL-MENY OG TOPPLINJE --- */
-.mobile-header {
-    display: none; /* Skjult på PC */
-    background: var(--marine);
-    color: white;
-    padding: 10px 20px;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 2px solid var(--gull);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
 
-.menu-btn {
-    background-color: var(--gull) !important;
-    color: var(--marine) !important;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* --- VAKTPLAN VERKTØYLINJE (FIKS FOR KNAPPER) --- */
-.vakt-toolbar {
-    display: flex !important;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #e9ecef !important;
-    padding: 15px 20px !important;
-    border-radius: 40px !important;
-    margin-bottom: 25px !important;
-    gap: 15px;
-}
-
-.vakt-controls {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-}
-
-/* Gjør at knappene i vaktplanen ikke forsvinner */
-.vakt-controls .btn {
-    width: auto !important;
-    min-width: 130px;
-    display: inline-block !important;
-    margin: 0 !important;
-}
-
-#vakt-month-picker {
-    font-size: 18px !important;
-    font-weight: bold !important;
-    padding: 8px !important;
-    border: 2px solid var(--gull) !important;
-    border-radius: 10px !important;
-}
-
-/* --- REGLER FOR MOBIL (Skjerm under 1024px) --- */
-/* På mobil: større celler med scroll */
-@media (max-width: 1024px) {
-    .vakt-table td {
-        min-width: 100px;
-    }
-    
-    .vakt-cell {
-        min-width: 90px;
-    }
-    
-    .vakt-input {
-        font-size: 10px;
-        white-space: normal;
-        word-break: break-word;
-    }
-}
-/* Horisontal scroll for tabellen på små skjermer */
-@media (max-width: 768px) {
-    .admin-card[style*="overflow-x"] {
-        overflow-x: auto !important;
-    }
-    
-    .vakt-table {
-        min-width: 800px;
-    }
-}
-    
-    /* Statusbar må vike for mobil-header */
-    .status-bar {
-        top: 52px !important;
-    }
-    
-}
-         /* --- SPESIFIKK FIKS FOR SKAPLEIE PÅ MOBIL --- */
-    
-    #mod-skap .split-container {
-        flex-direction: column !important; /* Stabler matrise og panel oppå hverandre */
-    }
-
-    #mod-skap .column-form, 
-    #mod-skap .column-side {
-        width: 100% !important; /* Lar begge bruke hele bredden */
-        margin-bottom: 20px;
-    }
-
-    /* Gjør skap-rutene litt mindre på mobil så 10 stk får plass i bredden */
-    .locker-grid {
-        grid-template-columns: repeat(10, 1fr) !important;
-        gap: 4px !important; /* Mindre mellomrom på mobil */
-    }
-
-    .locker-box {
-        font-size: 10px !important; /* Mindre tall inni boksene */
-        padding: 2px !important;
-    }
-
-    /* Flytter info-panelet (høyre side) under matrisen */
-    #locker-panel {
-        margin-top: 10px;
-        border-top: 5px solid var(--gull);
-    } 
-         }
-    .mobile-header { display: flex; } /* Viser burger på mobil */
-
-    nav {
-        position: fixed;
-        left: -280px;
-        top: 0;
-        height: 100vh;
-        width: 260px;
-        z-index: 9999;
-        transition: left 0.3s ease;
-        background: var(--marine);
-    }
-
-    nav.open { left: 0; } /* Sklir inn når man trykker Meny */
-
-    main { width: 100%; padding: 15px; }
-
-    /* Stabler knappene i vaktplanen på mobil */
-    .vakt-toolbar, .vakt-controls {
-        flex-direction: column !important;
-        align-items: stretch !important;
-    }
-
-    .vakt-controls .btn, #vakt-month-picker {
-        width: 100% !important;
-    }
-}
 /* --- PIN-LÅS MODAL --- */
 .pin-overlay {
     position: fixed;
@@ -854,7 +686,7 @@ label {
     text-align: center;
     max-width: 380px;
     width: 90%;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
     border: 1px solid #c9a84c;
 }
 
@@ -952,95 +784,258 @@ label {
     text-decoration: none;
 }
 
-/* --- ÅPEN TILSTAND - STATUSLINJE --- */
-.status-bar {
+/* --- MOBIL HEADER & MENY --- */
+.mobile-header {
+    display: none;
+    background: var(--marine);
+    color: white;
+    padding: 10px 20px;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--gull);
     position: fixed;
     top: 0;
-    right: 0;
     left: 0;
-    background: #1a2f3c;
-    padding: 8px 20px;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 15px;
-    z-index: 9999;
-    border-bottom: 2px solid #c9a84c;
+    right: 0;
+    z-index: 10000;
 }
 
-.status-badge {
-    background: #27ae60;
-    color: white;
-    padding: 5px 12px;
+.menu-btn {
+    background-color: var(--gull) !important;
+    color: var(--marine) !important;
+    border: none;
+    padding: 8px 15px;
     border-radius: 60px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.status-timer {
-    color: #c9a84c;
-    font-size: 13px;
-    font-family: monospace;
     font-weight: bold;
-}
-
-.logout-btn {
-    background: none;
-    border: 1px solid #c9a84c;
-    color: #c9a84c;
-    padding: 5px 15px;
-    border-radius: 60px;
     cursor: pointer;
-    font-size: 12px;
+}
+
+.mobile-logo-text {
     font-weight: bold;
-    transition: all 0.2s;
 }
 
-.logout-btn:hover {
-    background: #c9a84c;
-    color: #1a2f3c;
+/* --- RESPONSIV (MOBIL) --- */
+@media (max-width: 1024px) {
+
+    body {
+        flex-direction: column;
+        padding-top: 52px;
+    }
+
+    .mobile-header {
+        display: flex;
+    }
+
+    nav {
+        position: fixed;
+        left: -280px;
+        top: 52px;
+        height: calc(100vh - 52px);
+        width: 260px;
+        z-index: 9999;
+        transition: left 0.3s ease;
+        background: var(--marine);
+        border-right: 4px solid var(--gull);
+    }
+
+    nav.open {
+        left: 0;
+    }
+
+    main {
+        width: 100%;
+        padding: 15px;
+        margin-top: 0;
+        height: calc(100vh - 52px);
+    }
+
+    /* Statusbar på mobil */
+    .status-bar {
+        top: 52px;
+        padding: 6px 15px;
+    }
+
+    .status-timer {
+        font-size: 11px;
+    }
+
+    /* Skap-grid tilpasning */
+    #mod-skap .split-container {
+        flex-direction: column !important;
+    }
+
+    #mod-skap .column-form,
+    #mod-skap .column-side {
+        width: 100% !important;
+        margin-bottom: 20px;
+    }
+
+    .locker-grid {
+        grid-template-columns: repeat(10, 1fr) !important;
+        gap: 4px !important;
+    }
+
+    .locker-box {
+        font-size: 10px !important;
+        padding: 2px !important;
+    }
+
+    /* Vaktplan tilpasning */
+    .vakt-toolbar,
+    .vakt-controls {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .vakt-controls .btn {
+        width: 100% !important;
+    }
+
+    .vakt-table td {
+        min-width: 100px;
+    }
+
+    .vakt-cell {
+        min-width: 90px;
+    }
+
+    .vakt-input {
+        font-size: 10px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    /* Horisontal scroll for tabeller */
+    .admin-card[style*="overflow-x"] {
+        overflow-x: auto !important;
+    }
+
+    .vakt-table {
+        min-width: 800px;
+    }
 }
 
-/* --- TILPASNING FOR STATUSLINJE --- */
-body.pin-active {
-    overflow: hidden;
+/* --- PRINT STIL (PDF) --- */
+@media print {
+
+    nav,
+    .nav-btn,
+    .btn,
+    .locker-grid,
+    .column-form,
+    h1,
+    #sync-loader,
+    .status-bar,
+    .mobile-header {
+        display: none !important;
+    }
+
+    main {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .column-side {
+        width: 100% !important;
+        flex: none !important;
+    }
+
+    .admin-card {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    #locker-panel {
+        display: none !important;
+    }
+
+    .print-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .print-table th,
+    .print-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+        font-size: 12px;
+    }
+
+    .print-table th {
+        background-color: #f2f2f2 !important;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .print-header {
+        text-align: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid var(--marine);
+        padding-bottom: 10px;
+    }
 }
 
-body.pin-inactive .status-bar {
+/* --- HJELPESIDE --- */
+.help-accordion {
+    margin-top: 20px;
+}
+
+.help-accordion details {
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 16px;
+    margin-bottom: 10px;
+    transition: all 0.3s;
+}
+
+.help-accordion summary {
+    padding: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    list-style: none;
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--marine);
+    border-radius: 16px;
 }
 
-body.pin-inactive nav {
-    height: calc(100vh - 52px);
+.help-accordion summary::after {
+    content: '▶';
+    font-size: 12px;
+    transition: transform 0.3s;
 }
 
-main { 
-    flex: 1; 
-    padding: 30px; 
-    overflow-y: auto; 
-    position: relative; 
+.help-accordion details[open] {
+    background: white;
+    border-color: var(--gull);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
-body.pin-inactive main {
-    height: calc(100vh - 52px);
+.help-accordion details[open] summary {
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
 }
 
-/* Skjul statuslinje når låst */
-body:not(.pin-inactive) .status-bar {
-    display: none;
+.help-accordion details[open] summary::after {
+    transform: rotate(90deg);
 }
 
-/* Runde hjørner på alle bokser */
-.admin-card, .modal-content, .pin-modal, .search-result-item, .locker-box, .table-card, .btn, .input-field, .vakt-input {
-    border-radius: 16px !important;
+.help-content {
+    padding: 0 20px 20px 20px;
+    line-height: 1.6;
 }
 
-.locker-box {
-    border-radius: 12px !important;
+.help-content ul {
+    padding-left: 20px;
 }
 
-.btn, .unlock-btn, .logout-btn {
-    border-radius: 60px !important;
+.help-content li {
+    margin-bottom: 10px;
+}
+
+.help-content strong {
+    color: var(--marine);
 }
