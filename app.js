@@ -121,3 +121,188 @@ document.addEventListener('click', function(e) {
         }
     }
 });
+// --- PIN-LÅS SYSTEM ---
+const PINKODE = "19891989";
+let pinTimer = null;
+let pinTimeout = null;
+
+function visPinModal() {
+    // Fjern eksisterende modal hvis den finnes
+    const eksisterende = document.getElementById('pin-overlay');
+    if (eksisterende) eksisterende.remove();
+    
+    const modal = document.createElement('div');
+    modal.id = 'pin-overlay';
+    modal.className = 'pin-overlay';
+    modal.innerHTML = `
+        <div class="pin-modal">
+            <div class="pin-logo">
+                <img src="logoobk.png" alt="OBK Logo" onerror="this.src='https://placehold.co/120x80?text=OBK'">
+            </div>
+            <div class="pin-title">Bak Disken system</div>
+            <div class="pin-subtitle">Låst - Skriv inn PIN-kode</div>
+            
+            <div class="pin-input-wrapper">
+                <input type="password" id="pin-input" class="pin-input" maxlength="8" placeholder="········" autocomplete="off">
+            </div>
+            
+            <button class="show-pin-btn" id="show-pin-toggle">👁 Vis PIN</button>
+            <button class="unlock-btn" id="unlock-btn">🔓 LÅS OPP</button>
+            
+            <div id="pin-error" class="pin-error" style="display: none;">❌ Feil PIN-kode. Prøv igjen.</div>
+            
+            <div class="pin-contact">
+                📞 Ved tilgangsproblemer, kontakt Pergantis på <a href="tel:92641953">92641953</a>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    document.body.classList.add('pin-active');
+    document.body.classList.remove('pin-inactive');
+    
+    const pinInput = document.getElementById('pin-input');
+    const unlockBtn = document.getElementById('unlock-btn');
+    const showPinToggle = document.getElementById('show-pin-toggle');
+    const errorDiv = document.getElementById('pin-error');
+    
+    pinInput.focus();
+    
+    // Vis/skjul PIN
+    showPinToggle.addEventListener('click', () => {
+        if (pinInput.type === 'password') {
+            pinInput.type = 'text';
+            showPinToggle.innerHTML = '🙈 Skjul PIN';
+        } else {
+            pinInput.type = 'password';
+            showPinToggle.innerHTML = '👁 Vis PIN';
+        }
+    });
+    
+    // Enter-tast
+    pinInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sjekkPin(pinInput.value, errorDiv);
+        }
+    });
+    
+    unlockBtn.addEventListener('click', () => {
+        sjekkPin(pinInput.value, errorDiv);
+    });
+}
+
+function sjekkPin(verdi, errorDiv) {
+    if (verdi === PINKODE) {
+        // Riktig PIN
+        document.getElementById('pin-overlay').remove();
+        document.body.classList.remove('pin-active');
+        document.body.classList.add('pin-inactive');
+        startPinSession();
+        visStatusBar();
+    } else {
+        errorDiv.style.display = 'block';
+        document.getElementById('pin-input').value = '';
+        document.getElementById('pin-input').focus();
+    }
+}
+
+function startPinSession() {
+    // Fjern eventuelle gamle timere
+    if (pinTimer) clearInterval(pinTimer);
+    if (pinTimeout) clearTimeout(pinTimeout);
+    
+    // Lagre i sessionStorage
+    sessionStorage.setItem('pin_auth', 'true');
+    sessionStorage.setItem('pin_expiry', Date.now() + (2 * 60 * 60 * 1000));
+    
+    oppdaterNedtelling();
+    
+    // Start nedtelling
+    pinTimer = setInterval(oppdaterNedtelling, 1000);
+    
+    // Auto-lås etter 2 timer
+    pinTimeout = setTimeout(() => {
+        lockSystem();
+    }, 2 * 60 * 60 * 1000);
+}
+
+function oppdaterNedtelling() {
+    const expiry = sessionStorage.getItem('pin_expiry');
+    if (!expiry) return;
+    
+    const igjen = parseInt(expiry) - Date.now();
+    if (igjen <= 0) {
+        lockSystem();
+        return;
+    }
+    
+    const timer = document.getElementById('session-timer');
+    if (timer) {
+        const min = Math.floor(igjen / 60000);
+        const sek = Math.floor((igjen % 60000) / 1000);
+        timer.innerText = `⏱ ${min}:${sek.toString().padStart(2, '0')} igjen`;
+    }
+}
+
+function visStatusBar() {
+    // Fjern eksisterende
+    const eksisterende = document.getElementById('status-bar');
+    if (eksisterende) eksisterende.remove();
+    
+    const statusBar = document.createElement('div');
+    statusBar.id = 'status-bar';
+    statusBar.className = 'status-bar';
+    statusBar.innerHTML = `
+        <div class="status-badge">
+            🟢 Bak disken
+        </div>
+        <div class="status-timer" id="session-timer">⏱ 2:00 igjen</div>
+        <button class="logout-btn" id="logout-btn">🔒 Logg ut</button>
+    `;
+    
+    document.body.insertBefore(statusBar, document.body.firstChild);
+    
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        lockSystem();
+    });
+    
+    oppdaterNedtelling();
+}
+
+function lockSystem() {
+    // Rydd opp
+    if (pinTimer) clearInterval(pinTimer);
+    if (pinTimeout) clearTimeout(pinTimeout);
+    
+    // Fjern session
+    sessionStorage.removeItem('pin_auth');
+    sessionStorage.removeItem('pin_expiry');
+    
+    // Fjern statusbar
+    const statusBar = document.getElementById('status-bar');
+    if (statusBar) statusBar.remove();
+    
+    // Vis PIN-modal igjen
+    visPinModal();
+}
+
+function sjekkEksisterendeSession() {
+    const auth = sessionStorage.getItem('pin_auth');
+    const expiry = sessionStorage.getItem('pin_expiry');
+    
+    if (auth === 'true' && expiry && parseInt(expiry) > Date.now()) {
+        // Økten er gyldig
+        document.body.classList.remove('pin-active');
+        document.body.classList.add('pin-inactive');
+        startPinSession();
+        visStatusBar();
+    } else {
+        // Ingen gyldig økt
+        sessionStorage.removeItem('pin_auth');
+        sessionStorage.removeItem('pin_expiry');
+        visPinModal();
+    }
+}
+
+// Start systemet
+sjekkEksisterendeSession();
