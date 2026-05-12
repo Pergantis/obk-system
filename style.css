@@ -617,17 +617,26 @@ label {
     background: #ffe0e7 !important; 
 }
 
-.vakt-cell { display: flex; flex-direction: column; gap: 4px; min-height: 60px; }
+.vakt-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 80px;
+    max-width: 120px;
+}
 .vakt-date { font-size: 11px; font-weight: bold; color: black; }
 
 /* Inndatafelt i kalenderen */
-.vakt-input { 
-    width: 100%; 
-    padding: 4px 6px; 
-    border: 1px solid #ccb38c; 
-    border-radius: 12px; 
-    font-size: 12px; 
+.vakt-input {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #ccb38c;
+    border-radius: 12px;
+    font-size: 11px;
     outline: none;
+    white-space: nowrap;
+    overflow-x: auto;
+    text-overflow: clip;
 }
 
 /* Modus for låst visning */
@@ -731,16 +740,32 @@ label {
 }
 
 /* --- REGLER FOR MOBIL (Skjerm under 1024px) --- */
+/* På mobil: større celler med scroll */
 @media (max-width: 1024px) {
-    /* Sørg for at mobil-header vises */
-    .mobile-header {
-        display: flex !important;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 10000;
+    .vakt-table td {
+        min-width: 100px;
     }
+    
+    .vakt-cell {
+        min-width: 90px;
+    }
+    
+    .vakt-input {
+        font-size: 10px;
+        white-space: normal;
+        word-break: break-word;
+    }
+}
+/* Horisontal scroll for tabellen på små skjermer */
+@media (max-width: 768px) {
+    .admin-card[style*="overflow-x"] {
+        overflow-x: auto !important;
+    }
+    
+    .vakt-table {
+        min-width: 800px;
+    }
+}
     
     /* Statusbar må vike for mobil-header */
     .status-bar {
