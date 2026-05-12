@@ -32,6 +32,9 @@ main {
 /* Sørger for at nav-menyen også flytter seg ned 44px når statusbaren er der */
 body.pin-inactive nav {
     height: calc(100vh - 44px);
+    margin-top: 0; /* Sikrer at det ikke er noe gap */
+    position: relative;
+    top: 0;
 }
 
 /* Hvis statusbaren IKKE er der (aktiv pin), skal menyen være full høyde */
