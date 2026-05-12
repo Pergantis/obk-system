@@ -1013,12 +1013,17 @@ body.pin-inactive .status-bar {
 }
 
 body.pin-inactive nav {
-    margin-top: 52px;
     height: calc(100vh - 52px);
 }
 
+main { 
+    flex: 1; 
+    padding: 30px; 
+    overflow-y: auto; 
+    position: relative; 
+}
+
 body.pin-inactive main {
-    margin-top: 52px;
     height: calc(100vh - 52px);
 }
 
