@@ -732,7 +732,24 @@ label {
 
 /* --- REGLER FOR MOBIL (Skjerm under 1024px) --- */
 @media (max-width: 1024px) {
-    body { flex-direction: column; 
+    body.pin-inactive nav {
+        margin-top: 52px;
+        height: calc(100vh - 52px);
+    }
+    
+    body.pin-inactive main {
+        margin-top: 52px;
+        height: calc(100vh - 52px);
+    }
+    
+    .status-bar {
+        padding: 6px 15px;
+    }
+    
+    .status-timer {
+        font-size: 11px;
+    }
+}
          /* --- SPESIFIKK FIKS FOR SKAPLEIE PÅ MOBIL --- */
     
     #mod-skap .split-container {
