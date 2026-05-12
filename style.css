@@ -911,7 +911,7 @@ label {
     background: white;
     color: var(--marine);
     font-weight: bold;
-    cursor: pointer;
+    /* cursor: pointer;*/
      min-width: 180px;
 }
 
