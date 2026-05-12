@@ -13,6 +13,18 @@
     --tekst-mork: #333;
     --tekst-lys: #666;
 }
+/* --- PIN-LÅS TILPASNING FOR PC --- */
+body.pin-inactive {
+    padding-top: 44px;
+}
+
+nav {
+    margin-top: 0;
+}
+
+main {
+    margin-top: 0;
+}
 
 * {
     box-sizing: border-box;
