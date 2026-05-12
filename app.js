@@ -108,3 +108,16 @@ function toggleMenu(action) {
         nav.classList.toggle('open');
     }
 }
+// Lukk meny når man klikker utenfor på mobil
+document.addEventListener('click', function(e) {
+    const nav = document.getElementById('main-nav');
+    const menuBtn = document.querySelector('.menu-btn');
+    
+    // Sjekk om menyen er åpen på mobil (window width < 1024px)
+    if (window.innerWidth < 1024 && nav && nav.classList.contains('open')) {
+        // Sjekk om klikket er utenfor menyen OG utenfor menyknappen
+        if (!nav.contains(e.target) && !menuBtn?.contains(e.target)) {
+            toggleMenu('close');
+        }
+    }
+});
