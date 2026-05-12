@@ -16,7 +16,10 @@
 
 * { box-sizing: border-box; }
 
-body { 
+body {
+    body.pin-inactive {
+    padding-top: 52px;
+}
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
     background: var(--krem); 
     margin: 0; 
