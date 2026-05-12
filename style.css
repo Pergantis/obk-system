@@ -732,22 +732,30 @@ label {
 
 /* --- REGLER FOR MOBIL (Skjerm under 1024px) --- */
 @media (max-width: 1024px) {
+    /* Sørg for at mobil-header vises */
+    .mobile-header {
+        display: flex !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10000;
+    }
+    
+    /* Statusbar må vike for mobil-header */
+    .status-bar {
+        top: 52px !important;
+    }
+    
+    /* Juster navigasjon */
     body.pin-inactive nav {
-        margin-top: 52px;
-        height: calc(100vh - 52px);
+        margin-top: 104px !important;
+        height: calc(100vh - 104px) !important;
     }
     
     body.pin-inactive main {
-        margin-top: 52px;
-        height: calc(100vh - 52px);
-    }
-    
-    .status-bar {
-        padding: 6px 15px;
-    }
-    
-    .status-timer {
-        font-size: 11px;
+        margin-top: 52px !important;
+        height: calc(100vh - 52px) !important;
     }
 }
          /* --- SPESIFIKK FIKS FOR SKAPLEIE PÅ MOBIL --- */
