@@ -772,16 +772,6 @@ label {
         top: 52px !important;
     }
     
-    /* Juster navigasjon */
-    body.pin-inactive nav {
-        margin-top: 104px !important;
-        height: calc(100vh - 104px) !important;
-    }
-    
-    body.pin-inactive main {
-        margin-top: 52px !important;
-        height: calc(100vh - 52px) !important;
-    }
 }
          /* --- SPESIFIKK FIKS FOR SKAPLEIE PÅ MOBIL --- */
     
