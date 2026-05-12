@@ -4,17 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oslo Biljardklubb - System</title>
-    <!-- Supabase Bibliotek -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<!-- Topplinje som bare vises på mobil -->
+
+<!-- Mobil-header -->
 <header class="mobile-header">
     <button class="menu-btn" onclick="toggleMenu()">☰ Meny</button>
     <div class="mobile-logo-text">Oslo Biljardklubb</div>
 </header>
-<div id="sync-loader">Synkroniserer...</div>
 
 <nav id="main-nav">
     <div class="nav-logo-top">
@@ -29,80 +28,67 @@
 </nav>
 
 <main>
-   <!-- MODUL: VAKTPLAN (PROTOTYPE) -->
-<section id="mod-vaktplan" class="module">
-    <div class="vakt-header">
-        <h1>🎱 Bak disken – Vaktplan</h1>
-    </div>
-
-    <!-- Verktøylinjen med knapper -->
-    <div class="vakt-toolbar">
-        <div class="vakt-controls">
-            <label>Måned:</label>
-            <input type="month" id="vakt-month-picker" value="2026-05">
-            <!--<button class="btn" style="background: var(--marine);" onclick="initVaktplan()">🔄 LAST / OPPDATER</button> -->
-            <button class="btn" id="btn-toggle-edit" style="background: var(--gull); color: var(--marine);" onclick="toggleEditMode()">🔓 ÅPNE FOR REDIGERING</button>
+    <!-- MODUL: VAKTPLAN -->
+    <section id="mod-vaktplan" class="module">
+        <div class="vakt-header">
+            <h1>🎱 Bak disken – Vaktplan</h1>
         </div>
-        <div class="vakt-rule-badge">
-            🎯 Regel: 1 vakt = 1 poeng | 3 poeng = 1 måned gratis spill
+
+        <div class="vakt-toolbar">
+            <div class="vakt-controls">
+                <label>Måned:</label>
+                <input type="month" id="vakt-month-picker" value="2026-05">
+                <button class="btn" style="background: var(--marine);" onclick="initVaktplan()">🔄 LAST / OPPDATER</button>
+                <button class="btn" id="btn-toggle-edit" style="background: var(--gull); color: var(--marine);" onclick="toggleEditMode()">🔓 ÅPNE FOR REDIGERING</button>
+            </div>
+            <div class="vakt-rule-badge">
+                🎯 Regel: 1 vakt = 1 poeng | 3 poeng = 1 måned gratis spill
+            </div>
         </div>
-    </div>
 
-    <div class="admin-card card-marine" style="overflow-x: auto;">
-        <table class="vakt-table" id="vakt-table-prototype">
-            <thead>
-                <tr>
-                    <th>Uke</th>
-                    <th>Mandag</th>
-                    <th>Tirsdag</th>
-                    <th>Onsdag</th>
-                    <th>Torsdag</th>
-                    <th>Fredag</th>
-                    <th class="th-weekend">Lørdag</th>
-                    <th class="th-weekend">Søndag</th>
-                </tr>
-            </thead>
-            <tbody id="vakt-body-prototype"></tbody>
-        </table>
-    </div>
-    
-    <!-- Poengtabellen din fortsetter herunder... -->
-
-    <!-- Poengoversikt (Nå med rammer og formatering lik medlemslisten) -->
-    <div class="admin-card card-green" style="margin-top: 30px;">
-        <h3>📊 Frivillige – Poengoversikt</h3>
-<p style="font-size: 13px; color: var(--tekst-lys); margin-bottom: 15px;">
-    💡 1 vakt = 1 poeng | 3 poeng = 1 måned gratis spill
-</p>
-        <div class="column-list"> <!-- Gjenbruker kolonne-stilen fra medlemslisten -->
-            <table style="border: 1px solid #ddd;">
+        <div class="admin-card card-marine" style="overflow-x: auto;">
+            <table class="vakt-table" id="vakt-table-prototype">
                 <thead>
                     <tr>
-                        <th>Frivillig</th>
-                        <th>Poeng opptjent</th>
-                        <th>Poeng benyttet</th>
-                        <th>Poeng til gode</th>
+                        <th>Uke</th>
+                        <th>Mandag</th>
+                        <th>Tirsdag</th>
+                        <th>Onsdag</th>
+                        <th>Torsdag</th>
+                        <th>Fredag</th>
+                        <th class="th-weekend">Lørdag</th>
+                        <th class="th-weekend">Søndag</th>
                     </tr>
                 </thead>
-                <tbody id="vakt-score-body">
-                    <tr>
-                        <td class="navn-fet">Maria</td>
-                        <td style="text-align: center;">16</td>
-                        <td style="text-align: center;"><input type="number" value="0" class="input-field" style="width: 60px; margin: 0; padding: 2px; text-align: center;"></td>
-                        <td class="tekst-gronn" style="text-align: right;">16</td>
-                    </tr>
-                    <tr>
-                        <td class="navn-fet">Pergantis</td>
-                        <td style="text-align: center;">48</td>
-                        <td style="text-align: center;"><input type="number" value="0" class="input-field" style="width: 60px; margin: 0; padding: 2px; text-align: center;"></td>
-                        <td class="tekst-gronn" style="text-align: right;">48</td>
-                    </tr>
-                </tbody>
+                <tbody id="vakt-body-prototype"></tbody>
             </table>
         </div>
-    </div>
-</section>
+
+        <div class="admin-card card-green" style="margin-top: 30px;">
+            <h3>📊 Frivillige – Poengoversikt</h3>
+            <p style="font-size: 13px; color: var(--tekst-lys); margin-bottom: 15px;">
+                💡 1 vakt = 1 poeng | 3 poeng = 1 måned gratis spill
+            </p>
+            <div class="column-list">
+                <table style="border: 1px solid #ddd;">
+                    <thead>
+                        <tr>
+                            <th>Frivillig</th>
+                            <th>Poeng opptjent</th>
+                            <th>Poeng benyttet</th>
+                            <th>Poeng til gode</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vakt-score-body">
+                        <!-- Fylles av JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <div id="error-log" class="alert-box alert-danger" style="display:none;"></div>
+    <div id="sync-loader">Synkroniserer...</div>
 
     <!-- MODUL: BORDLEIE -->
     <section id="mod-bord" class="module active">
@@ -113,36 +99,23 @@
     <!-- MODUL: PERIODEKORT -->
     <section id="mod-medlem" class="module">
         <h1>Periodekort Administrasjon</h1>
-        
         <div class="split-container">
-            <!-- Venstre kolonne: Søk og Skjema -->
             <div class="column-form">
-                <!-- Søkeboks -->
                 <div class="admin-card card-blue">
                     <h3>Finn Medlem</h3>
                     <label>Søk etter medlem</label>
                     <input type="text" id="p-search-input" placeholder="Mobil eller etternavn..." class="input-field" onkeyup="if(event.key==='Enter') runSearch()">
                     <button class="btn" style="background: var(--marine)" onclick="runSearch()">SØK</button>
-                    
-                    <div id="p-search-results">
-                        <!-- Her havner .search-result-item fra JS -->
-                    </div>
+                    <div id="p-search-results"></div>
                 </div>
 
-                <!-- Skjema for eksisterende medlem -->
                 <div id="p-form-box" class="admin-card card-gold" style="display:none;">
                     <h3 id="p-display-name">Navn</h3>
-                    
-                    <div id="p-existing-warning" class="alert-box alert-warning" style="display:none;">
-                        <!-- Advarsel om eksisterende kort -->
-                    </div>
-
+                    <div id="p-existing-warning" class="alert-box alert-warning" style="display:none;"></div>
                     <label>E-post <span class="req">*</span></label>
                     <input type="email" id="p-edit-email" class="input-field">
-                    
                     <label>Mobilnummer <span class="req">*</span></label>
                     <input type="tel" id="p-edit-phone" class="input-field">
-                    
                     <div class="admin-card" style="background: #fffdf5; border-top: none; padding: 10px; margin-bottom: 15px;">
                         <label id="p-date-label">Nytt periodekort</label>
                         <div class="split-container" style="gap: 10px;">
@@ -150,28 +123,21 @@
                             <div style="flex:1"><label>Slutt</label><input type="date" id="p-end-date" class="input-field"></div>
                         </div>
                     </div>
-                    
                     <button class="btn" style="background: var(--biljard-gronn); margin-bottom: 10px;" onclick="saveMemberPassUpdate()">LAGRE ENDRINGER & KORT</button>
                     <button class="btn" style="background: #95a5a6;" onclick="cancelSelection()">AVBRYT</button>
                 </div>
 
-                <!-- Skjema for NYTT medlem -->
                 <div id="p-new-member-box" class="admin-card card-marine" style="display:none;">
                     <h3>Registrer Nytt Medlem</h3>
                     <div id="n-warning" class="alert-box alert-danger" style="display:none;"></div>
-                    
                     <label>Fornavn <span class="req">*</span></label>
                     <input type="text" id="n-fn" class="input-field">
-                    
                     <label>Etternavn <span class="req">*</span></label>
                     <input type="text" id="n-en" class="input-field">
-                    
                     <label>E-post <span class="req">*</span></label>
                     <input type="email" id="n-email" class="input-field">
-                    
                     <label>Mobilnummer <span class="req">*</span></label>
                     <input type="tel" id="n-phone" class="input-field">
-                    
                     <div class="admin-card" style="background: #f0f7ff; border-top: none; padding: 10px; margin-bottom: 15px;">
                         <label>Periodekort (valgfritt)</label>
                         <div class="split-container" style="gap: 10px;">
@@ -179,29 +145,20 @@
                             <div style="flex:1"><input type="date" id="n-end" class="input-field"></div>
                         </div>
                     </div>
-                    
                     <button class="btn" id="n-btn-save" style="background: var(--marine); margin-bottom: 10px;" onclick="registerBrandNewMember()">LAGRE NYTT MEDLEM</button>
                     <button class="btn" id="n-btn-force" style="display:none; background: var(--advarsel); margin-bottom: 10px;" onclick="registerBrandNewMember(true)">JA, JEG ER SIKKER - LAGRE LIKEVEL</button>
                     <button class="btn" style="background: #95a5a6;" onclick="cancelSelection()">AVBRYT</button>
                 </div>
             </div>
 
-            <!-- Høyre kolonne: Liste over aktive kort -->
             <div class="column-list">
                 <div class="admin-card card-green">
                     <h3>Aktive Periodekort</h3>
                     <table>
                         <thead>
-                            <tr>
-                                <th>Navn</th>
-                                <th>Mobil</th>
-                                <th>Utløper</th>
-                                <th>Status</th>
-                            </tr>
+                            <tr><th>Navn</th><th>Mobil</th><th>Utløper</th><th>Status</th></tr>
                         </thead>
-                        <tbody id="p-active-table-body">
-                            <!-- JS fyller inn rader her -->
-                        </tbody>
+                        <tbody id="p-active-table-body"></tbody>
                     </table>
                 </div>
             </div>
@@ -212,30 +169,20 @@
     <section id="mod-skap" class="module">
         <h1>Skaputleie</h1>
         <div class="split-container">
-            <!-- Skap-kart -->
             <div class="column-form">
                 <div class="admin-card card-marine">
                     <h3>Oversikt (1-100)</h3>
-                    <!-- KNAPP FOR UTSKRIFT -->
                     <button class="btn" style="background: var(--marine); width: auto; padding: 5px 15px; margin-bottom: 10px; font-size: 11px;" onclick="generateExpiryPDF()">🖨️ LAST NED UTLØPSLISTE (PDF)</button>
-                    <div class="locker-grid" id="locker-grid-visual">
-                        <!-- JS genererer 100 bokser her -->
-                    </div>
+                    <div class="locker-grid" id="locker-grid-visual"></div>
                 </div>
             </div>
-
-            <!-- Detaljpanel for valgt skap -->
             <div class="column-side">
                 <div id="locker-panel" class="admin-card card-gold" style="display:none;">
                     <h2 id="selected-locker-title" style="margin-top:0;">Skap X</h2>
-                    
-                    <!-- Skjema for utleie -->
                     <div id="locker-rent-form" style="display:none;">
                         <label>Søk leietager (Etternavn/Mobil)</label>
                         <input type="text" id="locker-search-input" class="input-field" onkeyup="searchMemberForLocker()">
-                        
                         <div id="locker-search-results"></div>
-                        
                         <div id="locker-final-fields" style="display:none; margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
                             <p id="locker-target-name" style="font-weight:bold; color:var(--marine);"></p>
                             <label>Fra dato</label>
@@ -247,8 +194,6 @@
                             <button class="btn" style="background:var(--biljard-gronn)" onclick="saveLockerLease()">LAGRE UTLEIE</button>
                         </div>
                     </div>
-
-                    <!-- Info om opptatt skap -->
                     <div id="locker-info-panel" style="display:none;">
                         <div class="admin-card" style="background:#f0f7ff; border-top:none; margin-bottom:15px;">
                             <div id="locker-info-name" style="font-weight:bold; font-size:18px;"></div>
@@ -265,86 +210,20 @@
             </div>
         </div>
     </section>
-    <!-- MODUL: HJELP / VEILEDNING -->
-<section id="mod-hjelp" class="module">
-    <h1>Brukerveiledning - OBK Admin</h1>
-    
-    <div class="admin-card card-marine">
-        <p>Velkommen til administrasjonssystemet for Oslo Biljardklubb. Her finner du detaljert informasjon om hvordan du bruker de ulike modulene.</p>
-        
-        <div class="help-accordion">
-            <details>
-                <summary>🎱 Bordleie og Tidskontroll</summary>
-                <div class="help-content">
-                    <p>Denne modulen brukes for å starte og stoppe tid på biljardbordene. Systemet er fargekodet etter bordsonene i lokalet.</p>
-                    <ul>
-                        <li><strong>Starte et bord:</strong> Finn riktig bordnummer. Skriv inn navnet på spilleren i tekstfeltet (valgfritt, men anbefalt for oversikt). Trykk på den blå/grå knappen "START". Bordet vil nå skifte farge til lysegrønt, og klokken begynner å telle.</li>
-                        <li><strong>Stoppe et bord:</strong> Trykk på den røde "STOPP"-knappen. En stor popup (modal) vil vises på skjermen.</li>
-                        <li><strong>Bord ferdig-vinduet:</strong> Dette vinduet viser nøyaktig spilt tid i minutter med store tall. Navnet på spilleren vises under. Dette bildet kan vises til kunden for å bekrefte prisen. Trykk "BEKREFT & FRIGJØR" for å gjøre bordet ledig igjen.</li>
-                        <li><strong>Fargekoder (Ledig status):</strong>
-                            <ul>
-                                <li><span style="color:#1E90FF; font-weight:bold;">Blå:</span> Bord 1-10 (Matchbord).</li>
-                                <li><span style="color:#708090; font-weight:bold;">Grå:</span> Bord 11-16 (Standardbord).</li>
-                                <li><span style="color:#B8860B; font-weight:bold;">Beige:</span> Bord 17-20 (Bord vi låner fra Cue).</li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </details>
 
-            <details>
-                <summary>👤 Periodekort og Medlemshåndtering</summary>
-                <div class="help-content">
-                    <p>Her administrerer du klubbens medlemmer og deres aktive periodekort.</p>
-                    <ul>
-                        <li><strong>Søk etter medlem:</strong> Skriv inn minst to bokstaver av etternavnet eller deler av mobilnummeret i søkefeltet og trykk "SØK" (eller Enter). Resultatene vises som klikkbare bokser.</li>
-                        <li><strong>Registrere nytt periodekort:</strong> Velg et medlem fra søket. Skjemaet "Lagre endringer & kort" dukker opp. Velg startdato og sluttdato. Systemet lagrer både oppdatert medlemsinfo (epost/mobil) og det nye kortet samtidig.</li>
-                        <li><strong>Fornyelse:</strong> Hvis du velger et medlem som allerede har et aktivt kort, vil en gul boks advare deg. Systemet vil automatisk foreslå at det nye kortet starter dagen etter at det gamle går ut.</li>
-                        <li><strong>Registrere helt nytt medlem:</strong> Hvis søket ikke gir treff, trykk på den blå knappen "+ REGISTRER NYTT MEDLEM". Fyll ut alle obligatoriske felt (merket med *). Systemet sjekker automatisk om mobilnummeret er i bruk fra før for å hindre duplikater.</li>
-                        <li><strong>Statuslisten (Høyre side):</strong> Viser alle aktive kort i klubben.
-                            <ul>
-                                <li><span style="color:#006400; font-weight:bold;">Mørkegrønn:</span> Kortet er aktivt og har mer enn 6 dager igjen.</li>
-                                <li><span style="color:#B22222; font-weight:bold;">Mørkerød:</span> Kortet utløper innen 6 dager eller i dag. Kontakt medlemmet for fornyelse.</li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </details>
-
-            <details>
-                <summary>🔐 Skapleie og Utstyrsoppbevaring</summary>
-                <div class="help-content">
-                    <p>Modul for oversikt over klubbens 100 utleieskap.</p>
-                    <ul>
-                        <li><strong>Oversiktskartet:</strong> Hver boks representerer et fysisk skapnummer.
-                            <ul>
-                                <li><span style="color:#27ae60; font-weight:bold;">Grønn:</span> Skapet er ledig.</li>
-                                <li><span style="color:#e74c3c; font-weight:bold;">Rød:</span> Skapet er utleid.</li>
-                                <li><span style="color:#f1c40f; font-weight:bold;">Gul:</span> Skapet utløper innen 14 dager eller har allerede gått ut.</li>
-                            </ul>
-                        </li>
-                        <li><strong>Leie ut skap:</strong> Klikk på et grønt skap. Søk opp medlemmet (samme metode som under Periodekort). Velg medlemmet, legg inn eventuelle notater (f.eks. "Nøkkel A-12") og trykk lagre. Systemet foreslår automatisk 1 års leieperiode.</li>
-                        <li><strong>Forlenge leie:</strong> Klikk på et rødt/gult skap. Trykk på den blå knappen "➕ FORLENG LEIE". Systemet henter automatisk nåværende leietaker og setter ny sluttdato 12 måneder frem i tid fra forrige utløp.</li>
-                        <li><strong>Frigjøre skap:</strong> Når et medlem leverer tilbake skapet, trykk "FRIGJØR SKAP". Dette sletter leieforholdet og gjør skapet grønt (ledig) igjen.</li>
-                        <li><strong>PDF-utløpsliste:</strong> Trykk på "🖨️ LAST NED UTLØPSLISTE". Dette genererer en oversikt over alle som må kontaktes for fornyelse eller tømming.</li>
-                    </ul>
-                </div>
-            </details>
-
-            <details>
-                <summary>⚙️ Generelle tips og Feilsøking</summary>
-                <div class="help-content">
-                    <p>Nyttig informasjon for daglig drift av systemet.</p>
-                    <ul>
-                        <li><strong>Automatisk lagring:</strong> Alt du gjør lagres umiddelbart i nettskyen (Supabase). Du trenger ikke lete etter en "lagre alt"-knapp.</li>
-                        <li><strong>Synkronisering:</strong> En oransje boks øverst til høyre viser når systemet snakker med databasen. Hvis denne ikke forsvinner, sjekk internettforbindelsen.</li>
-                        <li><strong>Tving oppdatering:</strong> Hvis du har gjort endringer som ikke vises, eller hvis logoen/farger ser rare ut, hold inne <strong>CTRL</strong> og trykk <strong>F5</strong>. Dette tvinger nettleseren til å laste inn den nyeste versjonen av koden fra GitHub.</li>
-                    </ul>
-                </div>
-            </details>
+    <!-- MODUL: HJELP -->
+    <section id="mod-hjelp" class="module">
+        <h1>Brukerveiledning - OBK Admin</h1>
+        <div class="admin-card card-marine">
+            <p>Velkommen til administrasjonssystemet for Oslo Biljardklubb.</p>
+            <div class="help-accordion">
+                <details><summary>🎱 Bordleie og Tidskontroll</summary><div class="help-content"><p>Start og stopp tid på bordene.</p></div></details>
+                <details><summary>👤 Periodekort og Medlemshåndtering</summary><div class="help-content"><p>Søk, registrer og forny periodekort.</p></div></details>
+                <details><summary>🔐 Skapleie og Utstyrsoppbevaring</summary><div class="help-content"><p>Oversikt over 100 skap.</p></div></details>
+                <details><summary>⚙️ Generelle tips og Feilsøking</summary><div class="help-content"><p>Ctrl+F5 for å oppdatere.</p></div></details>
+            </div>
         </div>
-    </div>
-</section>
+    </section>
 </main>
 
 <!-- MODAL: BORD FERDIG -->
@@ -361,25 +240,22 @@
     </div>
 </div>
 
-<!-- Laster modulene til slutt -->
+<!-- PIN MODAL (vises av JS) -->
+<datalist id="medlem-liste"></datalist>
+<div id="vakt-pin-modal" class="modal-overlay" style="display:none;">
+    <div class="admin-card" style="width:300px; text-align:center;">
+        <h3>Tast PIN-kode</h3>
+        <input type="password" id="vakt-pin-input" class="input-field" maxlength="4">
+        <div id="vakt-pin-error" style="color:var(--advarsel); display:none;">Feil kode!</div>
+        <button class="btn" style="background:var(--marine);" onclick="verifyVaktPin()">LÅS OPP</button>
+        <button class="btn" style="background:#95a5a6;" onclick="closeVaktPin()">AVBRYT</button>
+    </div>
+</div>
+
 <script src="app.js"></script>
 <script src="tables.js"></script>
 <script src="members.js"></script>
 <script src="lockers.js"></script>
 <script src="vaktplan.js"></script>
-    
-<!-- Denne listen fylles automatisk i app.js for å gi forslag i vaktplanen -->
-<datalist id="medlem-liste"></datalist>
-<!-- PIN-kode Modal for Vaktplan -->
-<div id="vakt-pin-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center;">
-    <div class="admin-card" style="width:300px; text-align:center; border-top: 8px solid var(--gull);">
-        <h3>Tast PIN-kode</h3>
-        <p style="font-size:12px; color:var(--tekst-lys);">Kun for vaktansvarlig</p>
-        <input type="password" id="vakt-pin-input" class="input-field" style="text-align:center; font-size:24px; letter-spacing:5px;" maxlength="4">
-        <div id="vakt-pin-error" style="color:var(--advarsel); font-size:12px; margin-bottom:10px; display:none;">Feil kode!</div>
-        <button class="btn" style="background:var(--marine);" onclick="verifyVaktPin()">LÅS OPP</button>
-        <button class="btn" style="background:#95a5a6; margin-top:5px;" onclick="closeVaktPin()">AVBRYT</button>
-    </div>
-</div>    
 </body>
 </html>
