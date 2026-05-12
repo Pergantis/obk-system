@@ -237,9 +237,9 @@ h1 {
 /* --- SKJEMA-ELEMENTER --- */
 label {
     display: block;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: bold;
-    color: var(--tekst-lys);
+    color: var(--tekst-mørk);
     text-transform: uppercase;
     margin-bottom: 5px;
 }
