@@ -209,7 +209,7 @@ function getWeekNumber(d) {
     return weekNo;
 }
 // --- PIN-KODE LOGIKK FOR VAKTPLAN ---
-const VAKT_EDIT_PIN = "1234"; // <--- Din pinkode
+const VAKT_EDIT_PIN = "0555"; // <--- Din pinkode
 
 // Denne funksjonen kjøres når man trykker på hovedknappen (Lås/Åpne)
 function toggleEditMode() {
