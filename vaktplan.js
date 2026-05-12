@@ -390,9 +390,11 @@ function oppdaterGrensesnitt(laast) {
     if (laast) {
         btn.innerHTML = "🔓 ÅPNE FOR REDIGERING";
         btn.style.background = "var(--gull)";
+        btn.style.color = "var(--marine)";
     } else {
         btn.innerHTML = "🔒 LÅS FOR REDIGERING";
         btn.style.background = "var(--marine)";
+        btn.style.color = "white";
     }
 }
 
