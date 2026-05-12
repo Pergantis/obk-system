@@ -789,3 +789,210 @@ label {
         width: 100% !important;
     }
 }
+/* --- PIN-LÅS MODAL --- */
+.pin-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(26, 47, 60, 0.98);
+    z-index: 20000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+.pin-modal {
+    background: white;
+    border-radius: 32px;
+    padding: 40px 30px;
+    text-align: center;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    border: 1px solid #c9a84c;
+}
+
+.pin-logo {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.pin-logo img {
+    max-width: 120px;
+    height: auto;
+}
+
+.pin-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1a2f3c;
+    margin-bottom: 8px;
+}
+
+.pin-subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+.pin-input-wrapper {
+    margin-bottom: 20px;
+}
+
+.pin-input {
+    background: #f5f0e8;
+    border: 2px solid #c9a84c;
+    border-radius: 60px;
+    padding: 14px 20px;
+    width: 100%;
+    text-align: center;
+    font-size: 28px;
+    letter-spacing: 8px;
+    font-weight: bold;
+    color: #1a2f3c;
+    font-family: monospace;
+}
+
+.pin-input:focus {
+    outline: none;
+    border-color: #1a2f3c;
+}
+
+.show-pin-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 12px;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.unlock-btn {
+    background: #c9a84c;
+    color: #1a2f3c;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 60px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 20px;
+    transition: opacity 0.2s;
+}
+
+.unlock-btn:hover {
+    opacity: 0.9;
+}
+
+.pin-error {
+    color: #e74c3c;
+    background: #fee;
+    padding: 10px;
+    border-radius: 60px;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.pin-contact {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    font-size: 12px;
+    color: #888;
+}
+
+.pin-contact a {
+    color: #c9a84c;
+    text-decoration: none;
+}
+
+/* --- ÅPEN TILSTAND - STATUSLINJE --- */
+.status-bar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    background: #1a2f3c;
+    padding: 8px 20px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+    z-index: 9999;
+    border-bottom: 2px solid #c9a84c;
+}
+
+.status-badge {
+    background: #27ae60;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 60px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-timer {
+    color: #c9a84c;
+    font-size: 13px;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.logout-btn {
+    background: none;
+    border: 1px solid #c9a84c;
+    color: #c9a84c;
+    padding: 5px 15px;
+    border-radius: 60px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.logout-btn:hover {
+    background: #c9a84c;
+    color: #1a2f3c;
+}
+
+/* --- TILPASNING FOR STATUSLINJE --- */
+body.pin-active {
+    overflow: hidden;
+}
+
+body.pin-inactive .status-bar {
+    display: flex;
+}
+
+body.pin-inactive nav {
+    margin-top: 52px;
+    height: calc(100vh - 52px);
+}
+
+body.pin-inactive main {
+    margin-top: 52px;
+    height: calc(100vh - 52px);
+}
+
+/* Skjul statuslinje når låst */
+body:not(.pin-inactive) .status-bar {
+    display: none;
+}
+
+/* Runde hjørner på alle bokser */
+.admin-card, .modal-content, .pin-modal, .search-result-item, .locker-box, .table-card, .btn, .input-field, .vakt-input {
+    border-radius: 16px !important;
+}
+
+.locker-box {
+    border-radius: 12px !important;
+}
+
+.btn, .unlock-btn, .logout-btn {
+    border-radius: 60px !important;
+}
