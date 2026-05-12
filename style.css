@@ -39,6 +39,7 @@ nav {
     display: flex;
     flex-direction: column;
     height: 100vh;
+     margin-top: 0;
     transition: left 0.3s ease;
 }
 
@@ -84,6 +85,7 @@ main {
     padding: 30px;
     overflow-y: auto;
     position: relative;
+    margin-top: 0;
 }
 
 .module {
@@ -620,7 +622,7 @@ label {
     right: 0;
     left: 0;
     background: var(--marine);
-    padding: 8px 20px;
+    padding: 4px 20px;
     display: flex;
     justify-content: flex-end;
     align-items: center;
