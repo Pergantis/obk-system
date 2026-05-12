@@ -894,46 +894,42 @@ label {
         padding: 2px !important;
     }
 
-    /* Vaktplan tilpasning */
-    /* Styling av vakt-controls container */
-    .vakt-controls {
-        display: flex;
-        align-items: center; /* Sørger for at label, input og knapp er på linje */
-        gap: 15px;           /* Avstand mellom elementene */
-        flex-wrap: nowrap;     /* Gjør at de kan legge seg under hverandre på mobil */
-    }
-    /* Gjør datovelgeren større og penere */
+    /* 1. PC-VISNING (Standard) */
+.vakt-controls {
+    display: flex;
+    flex-direction: row;      /* Stå på linje på PC */
+    align-items: center;
+    gap: 15px;
+}
+
 .vakt-month-input {
+    width: 200px;
     padding: 10px 20px;
-    font-size: 16px;
+    border-radius: 50px;
     border: 2px solid var(--gull);
-    border-radius: 50px; /* Helt runde kanter */
-    background: white;
-    color: var(--marine);
-    font-weight: bold;
-    /* cursor: pointer;*/
-     min-width: 180px;
 }
 
-/* Spesialtilpasning av knappen ved siden av */
 .btn-edit {
-    width: auto !important;
-    white-space: nowrap; /* Hindrer at teksten i knappen brytes i to linjer */
-    padding: 10px 25px !important;
-    flex-shrink: 0; /* Hindrer at knappen krymper hvis plassen blir liten */
+    width: auto !important;   /* Knappen tar kun nødvendig plass */
+    white-space: nowrap;      /* Teksten i knappen står på én linje */
 }
 
-/* Mobil-tilpasning: Hvis skjermen er smal, legg dem under hverandre */
-@media (max-width: 600px) {
+/* 2. MOBIL-VISNING (Når skjermen er under 768px) */
+@media (max-width: 768px) {
     .vakt-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-}
-    .vakt-controls .btn {
-        width: 100% !important;
+        flex-direction: column; /* Stables vertikalt */
+        width: 100%;
+        gap: 10px;
     }
 
+    .vakt-month-input {
+        width: 100% !important; /* Fyller hele bredden på mobil */
+    }
+
+    .btn-edit {
+        width: 100% !important; /* Fyller hele bredden på mobil */
+    }
+}
     .vakt-table td {
         min-width: 100px;
     }
