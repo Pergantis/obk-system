@@ -541,14 +541,14 @@ label {
 
 .vakt-toolbar {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* Tillater at elementer flytter seg hvis det er trangt */
     justify-content: space-between;
     align-items: center;
     background: #e9ecef;
-    padding: 10px 20px;
+    padding: 15px 25px; /* Litt luftigere */
     border-radius: 50px;
     margin-bottom: 20px;
-    gap: 15px;
+    gap: 20px;
 }
 
 .vakt-rule-badge {
@@ -900,11 +900,11 @@ label {
         display: flex;
         align-items: center; /* Sørger for at label, input og knapp er på linje */
         gap: 15px;           /* Avstand mellom elementene */
-        flex-wrap: wrap;     /* Gjør at de kan legge seg under hverandre på mobil */
+        flex-wrap: nowrap;     /* Gjør at de kan legge seg under hverandre på mobil */
     }
     /* Gjør datovelgeren større og penere */
 .vakt-month-input {
-    padding: 12px 20px;
+    padding: 10px 20px;
     font-size: 16px;
     border: 2px solid var(--gull);
     border-radius: 50px; /* Helt runde kanter */
@@ -912,12 +912,15 @@ label {
     color: var(--marine);
     font-weight: bold;
     cursor: pointer;
+     min-width: 180px;
 }
 
 /* Spesialtilpasning av knappen ved siden av */
 .btn-edit {
-    width: auto !important; /* Gjør at den ikke tar full bredde */
-    padding: 12px 25px !important;
+    width: auto !important;
+    white-space: nowrap; /* Hindrer at teksten i knappen brytes i to linjer */
+    padding: 10px 25px !important;
+    flex-shrink: 0; /* Hindrer at knappen krymper hvis plassen blir liten */
 }
 
 /* Mobil-tilpasning: Hvis skjermen er smal, legg dem under hverandre */
