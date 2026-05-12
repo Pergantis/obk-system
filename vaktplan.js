@@ -238,9 +238,9 @@ async function lagreVaktFraInput(inputElement) {
     showLoader(false);
 }
 
-// 5. Poengberegning - FIXET (inkluderer ALLE vakter, ikke bare nåværende måned)
+// 5. Poengberegning - FIXET (KUN fortid og i dag)
 async function beregnOgVisPoeng() {
-    // Hent ALLE vakter for nøyaktig poengberegning
+    // Hent ALLE vakter
     const { data: alleVakter, error } = await sb
         .from('vaktplan')
         .select('maaned, dato, hoved_vakt_id, ekstra_vakt_id');
@@ -253,21 +253,23 @@ async function beregnOgVisPoeng() {
     if (!alleVakter) return;
 
     const iDag = new Date();
-    iDag.setHours(23, 59, 59, 999);
+    iDag.setHours(23, 59, 59, 999); // Inkluder hele dagen i dag
     
     const teller = {};
     
     alleVakter.forEach(v => {
         const [year, month] = v.maaned.split('-').map(Number);
         const vaktDato = new Date(year, month - 1, v.dato);
+        vaktDato.setHours(23, 59, 59, 999);
         
-        // Tell poeng for alle vakter (inkludert fremtidige hvis du vil, ellers sjekk dato)
-        // For nå teller vi alle vakter
-        if (v.hoved_vakt_id) {
-            teller[v.hoved_vakt_id] = (teller[v.hoved_vakt_id] || 0) + 1;
-        }
-        if (v.ekstra_vakt_id) {
-            teller[v.ekstra_vakt_id] = (teller[v.ekstra_vakt_id] || 0) + 1;
+        // KUN tell poeng hvis vakten er i dag eller tidligere
+        if (vaktDato <= iDag) {
+            if (v.hoved_vakt_id) {
+                teller[v.hoved_vakt_id] = (teller[v.hoved_vakt_id] || 0) + 1;
+            }
+            if (v.ekstra_vakt_id) {
+                teller[v.ekstra_vakt_id] = (teller[v.ekstra_vakt_id] || 0) + 1;
+            }
         }
     });
     
@@ -309,7 +311,7 @@ async function beregnOgVisPoeng() {
     });
     
     if (vistCount === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px;">Ingen vakter registrert enda</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px;">Ingen opptjente vakter enda</td></tr>`;
     }
 }
 
