@@ -895,12 +895,38 @@ label {
     }
 
     /* Vaktplan tilpasning */
-    .vakt-toolbar,
+    /* Styling av vakt-controls container */
     .vakt-controls {
-        flex-direction: column !important;
-        align-items: stretch !important;
+        display: flex;
+        align-items: center; /* Sørger for at label, input og knapp er på linje */
+        gap: 15px;           /* Avstand mellom elementene */
+        flex-wrap: wrap;     /* Gjør at de kan legge seg under hverandre på mobil */
     }
+    /* Gjør datovelgeren større og penere */
+.vakt-month-input {
+    padding: 12px 20px;
+    font-size: 16px;
+    border: 2px solid var(--gull);
+    border-radius: 50px; /* Helt runde kanter */
+    background: white;
+    color: var(--marine);
+    font-weight: bold;
+    cursor: pointer;
+}
 
+/* Spesialtilpasning av knappen ved siden av */
+.btn-edit {
+    width: auto !important; /* Gjør at den ikke tar full bredde */
+    padding: 12px 25px !important;
+}
+
+/* Mobil-tilpasning: Hvis skjermen er smal, legg dem under hverandre */
+@media (max-width: 600px) {
+    .vakt-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
     .vakt-controls .btn {
         width: 100% !important;
     }
