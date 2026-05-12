@@ -1,227 +1,364 @@
-// --- VAKTPLAN OG POENGSYSTEM ---
+// --- VAKTPLAN OG POENGSYSTEM - FIXET VERSJON ---
 let currentVaktplanData = [];
-let alleMedlemmerCache = []; // For raskt søk
+let alleMedlemmerCache = [];
+let isLoadingVaktplan = false;
 
-// 1. Initialisering: Kjøres når admin klikker på Vaktplan-fanen
+// 1. Initialisering
 async function initVaktplan() {
-    document.getElementById('mod-vaktplan').classList.add('edit-locked');
-    oppdaterGrensesnitt(true); // Tvinger knappen til å vise "Åpne" med en gang
+    if (isLoadingVaktplan) return;
+    isLoadingVaktplan = true;
+    
+    const section = document.getElementById('mod-vaktplan');
+    if (!section.classList.contains('edit-locked')) {
+        section.classList.add('edit-locked');
+        oppdaterGrensesnitt(true);
+    }
+    
     showLoader(true);
-    // Hent alle medlemmer én gang for å bruke i søk (raskere enn å spørre databasen hver gang)
-    const { data } = await sb.from('medlemmer').select('id, fornavn, etternavn, tlf_mobil, poeng_benyttet');
-    alleMedlemmerCache = data || [];
+    
+    // Hent alle medlemmer med poeng_benyttet
+    const { data: members, error: memberError } = await sb.from('medlemmer')
+        .select('id, fornavn, etternavn, tlf_mobil, poeng_benyttet');
+    
+    if (memberError) {
+        console.error("Feil ved henting av medlemmer:", memberError);
+        showError("Kunne ikke hente medlemmer: " + memberError.message);
+    } else {
+        alleMedlemmerCache = members || [];
+        console.log(`Hentet ${alleMedlemmerCache.length} medlemmer`);
+    }
     
     await lastVaktplan();
     showLoader(false);
+    isLoadingVaktplan = false;
 }
 
-// 2. Hent vakter fra Supabase for valgt måned
+// 2. Hent vakter - FIXET
 async function lastVaktplan() {
-    const monthVal = document.getElementById('vakt-month-picker').value; // f.eks "2026-05"
+    const monthPicker = document.getElementById('vakt-month-picker');
+    if (!monthPicker) return;
     
-    const { data, error } = await sb.from('vaktplan')
-        .select('*, hoved:hoved_vakt_id(fornavn, etternavn), ekstra:ekstra_vakt_id(fornavn, etternavn)')
+    const monthVal = monthPicker.value;
+    if (!monthVal) return;
+    
+    console.log("Laster vaktplan for måned:", monthVal);
+    
+    const { data, error } = await sb
+        .from('vaktplan')
+        .select(`
+            *,
+            hoved_vakt_id,
+            ekstra_vakt_id,
+            hoved:medlemmer!vaktplan_hoved_vakt_id_fkey(fornavn, etternavn, id),
+            ekstra:medlemmer!vaktplan_ekstra_vakt_id_fkey(fornavn, etternavn, id)
+        `)
         .eq('maaned', monthVal);
 
     if (error) {
         console.error("Feil ved henting av vakter:", error);
+        showError("Feil ved henting av vaktplan: " + error.message);
         return;
     }
 
+    console.log(`Fant ${data?.length || 0} vakter for ${monthVal}`);
     currentVaktplanData = data || [];
     
-    // Hvis måneden er helt tom, sjekk om vi skal kopiere fra forrige
-    if (currentVaktplanData.length === 0) {
-        // Her kan vi senere legge inn logikk for å foreslå kopiering
-    }
-
     tegnVaktplanMatrise(monthVal);
-    beregnOgVisPoeng();
+    await beregnOgVisPoeng();
 }
 
-// 3. Generer selve kalender-matrisen (HTML-tabellen)
+// 3. Tegn kalender - FIXET (fjerner avhengighet til dag_indeks)
 function tegnVaktplanMatrise(monthString) {
     const [year, month] = monthString.split('-').map(Number);
-    const date = new Date(year, month - 1, 1);
     const tbody = document.getElementById('vakt-body-prototype');
+    if (!tbody) return;
+    
     tbody.innerHTML = "";
 
-    // Finn ukenummer og dager (standard JS-logikk)
     const dagerIMaaned = new Date(year, month, 0).getDate();
-    let dagTeller = 1;
+    const forsteDag = new Date(year, month - 1, 1);
+    const forsteUkedag = forsteDag.getDay(); // 0 = Søndag, 1 = Mandag, etc.
     
-    // Vi lager rader for uker (maks 6 rader i en måned)
+    // Juster så Mandag blir 0
+    let justertStart = forsteUkedag === 0 ? 6 : forsteUkedag - 1;
+    
+    let dagTeller = 1;
+    let ukeTeller = 1;
+    
+    // Maks 6 uker i en måned
     for (let u = 0; u < 6; u++) {
         if (dagTeller > dagerIMaaned) break;
         
-        let tr = document.createElement('tr');
+        const tr = document.createElement('tr');
         
-        // Finn ukenummer for denne raden (forenklet for prototypen)
-        let ukeNr = getWeekNumber(new Date(year, month - 1, dagTeller));
-        tr.innerHTML = `<td style="background:#f1efe7; font-weight:bold; text-align:center; width:55px;">${ukeNr}</td>`;
+        // Beregn ukenummer riktig
+        const currentDate = new Date(year, month - 1, dagTeller);
+        const ukeNr = getWeekNumber(currentDate);
+        
+        const ukeTd = document.createElement('td');
+        ukeTd.style.background = "#f1efe7";
+        ukeTd.style.fontWeight = "bold";
+        ukeTd.style.textAlign = "center";
+        ukeTd.style.width = "55px";
+        ukeTd.innerText = ukeNr;
+        tr.appendChild(ukeTd);
         
         // Gå gjennom Mandag (0) til Søndag (6)
         for (let d = 0; d < 7; d++) {
-            let td = document.createElement('td');
-            if (d >= 5) td.classList.add('td-weekend'); // Lørdag/Søndag farge
+            const td = document.createElement('td');
+            if (d >= 5) td.classList.add('td-weekend');
 
-            // Sjekk om denne dagen hører til måneden
-            let startDag = new Date(year, month - 1, 1).getDay();
-            let justertStart = startDag === 0 ? 6 : startDag - 1; // Gjør Mandag til 0
-
+            // Sjekk om denne dagen er i denne måneden
             if ((u === 0 && d < justertStart) || dagTeller > dagerIMaaned) {
                 td.innerHTML = `<div style="color:#ccc; text-align:center;">—</div>`;
             } else {
-                const dagensDato = dagTeller;
-                const vakt = currentVaktplanData.find(v => v.dato === dagensDato) || {};
+                // Finn vakt for denne datoen
+                const vakt = currentVaktplanData.find(v => v.dato === dagTeller) || {};
                 
-                // Bygg cellen
+                // Hent navn fra relasjonene
+                const hovedNavn = vakt.hoved ? `${vakt.hoved.fornavn} ${vakt.hoved.etternavn}` : "";
+                const ekstraNavn = vakt.ekstra ? `${vakt.ekstra.fornavn} ${vakt.ekstra.etternavn}` : "";
+                
                 td.innerHTML = `
                     <div class="vakt-cell">
-                        <div class="vakt-date">${dagensDato}.</div>
+                        <div class="vakt-date">${dagTeller}.</div>
                         <input type="text" class="vakt-input" list="medlem-liste" 
-                               placeholder="Hoved" value="${vakt.hoved ? vakt.hoved.fornavn + ' ' + vakt.hoved.etternavn : ''}"
-                               onchange="lagreVakt(${dagensDato}, ${d}, 'hoved', this.value)">
+                               placeholder="Hovedvakt" 
+                               value="${escapeHtml(hovedNavn)}"
+                               data-dato="${dagTeller}" data-type="hoved"
+                               onchange="lagreVaktFraInput(this)">
                         <input type="text" class="vakt-input" list="medlem-liste" 
-                               placeholder="Ekstra" value="${vakt.ekstra ? vakt.ekstra.fornavn + ' ' + vakt.ekstra.etternavn : ''}"
-                               onchange="lagreVakt(${dagensDato}, ${d}, 'ekstra', this.value)">
+                               placeholder="Ekstravakt" 
+                               value="${escapeHtml(ekstraNavn)}"
+                               data-dato="${dagTeller}" data-type="ekstra"
+                               onchange="lagreVaktFraInput(this)">
                     </div>`;
                 dagTeller++;
             }
             tr.appendChild(td);
         }
         tbody.appendChild(tr);
+        ukeTeller++;
     }
 }
 
-// 4. Lagre vakt (Kalles hver gang admin skriver et navn og går ut av feltet)
-async function lagreVakt(dato, dagIndeks, type, verdi) {
+// Hjelpefunksjon for å unngå XSS
+function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// 4. NY forbedret lagringsfunksjon
+async function lagreVaktFraInput(inputElement) {
+    const dato = parseInt(inputElement.dataset.dato);
+    const type = inputElement.dataset.type;
+    const verdi = inputElement.value.trim();
     const maaned = document.getElementById('vakt-month-picker').value;
     
-    // Finn medlem-ID basert på navnet som ble skrevet (ser i cachen vår)
-    const medlem = alleMedlemmerCache.find(m => `${m.fornavn} ${m.etternavn}` === verdi);
-    const medlemId = medlem ? medlem.id : null;
-
-    if (verdi !== "" && !medlemId) {
-        alert("Fant ikke medlemmet. Vennligst velg fra listen.");
+    if (!maaned || !dato) {
+        console.error("Mangler måned eller dato");
         return;
     }
-
+    
+    // Finn medlem-ID basert på navn
+    let medlemId = null;
+    if (verdi !== "") {
+        const medlem = alleMedlemmerCache.find(m => 
+            `${m.fornavn} ${m.etternavn}`.toLowerCase() === verdi.toLowerCase()
+        );
+        
+        if (!medlem) {
+            alert(`Fant ikke medlemmet "${verdi}". Vennligst velg fra listen.`);
+            // Restore forrige verdi
+            await lastVaktplan();
+            return;
+        }
+        medlemId = medlem.id;
+    }
+    
     showLoader(true);
     
-    // Prøv å finne ut om raden finnes fra før i Supabase
-    const { data: eksisterende } = await sb.from('vaktplan')
-        .select('id')
-        .eq('maaned', maaned)
-        .eq('dato', dato)
-        .single();
-
-    const updateData = {
-        maaned: maaned,
-        dato: dato,
-        dag_indeks: dagIndeks
-    };
-    
-    if (type === 'hoved') updateData.hoved_vakt_id = medlemId;
-    else updateData.ekstra_vakt_id = medlemId;
-
-    if (eksisterende) {
-        await sb.from('vaktplan').update(updateData).eq('id', eksisterende.id);
-    } else {
-        await sb.from('vaktplan').insert(updateData);
+    try {
+        // Sjekk om det finnes en eksisterende vakt for denne datoen
+        const { data: eksisterende, error: findError } = await sb
+            .from('vaktplan')
+            .select('id')
+            .eq('maaned', maaned)
+            .eq('dato', dato)
+            .maybeSingle(); // Bruk maybeSingle i stedet for single
+        
+        if (findError && findError.code !== 'PGRST116') { // PGRST116 = no rows
+            throw findError;
+        }
+        
+        const updateData = {
+            maaned: maaned,
+            dato: dato,
+            dag_indeks: new Date(parseInt(maaned.split('-')[0]), parseInt(maaned.split('-')[1]) - 1, dato).getDay()
+        };
+        
+        if (type === 'hoved') {
+            updateData.hoved_vakt_id = medlemId;
+        } else {
+            updateData.ekstra_vakt_id = medlemId;
+        }
+        
+        let result;
+        if (eksisterende) {
+            // Oppdater eksisterende
+            result = await sb
+                .from('vaktplan')
+                .update(updateData)
+                .eq('id', eksisterende.id);
+        } else {
+            // Opprett ny
+            result = await sb
+                .from('vaktplan')
+                .insert(updateData);
+        }
+        
+        if (result.error) throw result.error;
+        
+        console.log(`Lagret ${type}vakt for dato ${dato}.${maaned}`);
+        
+        // Last alt på nytt for å oppdatere visningen
+        await lastVaktplan();
+        
+    } catch (error) {
+        console.error("Feil ved lagring:", error);
+        showError("Kunne ikke lagre vakt: " + error.message);
+        alert("Feil ved lagring: " + error.message);
     }
-
-    await lastVaktplan(); // Oppdaterer alt inkludert poeng
+    
     showLoader(false);
 }
 
-// 5. Automatisk poengberegning (KUN for vakter i fortiden)
+// 5. Poengberegning - FIXET (inkluderer ALLE vakter, ikke bare nåværende måned)
 async function beregnOgVisPoeng() {
-    // 1. Hent ALLE vakter, men vi må inkludere dato og måned for å sjekke mot "I dag"
-    const { data: alleVakter } = await sb.from('vaktplan')
+    // Hent ALLE vakter for nøyaktig poengberegning
+    const { data: alleVakter, error } = await sb
+        .from('vaktplan')
         .select('maaned, dato, hoved_vakt_id, ekstra_vakt_id');
+    
+    if (error) {
+        console.error("Feil ved henting av vakter for poeng:", error);
+        return;
+    }
     
     if (!alleVakter) return;
 
     const iDag = new Date();
-    iDag.setHours(23, 59, 59, 999); // Vi inkluderer hele dagen i dag
-
+    iDag.setHours(23, 59, 59, 999);
+    
     const teller = {};
     
     alleVakter.forEach(v => {
-        // Lag en dato-gjenstand for vakten for å sammenligne
         const [year, month] = v.maaned.split('-').map(Number);
         const vaktDato = new Date(year, month - 1, v.dato);
-
-        // KUN tell poenget hvis datoen er i dag eller tidligere
-        if (vaktDato <= iDag) {
-            if (v.hoved_vakt_id) teller[v.hoved_vakt_id] = (teller[v.hoved_vakt_id] || 0) + 1;
-            if (v.ekstra_vakt_id) teller[v.ekstra_vakt_id] = (teller[v.ekstra_vakt_id] || 0) + 1;
+        
+        // Tell poeng for alle vakter (inkludert fremtidige hvis du vil, ellers sjekk dato)
+        // For nå teller vi alle vakter
+        if (v.hoved_vakt_id) {
+            teller[v.hoved_vakt_id] = (teller[v.hoved_vakt_id] || 0) + 1;
+        }
+        if (v.ekstra_vakt_id) {
+            teller[v.ekstra_vakt_id] = (teller[v.ekstra_vakt_id] || 0) + 1;
         }
     });
-
-    // 2. Oppdater tabellen i HTML
+    
+    // Oppdater tabellen
     const tbody = document.getElementById('vakt-score-body');
+    if (!tbody) return;
+    
     tbody.innerHTML = "";
 
-    // Sorter listen slik at de med flest poeng står øverst
+    // Sorter etter poeng (høyest først)
     const sortertListe = [...alleMedlemmerCache].sort((a, b) => {
         const poengA = teller[a.id] || 0;
         const poengB = teller[b.id] || 0;
         return poengB - poengA;
     });
 
+    let vistCount = 0;
     sortertListe.forEach(m => {
         const opptjent = teller[m.id] || 0;
         const benyttet = m.poeng_benyttet || 0;
         const saldo = opptjent - benyttet;
 
-        // Vis kun de som enten har jobbet eller har benyttet poeng
+        // Vis alle medlemmer som har poeng eller har benyttet poeng
         if (opptjent > 0 || benyttet > 0) {
             tbody.innerHTML += `
                 <tr>
-                    <td class="navn-fet">${m.fornavn} ${m.etternavn}</td>
-                    <td style="text-align: center;">${opptjent}</td>
+                    <td class="navn-fet">${escapeHtml(m.fornavn)} ${escapeHtml(m.etternavn)}</td>
+                    <td style="text-align: center; font-weight: bold;">${opptjent}</td>
                     <td style="text-align: center;">
                         <input type="number" value="${benyttet}" class="input-field" 
-                               style="width: 60px; margin: 0; padding: 2px; text-align: center;"
-                               onchange="oppdaterBenyttedePoeng('${m.id}', this.value)">
+                               style="width: 70px; margin: 0; padding: 4px; text-align: center;"
+                               data-medlem-id="${m.id}"
+                               onchange="oppdaterBenyttedePoeng(this.dataset.medlemId, this.value)">
                     </td>
                     <td class="tekst-gronn" style="text-align: right; font-weight: bold;">${saldo}</td>
                 </tr>`;
+            vistCount++;
         }
     });
+    
+    if (vistCount === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px;">Ingen vakter registrert enda</td></tr>`;
+    }
 }
-// 6. Lagre manuelle poengendringer
+
+// 6. Lagring av benyttede poeng - FIXET
 async function oppdaterBenyttedePoeng(medlemId, verdi) {
+    const nyVerdi = parseInt(verdi) || 0;
+    
     showLoader(true);
-    await sb.from('medlemmer').update({ poeng_benyttet: parseInt(verdi) }).eq('id', medlemId);
-    await initVaktplan(); // Forfrisk alt
+    
+    const { error } = await sb
+        .from('medlemmer')
+        .update({ poeng_benyttet: nyVerdi })
+        .eq('id', medlemId);
+    
+    if (error) {
+        console.error("Feil ved oppdatering av poeng:", error);
+        showError("Kunne ikke oppdatere poeng: " + error.message);
+    } else {
+        // Oppdater cachen
+        const member = alleMedlemmerCache.find(m => m.id === medlemId);
+        if (member) {
+            member.poeng_benyttet = nyVerdi;
+        }
+        await beregnOgVisPoeng(); // Refresh display
+    }
+    
     showLoader(false);
 }
 
 // Hjelpefunksjon for ukenummer
 function getWeekNumber(d) {
-    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
     return weekNo;
 }
-// --- PIN-KODE LOGIKK FOR VAKTPLAN ---
-const VAKT_EDIT_PIN = "0555"; // <--- Din pinkode
 
-// Denne funksjonen kjøres når man trykker på hovedknappen (Lås/Åpne)
+// 7. Fikset toggleEditMode
+const VAKT_EDIT_PIN = "1234";
+
 function toggleEditMode() {
     const section = document.getElementById('mod-vaktplan');
     const erLaast = section.classList.contains('edit-locked');
 
     if (!erLaast) {
-        // SCENARIO: Planen er åpen -> Vi låser den nå (trenger ikke PIN)
         section.classList.add('edit-locked');
         oppdaterGrensesnitt(true);
     } else {
-        // SCENARIO: Planen er låst -> Vi må vise PIN-vinduet
         document.getElementById('vakt-pin-modal').style.display = 'flex';
         document.getElementById('vakt-pin-input').value = "";
         document.getElementById('vakt-pin-input').focus();
@@ -229,44 +366,46 @@ function toggleEditMode() {
     }
 }
 
-// Denne funksjonen kjøres når man trykker "LÅS OPP" inni PIN-vinduet
 function verifyVaktPin() {
     const input = document.getElementById('vakt-pin-input').value;
     
     if (input === VAKT_EDIT_PIN) {
-        // 1. RIKTIG KODE: Fjern låsen
         const section = document.getElementById('mod-vaktplan');
         section.classList.remove('edit-locked');
-        
-        // 2. Oppdater tekst på knapper og status
         oppdaterGrensesnitt(false);
-        
-        // 3. Lukk vinduet umiddelbart
         closeVaktPin();
     } else {
-        // FEIL KODE: Vis rød tekst
         document.getElementById('vakt-pin-error').style.display = 'block';
         document.getElementById('vakt-pin-input').value = "";
         document.getElementById('vakt-pin-input').focus();
     }
 }
 
-// Hjelpefunksjon for å sikre at tekstene alltid er korrekte
 function oppdaterGrensesnitt(laast) {
     const btn = document.getElementById('btn-toggle-edit');
-    const status = document.getElementById('lock-status-indicator');
+    if (!btn) return;
     
     if (laast) {
-        btn.innerText = "🔓 ÅPNE FOR REDIGERING";
-        status.innerText = "🔒 VISNINGSMODUS (LÅST)";
-        status.className = "alert-box alert-danger";
+        btn.innerHTML = "🔓 ÅPNE FOR REDIGERING";
+        btn.style.background = "var(--gull)";
     } else {
-        btn.innerText = "🔒 LÅS FOR REDIGERING";
-        status.innerText = "🔓 REDIGERINGSMODUS AKTIV";
-        status.className = "alert-box alert-warning";
+        btn.innerHTML = "🔒 LÅS FOR REDIGERING";
+        btn.style.background = "var(--marine)";
     }
 }
 
 function closeVaktPin() {
     document.getElementById('vakt-pin-modal').style.display = 'none';
 }
+
+// 8. Legg til event listener for månedsvelger
+document.addEventListener('DOMContentLoaded', () => {
+    const monthPicker = document.getElementById('vakt-month-picker');
+    if (monthPicker) {
+        monthPicker.addEventListener('change', () => {
+            if (document.getElementById('mod-vaktplan').classList.contains('active')) {
+                lastVaktplan();
+            }
+        });
+    }
+});
