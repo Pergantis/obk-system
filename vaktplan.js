@@ -349,7 +349,7 @@ function getWeekNumber(d) {
 }
 
 // 7. Fikset toggleEditMode
-const VAKT_EDIT_PIN = "1234";
+const VAKT_EDIT_PIN = "0555";
 
 function toggleEditMode() {
     const section = document.getElementById('mod-vaktplan');
