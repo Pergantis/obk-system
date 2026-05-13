@@ -532,7 +532,68 @@ label {
     width: 100%;
     max-width: 400px;      /* Begrenser bredden på PC */
 }
+/* --- TABELL OG VAKT-BOKS STIL --- */
+.vakt-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 2px solid #3a8c5a;
+}
 
+.vakt-table th {
+    background: #0a2b3e;
+    color: #f7e5b5;
+    padding: 10px;
+    border: 1px solid #3a8c5a;
+    font-size: 13px;
+}
+
+.vakt-table th.th-weekend {
+    background: #5a1e2e;
+    color: #ffe0e7;
+}
+
+.vakt-table td {
+    border: 1px solid #3a8c5a;
+    padding: 5px;
+    vertical-align: top;
+    background: white;
+    min-width: 100px;
+}
+
+.vakt-table td.td-weekend {
+    background: #ffe0e7 !important;
+}
+
+.vakt-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 60px;
+}
+
+.vakt-date {
+    font-size: 11px;
+    font-weight: bold;
+    color: black;
+}
+
+.vakt-input {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #ccb38c;
+    border-radius: 12px; /* Runde kanter på vaktboksene */
+    font-size: 12px;
+    outline: none;
+}
+
+/* Stiler for redigeringsmodus */
+.edit-locked .vakt-input {
+    border: transparent;
+    background: transparent;
+    pointer-events: none;
+    color: black;
+    font-weight: bold;
+}
 .vakt-month-input {
     width: 100%;
     padding: 15px;
