@@ -1055,3 +1055,8 @@ label {
 .help-content strong {
     color: var(--marine);
 }
+.input-field:disabled {
+    background-color: #f0f0f0;
+    color: #999;
+    cursor: not-allowed;
+    border-color: #ddd;
