@@ -102,7 +102,7 @@
                 <div class="admin-card card-blue">
                     <h3>Finn Medlem</h3>
                     <label>Søk etter medlem</label>
-                    <input type="text" id="p-search-input" placeholder="Mobil eller etternavn..." class="input-field" onkeyup="if(event.key==='Enter') runSearch()">
+                    <input type="text" id="p-search-input" placeholder="Mobil, fornavn eller etternavn..." class="input-field" onkeyup="if(event.key==='Enter') runSearch()">
                     <button class="btn" style="background: var(--marine)" onclick="runSearch()">SØK</button>
                     <div id="p-search-results"></div>
                 </div>
@@ -178,7 +178,7 @@
                 <div id="locker-panel" class="admin-card card-gold" style="display:none;">
                     <h2 id="selected-locker-title" style="margin-top:0;">Skap X</h2>
                     <div id="locker-rent-form" style="display:none;">
-                        <label>Søk leietager (Etternavn/Mobil)</label>
+                        <label>Søk leietager (Fornavn, Etternavn eller Mobil)</label>
                         <input type="text" id="locker-search-input" class="input-field" onkeyup="searchMemberForLocker()">
                         <div id="locker-search-results"></div>
                         <div id="locker-final-fields" style="display:none; margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
