@@ -166,10 +166,7 @@ async function searchMemberForLocker() {
     const q = document.getElementById('locker-search-input').value.trim();
     const resDiv = document.getElementById('locker-search-results');
     if (q.length < 2) return;
-    const { data } = await sb.from('medlemmer')
-        .select('*')
-        .or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%,fornavn.ilike.%${input}%`)
-        .limit(8);
+    const { data } = await sb.from('medlemmer').select('*').or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%,fornavn.ilike.%${input}%`).limit(8);
     if (data.length === 0) {
         resDiv.innerHTML = `<div class="alert-box alert-danger">Ingen treff. <button class="btn" style="background:var(--marine)" onclick="goToMemberRegistration('${q}')">REGISTRER NY</button></div>`;
         return;
