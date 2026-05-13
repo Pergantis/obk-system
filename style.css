@@ -515,105 +515,46 @@ label {
     color: #1a2f3c !important;
 }
 
-/* --- VAKTPLAN PROTOTYPE STIL --- */
-.vakt-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.edit-lock-status {
-    font-size: 12px;
-    font-weight: bold;
-    color: var(--biljard-gronn);
-    background: #eafff0;
-    padding: 5px 15px;
-    border-radius: 20px;
-    border: 1px solid var(--biljard-gronn);
-}
-
-.edit-locked .edit-lock-status {
-    color: var(--advarsel);
-    background: #fff0f0;
-    border-color: var(--advarsel);
-}
-
-/* Forenklet vakt-toolbar */
+/* Forenklet vakt-toolbar - fungerer overalt */
 .vakt-toolbar {
     background: #e9ecef;
     padding: 20px;
     border-radius: 16px;
     margin-bottom: 20px;
-}
-
-.vakt-table {
-    width: 100%;
-    border-collapse: collapse;
-    border: 2px solid #3a8c5a;
-}
-
-.vakt-table th {
-    background: #0a2b3e;
-    color: #f7e5b5;
-    padding: 10px;
-    border: 1px solid #3a8c5a;
-    font-size: 13px;
-}
-
-.vakt-table th.th-weekend {
-    background: #5a1e2e;
-    color: #ffe0e7;
-}
-
-.vakt-table td {
-    border: 1px solid #3a8c5a;
-    padding: 5px;
-    vertical-align: top;
-    background: white;
-    min-width: 100px;
-}
-
-.vakt-table td.td-weekend {
-    background: #ffe0e7 !important;
-}
-
-.vakt-cell {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-height: 60px;
+    justify-content: center; /* Sentrerer innholdet */
 }
 
-.vakt-date {
-    font-size: 11px;
-    font-weight: bold;
-    color: black;
-}
-
-.vakt-input {
+.vakt-controls {
+    display: flex;
+    flex-direction: column; /* Stabler vertikalt */
+    gap: 12px;
     width: 100%;
-    padding: 4px 6px;
-    border: 1px solid #ccb38c;
-    border-radius: 12px;
-    font-size: 12px;
-    outline: none;
+    max-width: 400px;      /* Begrenser bredden på PC */
 }
 
-.edit-locked .vakt-input {
-    border: transparent;
-    background: transparent;
-    pointer-events: none;
-    color: black;
+.vakt-month-input {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    border: 2px solid var(--gull);
+    border-radius: 50px;
+    text-align: center;
+    background: white;
+}
+
+.btn-edit {
+    width: 100% !important;
+    padding: 15px !important;
+    font-size: 16px !important;
+}
+
+.vakt-controls label {
+    text-align: center;
     font-weight: bold;
+    text-transform: uppercase;
+    font-size: 12px;
 }
-
-.edit-locked .input-field {
-    border: none;
-    background: transparent;
-    pointer-events: none;
-}
-
 /* --- STATUS BAR (PIN-lås) --- */
 .status-bar {
     position: fixed;
