@@ -11,7 +11,7 @@ async function runSearch() {
     const { data, error } = await sb.from('medlemmer')
         .select('*')
           .or(`tlf_mobil.ilike.%${input}%,etternavn.ilike.%${input}%,fornavn.ilike.%${input}%`)
-        .limit(8);
+        .limit(3);
 
     if (error) { 
         resDiv.innerHTML = `<div class="alert-box alert-danger">Feil: ${error.message}</div>`; 
