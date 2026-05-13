@@ -169,7 +169,7 @@ async function searchMemberForLocker() {
     const { data } = await sb.from('medlemmer')
         .select('*')
        .or(`tlf_mobil.ilike.%${q}%,etternavn.ilike.%${q}%,fornavn.ilike.%${q}%`)
-        .limit(8);
+        .limit(3);
     if (data.length === 0) {
         resDiv.innerHTML = `<div class="alert-box alert-danger">Ingen treff. <button class="btn" style="background:var(--marine)" onclick="goToMemberRegistration('${q}')">REGISTRER NY</button></div>`;
         return;
