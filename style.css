@@ -1067,35 +1067,3 @@ label {
 .help-content strong {
     color: var(--marine);
 }
-/* Tvinger toolbar til å vise alt på rad */
-.vakt-toolbar {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-}
-
-/* Tvinger kontrollene til å stå på rad og hindrer knappen fra å ta full bredde */
-.vakt-controls {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 15px !important;
-    width: auto !important;
-}
-
-/* Tvinger input-feltet til å beholde fasongen */
-.vakt-month-input {
-    width: 200px !important; 
-    padding: 10px 20px !important;
-    border-radius: 50px !important;
-    border: 2px solid var(--gull) !important;
-}
-
-/* Tvinger knappen til å være liten og på linje */
-.btn.btn-edit {
-    width: auto !important;
-    flex: 0 0 auto !important; /* Hindrer at den blir strukket */
-    padding: 10px 25px !important;
-    margin: 0 !important;
-}
