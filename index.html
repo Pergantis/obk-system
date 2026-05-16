@@ -250,7 +250,6 @@
     <!-- Her slutter modulen periodekort -->
 
     <!-- MODUL: SKAPLEIE -->
-<!-- MODUL: SKAPLEIE -->
 <section id="mod-skap" class="module">
     <h1>🔐 Skaputleie</h1>
     
@@ -299,9 +298,9 @@
                 <input type="text" id="skap-note" class="input-field" placeholder="F.eks. Skap-nøkkel utlevert">
                 
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button class="btn" id="skap-save-btn" style="background: var(--biljard-gronn);">📝 LAGRE UTLEIE</button>
-                    <button class="btn" id="skap-renew-btn" style="background: var(--biljard-blaa); display: none;">➕ FORLENG LEIE</button>
-                    <button class="btn" id="skap-release-btn" style="background: var(--advarsel); display: none;">🔓 FRIGJØR SKAP</button>
+                    <button class="btn" id="skap-save-btn" style="background: var(--biljard-gronn);" onclick="saveLockerLease()">📝 LAGRE UTLEIE</button>
+                    <button class="btn" id="skap-renew-btn" style="background: var(--biljard-blaa); display: none;" onclick="renewLease()">➕ FORLENG LEIE</button>
+                    <button class="btn" id="skap-release-btn" style="background: var(--advarsel); display: none;" onclick="releaseLocker()">🔓 FRIGJØR SKAP</button>
                 </div>
             </div>
             

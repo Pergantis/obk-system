@@ -84,8 +84,9 @@ async function selectLocker(skapNummer) {
         tenantNameInput.value = `${data.medlemmer?.fornavn || ''} ${data.medlemmer?.etternavn || ''}`;
         selectedLockerMember = data.medlemmer;
         
-        startInput.value = '';
-        endInput.value = '';
+        // Fyll skjema med eksisterende datoer for forlengelse
+        startInput.value = data.fra_dato;
+        endInput.value = data.til_dato;
         noteInput.value = data.notater || '';
         
         saveBtn.style.display = 'none';
@@ -225,8 +226,8 @@ window.clearSelectedLockerMember = function() {
     document.getElementById('skap-search').focus();
 };
 
-// --- OVERLAPPSSJEKK ---
-async function checkLockerOverlap(skapNummer, fraDato, tilDato, excludeCurrentId = null) {
+// --- OVERLAPPSSJEKK (bruker skap_nummer, ikke id) ---
+async function checkLockerOverlap(skapNummer, fraDato, tilDato, excludeSkapNummer = null) {
     const { data, error } = await sb
         .from('skapleie')
         .select('*')
@@ -236,7 +237,8 @@ async function checkLockerOverlap(skapNummer, fraDato, tilDato, excludeCurrentId
     if (error || !data || data.length === 0) return true;
     
     for (const lease of data) {
-        if (excludeCurrentId && lease.id === excludeCurrentId) continue;
+        // Ekskluder den nåværende leien hvis vi forlenger
+        if (excludeSkapNummer && lease.skap_nummer === excludeSkapNummer) continue;
         
         if (fraDato <= lease.til_dato && tilDato >= lease.fra_dato) {
             visBeskjed("ADVARSEL", `Skap ${skapNummer} er allerede opptatt i perioden ${formatDateForDisplay(lease.fra_dato)} - ${formatDateForDisplay(lease.til_dato)}`, "error");
@@ -275,19 +277,44 @@ window.saveLockerLease = async function() {
     if (!noOverlap) return;
     
     try {
-        const { error } = await sb
+        // Sjekk om skapet allerede finnes i databasen
+        const { data: existingLocker } = await sb
             .from('skapleie')
-            .insert({
-                skap_nummer: currentLockerNumber,
-                status: 'Opptatt',
-                medlem_id: selectedLockerMember.id,
-                fra_dato: fraDato,
-                til_dato: tilDato,
-                notater: note,
-                oppdatert_at: new Date().toISOString()
-            });
+            .select('skap_nummer')
+            .eq('skap_nummer', currentLockerNumber)
+            .single();
         
-        if (error) throw error;
+        if (existingLocker) {
+            // Skapet finnes - bruk UPDATE
+            const { error } = await sb
+                .from('skapleie')
+                .update({
+                    status: 'Opptatt',
+                    medlem_id: selectedLockerMember.id,
+                    fra_dato: fraDato,
+                    til_dato: tilDato,
+                    notater: note,
+                    oppdatert_at: new Date().toISOString()
+                })
+                .eq('skap_nummer', currentLockerNumber);
+            
+            if (error) throw error;
+        } else {
+            // Skapet finnes ikke - bruk INSERT
+            const { error } = await sb
+                .from('skapleie')
+                .insert({
+                    skap_nummer: currentLockerNumber,
+                    status: 'Opptatt',
+                    medlem_id: selectedLockerMember.id,
+                    fra_dato: fraDato,
+                    til_dato: tilDato,
+                    notater: note,
+                    oppdatert_at: new Date().toISOString()
+                });
+            
+            if (error) throw error;
+        }
         
         visBeskjed("SUKSESS", `Skap ${currentLockerNumber} er nå utleid til ${selectedLockerMember.fornavn} ${selectedLockerMember.etternavn}`, "success");
         
@@ -311,6 +338,7 @@ window.renewLease = async function() {
     }
     
     let nyTilDato = document.getElementById('skap-end').value;
+    const opprinneligStartDato = currentLockerData.fra_dato;
     
     if (!nyTilDato) {
         nyTilDato = addDaysLocal(getTodayLocal(), 365);
@@ -321,7 +349,8 @@ window.renewLease = async function() {
         return;
     }
     
-    const noOverlap = await checkLockerOverlap(currentLockerNumber, currentLockerData.fra_dato, nyTilDato, currentLockerData.id);
+    // Sjekk overlapp, ekskluder nåværende skap
+    const noOverlap = await checkLockerOverlap(currentLockerNumber, opprinneligStartDato, nyTilDato, currentLockerNumber);
     if (!noOverlap) return;
     
     try {
@@ -331,7 +360,7 @@ window.renewLease = async function() {
                 til_dato: nyTilDato,
                 oppdatert_at: new Date().toISOString()
             })
-            .eq('id', currentLockerData.id);
+            .eq('skap_nummer', currentLockerNumber);
         
         if (error) throw error;
         
@@ -340,7 +369,8 @@ window.renewLease = async function() {
         await fetchLockers();
         await fetchExpiringLockers();
         
-        selectLocker(currentLockerNumber);
+        // Oppdater panel med nye data
+        await selectLocker(currentLockerNumber);
         
     } catch (err) {
         console.error("Feil ved forlengelse:", err);
@@ -350,8 +380,8 @@ window.renewLease = async function() {
 
 // --- FRIGJØR SKAP ---
 window.releaseLocker = async function() {
-    if (!currentLockerData) {
-        visBeskjed("FEIL", "Kunne ikke finne nåværende leie", "error");
+    if (!currentLockerNumber) {
+        visBeskjed("FEIL", "Kunne ikke finne skapnummer", "error");
         return;
     }
     
@@ -366,7 +396,7 @@ window.releaseLocker = async function() {
                 notater: null,
                 oppdatert_at: new Date().toISOString()
             })
-            .eq('id', currentLockerData.id);
+            .eq('skap_nummer', currentLockerNumber);
         
         if (error) throw error;
         
@@ -440,6 +470,107 @@ async function fetchExpiringLockers() {
         container.innerHTML = '<p style="color: var(--advarsel); text-align: center;">❌ Kunne ikke laste liste</p>';
     }
 }
+
+// --- GENERER PDF OVER UTLØPENDE SKAP ---
+// --- GENERER PDF OVER UTLØPENDE SKAP ---
+window.generateExpiryPDF = async function() {
+    try {
+        const today = getTodayLocal();
+        const thirtyDaysLater = addDaysLocal(today, 30);
+        
+        const { data, error } = await sb
+            .from('skapleie')
+            .select('*, medlemmer(id, fornavn, etternavn, tlf_mobil)')
+            .eq('status', 'Opptatt')
+            .lte('til_dato', thirtyDaysLater)
+            .order('til_dato', { ascending: true });
+        
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            visBeskjed("INFO", "Ingen skap utløper i løpet av de neste 30 dagene", "success");
+            return;
+        }
+        
+        // Spør brukeren først
+        visBekreftelse(
+            "BEKREFTELSE",
+            `Vil du generere PDF med utløpsliste for ${data.length} skap?`,
+             "🖨️",
+            () => {
+                // JA - generer PDF
+                genererPDF(data, today);
+            },
+            () => {
+                // NEI - gjør ingenting
+                visBeskjed("AVBRUTT", "PDF-generering avbrutt", "success");
+            }
+        );
+        
+    } catch (err) {
+        console.error("Feil ved PDF-generering:", err);
+        visBeskjed("FEIL", "Kunne ikke generere PDF. Prøv igjen.", "error");
+    }
+};
+
+// Hjelpefunksjon for å generere PDF
+function genererPDF(data, today) {
+    let tableRows = '';
+    data.forEach(lease => {
+        const name = lease.medlemmer ? `${lease.medlemmer.fornavn} ${lease.medlemmer.etternavn}` : 'Ukjent';
+        const phone = lease.medlemmer?.tlf_mobil || 'Ikke registrert';
+        const isExpired = lease.til_dato < today;
+        const statusText = isExpired ? 'UTLØPT' : 'Utløper snart';
+        
+        tableRows += `
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${lease.skap_nummer}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${escapeHtml(name)}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${phone}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${formatDateForDisplay(lease.fra_dato)}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${formatDateForDisplay(lease.til_dato)}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; color: ${isExpired ? '#e74c3c' : '#e67e22'}; font-weight: bold;">${statusText}</td>
+            </tr>
+        `;
+    });
+    
+    const totalHtml = `
+        <html>
+        <head>
+            <title>OBK - Utløpsliste skap</title>
+            <meta charset="UTF-8">
+        </head>
+        <body style="font-family: Arial, sans-serif; margin: 40px;">
+            <h1 style="color: #1a2f3c; border-bottom: 2px solid #c9a84c; padding-bottom: 10px;">🎱 Oslo Biljardklubb</h1>
+            <h2 style="color: #1a2f3c;">Utløpsliste skap - 30 dager frem</h2>
+            <p>Dato: ${formatDateForDisplay(today)}</p>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
+                    <tr style="background-color: #1a2f3c; color: white;">
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Skap nr.</th>
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Leietager</th>
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Mobil</th>
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Fra dato</th>
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Til dato</th>
+                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+            <div style="margin-top: 40px; font-size: 12px; color: #666; text-align: center;">
+                Rapporten er generert automatisk av OBK Administrasjonssystem.
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(totalHtml);
+    printWindow.document.close();
+    printWindow.print();
+};
 
 // --- HJELPEFUNKSJONER ---
 function clearLockerForm() {
