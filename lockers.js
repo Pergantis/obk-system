@@ -1,220 +1,514 @@
-// --- SKAPLEIE LOGIKK (OPPDATERT) ---
-let lockerData = [];
-let selectedLockerNum = null;
-let lockerTargetMemberId = null;
+// lockers.js - Håndterer skaputleie
 
-function initLockerGrid() {
+// --- GLOBALE VARIABLER ---
+let currentLockerNumber = null;
+let currentLockerData = null;
+let selectedLockerMember = null;
+let lockerSearchTimeout = null;
+
+// --- HENT SKAPDATA ---
+async function fetchLockers() {
+    const { data, error } = await sb.from('skapleie').select('*');
+    if (!error && data) {
+        window.lockersData = data;
+        renderLockerGrid(data);
+    } else if (error) {
+        console.error("Feil ved henting av skap:", error);
+    }
+}
+
+function renderLockerGrid(lockers) {
     const grid = document.getElementById('locker-grid-visual');
     if (!grid) return;
-    let html = "";
+    
+    const today = getTodayLocal();
+    
+    const lockersMap = {};
+    lockers.forEach(l => { lockersMap[l.skap_nummer] = l; });
+    
+    let html = '';
     for (let i = 1; i <= 100; i++) {
-        html += `<div class="locker-box" id="locker-box-${i}" onclick="selectLocker(${i})">${i}</div>`;
+        const locker = lockersMap[i];
+        let statusClass = 'locker-box';
+        
+        if (locker && locker.status === 'Opptatt') {
+            if (locker.til_dato && locker.til_dato < today) {
+                statusClass += ' warning';
+            } else {
+                statusClass += ' occupied';
+            }
+        } else {
+            statusClass += ' free';
+        }
+        
+        html += `<div class="${statusClass}" data-skap="${i}" onclick="selectLocker(${i})">${i}</div>`;
     }
     grid.innerHTML = html;
 }
 
-async function loadLockers() {
-    if (!document.getElementById('locker-box-1')) initLockerGrid();
-    let { data, error } = await sb.from('skapleie').select('*, medlemmer(*)').order('skap_nummer');
-
-    if (data && data.length === 0) {
-        const startup = [];
-        for (let i = 1; i <= 100; i++) startup.push({ skap_nummer: i, status: 'Ledig' });
-        await sb.from('skapleie').insert(startup);
-        const retry = await sb.from('skapleie').select('*, medlemmer(*)').order('skap_nummer');
-        data = retry.data;
-    }
-    lockerData = data;
-    updateLockerVisuals();
-}
-
-function updateLockerVisuals() {
-    const iDag = new Date(); iDag.setHours(0,0,0,0);
-    lockerData.forEach(skap => {
-        const box = document.getElementById(`locker-box-${skap.skap_nummer}`);
-        if (!box) return;
-        box.className = "locker-box";
-        if (selectedLockerNum === skap.skap_nummer) box.classList.add('selected');
-        if (skap.status === 'Opptatt') {
-            const utlop = new Date(skap.til_dato);
-            const dagerIgjen = Math.ceil((utlop - iDag) / 86400000);
-            if (dagerIgjen < 14) box.classList.add('warning');
-            else box.classList.add('occupied');
-        }
-    });
-}
-
-function selectLocker(num) {
-    selectedLockerNum = num;
-    const skap = lockerData.find(s => s.skap_nummer === num);
-    document.getElementById('locker-msg').style.display = 'none';
-    document.getElementById('locker-panel').style.display = 'block';
-    document.getElementById('selected-locker-title').innerText = "Skap " + num;
+// --- VELG SKAP ---
+async function selectLocker(skapNummer) {
+    currentLockerNumber = skapNummer;
     
-    // Reset alle visninger i panelet
-    document.getElementById('locker-rent-form').style.display = 'none';
-    document.getElementById('locker-info-panel').style.display = 'none';
-    document.getElementById('locker-final-fields').style.display = 'none';
-
-    if (!skap || skap.status === 'Ledig') {
-        document.getElementById('locker-rent-form').style.display = 'block';
-        const start = new Date();
-        const slutt = new Date(); slutt.setFullYear(start.getFullYear() + 1);
-        document.getElementById('locker-start').value = start.toISOString().split('T')[0];
-        document.getElementById('locker-end').value = slutt.toISOString().split('T')[0];
+    const { data } = await sb
+        .from('skapleie')
+        .select('*, medlemmer(id, fornavn, etternavn, tlf_mobil)')
+        .eq('skap_nummer', skapNummer)
+        .single();
+    
+    currentLockerData = data;
+    
+    const panel = document.getElementById('skap-panel');
+    const skapNumberSpan = document.getElementById('skap-number');
+    const currentLeaseDiv = document.getElementById('skap-current-lease');
+    const tenantNameInput = document.getElementById('skap-tenant-name');
+    const startInput = document.getElementById('skap-start');
+    const endInput = document.getElementById('skap-end');
+    const noteInput = document.getElementById('skap-note');
+    const saveBtn = document.getElementById('skap-save-btn');
+    const renewBtn = document.getElementById('skap-renew-btn');
+    const releaseBtn = document.getElementById('skap-release-btn');
+    
+    skapNumberSpan.innerText = skapNummer;
+    panel.style.display = 'block';
+    
+    const today = getTodayLocal();
+    const oneYearLater = addDaysLocal(today, 365);
+    
+    if (data && data.status === 'Opptatt') {
+        // Skap er opptatt
+        currentLeaseDiv.style.display = 'block';
+        document.getElementById('skap-current-tenant').innerHTML = `${data.medlemmer?.fornavn || ''} ${data.medlemmer?.etternavn || ''} (📱 ${data.medlemmer?.tlf_mobil || 'Ingen'})`;
+        document.getElementById('skap-current-period').innerHTML = `${formatDateForDisplay(data.fra_dato)} - ${formatDateForDisplay(data.til_dato)}`;
+        
+        tenantNameInput.value = `${data.medlemmer?.fornavn || ''} ${data.medlemmer?.etternavn || ''}`;
+        selectedLockerMember = data.medlemmer;
+        
+        startInput.value = '';
+        endInput.value = '';
+        noteInput.value = data.notater || '';
+        
+        saveBtn.style.display = 'none';
+        renewBtn.style.display = 'block';
+        releaseBtn.style.display = 'block';
     } else {
-        document.getElementById('locker-info-panel').style.display = 'block';
-        const m = skap.medlemmer;
-        document.getElementById('locker-info-name').innerText = m ? `${m.fornavn} ${m.etternavn}` : 'Ukjent';
-        document.getElementById('locker-info-phone').innerText = m ? `📱 ${m.tlf_mobil}` : '-';
-        document.getElementById('locker-info-dates').innerText = `Utløper: ${new Date(skap.til_dato).toLocaleDateString('no-NO')}`;
-        document.getElementById('locker-info-note').innerText = skap.notater || "Ingen notat.";
-        lockerTargetMemberId = skap.medlem_id;
+        // Skap er ledig
+        currentLeaseDiv.style.display = 'none';
+        tenantNameInput.value = '';
+        selectedLockerMember = null;
+        
+        startInput.value = today;
+        endInput.value = oneYearLater;
+        noteInput.value = '';
+        
+        saveBtn.style.display = 'block';
+        renewBtn.style.display = 'none';
+        releaseBtn.style.display = 'none';
     }
-    updateLockerVisuals();
-}
-
-// --- NY FUNKSJON: FORLENGELSE ---
-function showRenewalForm() {
-    const skap = lockerData.find(s => s.skap_nummer === selectedLockerNum);
-    if (!skap) return;
-
-    // Gjør om panelet til et fornyelses-skjema
-    document.getElementById('locker-info-panel').style.display = 'none';
-    document.getElementById('locker-rent-form').style.display = 'block';
-    document.getElementById('locker-final-fields').style.display = 'block';
-    document.getElementById('locker-target-name').innerText = "Forlengelse for: " + skap.medlemmer.fornavn + " " + skap.medlemmer.etternavn;
     
-    // Beregn nye datoer: Start er dagen etter gammelt utløp, slutt er +1 år
-    const gammeltUtlop = new Date(skap.til_dato);
-    const nyStart = new Date(gammeltUtlop); nyStart.setDate(nyStart.getDate() + 1);
-    const nySlutt = new Date(nyStart); nySlutt.setFullYear(nySlutt.getFullYear() + 1);
-
-    document.getElementById('locker-start').value = nyStart.toISOString().split('T')[0];
-    document.getElementById('locker-end').value = nySlutt.toISOString().split('T')[0];
+    // Fjern markering fra alle skap
+    document.querySelectorAll('.locker-box').forEach(b => b.classList.remove('selected'));
+    const selectedBox = document.querySelector(`.locker-box[data-skap="${skapNummer}"]`);
+    if (selectedBox) selectedBox.classList.add('selected');
 }
 
-// --- NY FUNKSJON: PDF/PRINT ---
-function generateExpiryPDF() {
-    const iDag = new Date(); iDag.setHours(0,0,0,0);
-    const toUkerFrem = new Date(iDag); toUkerFrem.setDate(toUkerFrem.getDate() + 14);
-
-    // Filtrer ut skap som går ut innen 14 dager eller har gått ut
-    const utlopsListe = lockerData.filter(s => {
-        if (s.status !== 'Opptatt') return false;
-        const utlop = new Date(s.til_dato);
-        return utlop <= toUkerFrem;
-    }).sort((a, b) => new Date(a.til_dato) - new Date(b.til_dato));
-
-    if (utlopsListe.length === 0) {
-        alert("Ingen skap utløper i løpet av de neste 14 dagene.");
-        return;
+// --- SØK FUNKSJON ---
+window.handleLockerSearch = function(e) {
+    const query = e.target.value.trim();
+    removeLockerSearchBubble();
+    
+    if (query.length >= 3) {
+        if (lockerSearchTimeout) clearTimeout(lockerSearchTimeout);
+        lockerSearchTimeout = setTimeout(() => searchLockerMembers(query), 300);
     }
+};
 
-    // Lag et midlertidig utskriftsvindu
-    const printWindow = window.open('', '_blank');
-    let html = `
-        <html><head><title>Utløpsliste Skap - OBK</title>
-        <link rel="stylesheet" href="style.css">
-        <style>
-            body { background: white; padding: 40px; }
-            .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            .print-table th, .print-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-            .print-header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #1a2f3c; padding-bottom: 10px; }
-        </style>
-        </head><body>
-        <div class="print-header">
-            <h1>Oslo Biljardklubb - Utløpsliste Skap</h1>
-            <p>Generert: ${new Date().toLocaleDateString('no-NO')} | Filter: Utløp innen 14 dager</p>
-        </div>
-        <table class="print-table">
-            <thead>
-                <tr>
-                    <th>Skap</th>
-                    <th>Navn</th>
-                    <th>Mobilnummer</th>
-                    <th>Utløpsdato</th>
-                    <th>Dager igjen</th>
-                </tr>
-            </thead>
-            <tbody>`;
+async function searchLockerMembers(query) {
+    try {
+        const { data: members, error } = await sb
+            .from('medlemmer')
+            .select('id, fornavn, etternavn, tlf_mobil')
+            .or(`fornavn.ilike.%${query}%,etternavn.ilike.%${query}%,tlf_mobil.ilike.%${query}%`)
+            .limit(10);
+        
+        if (error) throw error;
+        
+        if (!members || members.length === 0) {
+            showNoLockerResultsBubble();
+            return;
+        }
+        
+        renderLockerSearchBubble(members);
+        
+    } catch (err) {
+        console.error("Søkefeil:", err);
+    }
+}
 
-    utlopsListe.forEach(s => {
-        const utlop = new Date(s.til_dato);
-        const dager = Math.ceil((utlop - iDag) / 86400000);
-        html += `
-            <tr>
-                <td><strong>${s.skap_nummer}</strong></td>
-                <td>${s.medlemmer ? s.medlemmer.fornavn + ' ' + s.medlemmer.etternavn : 'Ukjent'}</td>
-                <td>${s.medlemmer ? s.medlemmer.tlf_mobil : '-'}</td>
-                <td>${utlop.toLocaleDateString('no-NO')}</td>
-                <td style="color: ${dager < 0 ? 'red' : 'black'}">${dager < 0 ? 'UTLØPT' : dager + ' dager'}</td>
-            </tr>`;
+function renderLockerSearchBubble(members) {
+    removeLockerSearchBubble();
+    
+    const searchWrapper = document.querySelector('#mod-skap .search-wrapper');
+    if (!searchWrapper) return;
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'search-bubble';
+    
+    members.forEach(member => {
+        const item = document.createElement('div');
+        item.className = 'search-bubble-item';
+        
+        item.innerHTML = `
+            <div>
+                <span class="search-bubble-name">${escapeHtml(member.fornavn)} ${escapeHtml(member.etternavn)}</span>
+                <span class="search-bubble-phone">📱 ${member.tlf_mobil || 'Ingen telefon'}</span>
+            </div>
+        `;
+        
+        item.addEventListener('click', () => selectLockerMember(member));
+        bubble.appendChild(item);
     });
-
-    html += `</tbody></table>
-        <p style="margin-top: 40px; font-size: 10px; color: #666;">Dette dokumentet er generert fra OBK Admin System.</p>
-        <script>setTimeout(() => { window.print(); window.close(); }, 500);</script>
-        </body></html>`;
-
-    printWindow.document.write(html);
-    printWindow.document.close();
+    
+    searchWrapper.appendChild(bubble);
 }
 
-// ... resten av de eksisterende funksjonene (search, prepare, save, release) ...
-async function searchMemberForLocker() {
-    const q = document.getElementById('locker-search-input').value.trim();
-    const resDiv = document.getElementById('locker-search-results');
-    if (q.length < 2) return;
-    const { data } = await sb.from('medlemmer')
+function showNoLockerResultsBubble() {
+    removeLockerSearchBubble();
+    const searchWrapper = document.querySelector('#mod-skap .search-wrapper');
+    if (!searchWrapper) return;
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'search-bubble';
+    bubble.innerHTML = `
+        <div class="search-bubble-item" style="text-align: center;">
+            <div style="margin-bottom: 10px;">😕 Ingen medlemmer funnet</div>
+            <button class="search-bubble-btn" id="skap-register-member-btn">➕ Registrer nytt medlem</button>
+        </div>
+    `;
+    searchWrapper.appendChild(bubble);
+    
+    const registerBtn = document.getElementById('skap-register-member-btn');
+    if (registerBtn) {
+        registerBtn.addEventListener('click', () => {
+            openNewMemberModalForSkap((newMember) => {
+                selectLockerMember(newMember);
+            });
+        });
+    }
+}
+
+function removeLockerSearchBubble() {
+    const existing = document.querySelector('#mod-skap .search-bubble');
+    if (existing) existing.remove();
+}
+
+function selectLockerMember(member) {
+    selectedLockerMember = member;
+    
+    const tenantNameInput = document.getElementById('skap-tenant-name');
+    const selectedDiv = document.getElementById('skap-selected-member');
+    const selectedNameSpan = document.getElementById('skap-selected-name');
+    
+    tenantNameInput.value = `${member.fornavn} ${member.etternavn}`;
+    selectedNameSpan.innerHTML = `${member.fornavn} ${member.etternavn} (📱 ${member.tlf_mobil || 'Ingen'})`;
+    selectedDiv.style.display = 'block';
+    
+    removeLockerSearchBubble();
+    document.getElementById('skap-search').value = '';
+}
+
+window.clearSelectedLockerMember = function() {
+    selectedLockerMember = null;
+    document.getElementById('skap-tenant-name').value = '';
+    document.getElementById('skap-selected-member').style.display = 'none';
+    document.getElementById('skap-search').value = '';
+    document.getElementById('skap-search').focus();
+};
+
+// --- OVERLAPPSSJEKK ---
+async function checkLockerOverlap(skapNummer, fraDato, tilDato, excludeCurrentId = null) {
+    const { data, error } = await sb
+        .from('skapleie')
         .select('*')
-       .or(`tlf_mobil.ilike.%${q}%,etternavn.ilike.%${q}%,fornavn.ilike.%${q}%`)
-        .limit(3);
-    if (data.length === 0) {
-        resDiv.innerHTML = `<div class="alert-box alert-danger">Ingen treff. <button class="btn" style="background:var(--marine)" onclick="goToMemberRegistration('${q}')">REGISTRER NY</button></div>`;
+        .eq('skap_nummer', skapNummer)
+        .eq('status', 'Opptatt');
+    
+    if (error || !data || data.length === 0) return true;
+    
+    for (const lease of data) {
+        if (excludeCurrentId && lease.id === excludeCurrentId) continue;
+        
+        if (fraDato <= lease.til_dato && tilDato >= lease.fra_dato) {
+            visBeskjed("ADVARSEL", `Skap ${skapNummer} er allerede opptatt i perioden ${formatDateForDisplay(lease.fra_dato)} - ${formatDateForDisplay(lease.til_dato)}`, "error");
+            return false;
+        }
+    }
+    return true;
+}
+
+// --- LAGRE UTLEIE ---
+window.saveLockerLease = async function() {
+    if (!currentLockerNumber) {
+        visBeskjed("FEIL", "Velg et skap først", "error");
         return;
     }
-    resDiv.innerHTML = data.map(m => `
-        <div class="search-result-item" onclick="prepareLockerLease('${m.id}', '${m.fornavn} ${m.etternavn}')">
-            <div class="search-item-icon">👤</div>
-            <div class="search-item-info"><strong>${m.fornavn} ${m.etternavn}</strong><small>📱 ${m.tlf_mobil}</small></div>
-        </div>`).join('');
+    
+    if (!selectedLockerMember) {
+        visBeskjed("ADVARSEL", "Du må søke opp og velge en leietager", "error");
+        return;
+    }
+    
+    let fraDato = document.getElementById('skap-start').value;
+    let tilDato = document.getElementById('skap-end').value;
+    const note = document.getElementById('skap-note').value;
+    const today = getTodayLocal();
+    
+    if (!fraDato) fraDato = today;
+    if (!tilDato) tilDato = addDaysLocal(today, 365);
+    
+    if (fraDato > tilDato) {
+        visBeskjed("FEIL", "Fra-dato må være før eller lik til-dato", "error");
+        return;
+    }
+    
+    const noOverlap = await checkLockerOverlap(currentLockerNumber, fraDato, tilDato);
+    if (!noOverlap) return;
+    
+    try {
+        const { error } = await sb
+            .from('skapleie')
+            .insert({
+                skap_nummer: currentLockerNumber,
+                status: 'Opptatt',
+                medlem_id: selectedLockerMember.id,
+                fra_dato: fraDato,
+                til_dato: tilDato,
+                notater: note,
+                oppdatert_at: new Date().toISOString()
+            });
+        
+        if (error) throw error;
+        
+        visBeskjed("SUKSESS", `Skap ${currentLockerNumber} er nå utleid til ${selectedLockerMember.fornavn} ${selectedLockerMember.etternavn}`, "success");
+        
+        clearLockerForm();
+        await fetchLockers();
+        await fetchExpiringLockers();
+        
+        document.getElementById('skap-panel').style.display = 'none';
+        
+    } catch (err) {
+        console.error("Feil ved utleie:", err);
+        visBeskjed("FEIL", "Kunne ikke lagre utleie. Prøv igjen.", "error");
+    }
+};
+
+// --- FORLENG LEIE ---
+window.renewLease = async function() {
+    if (!currentLockerData) {
+        visBeskjed("FEIL", "Kunne ikke finne nåværende leie", "error");
+        return;
+    }
+    
+    let nyTilDato = document.getElementById('skap-end').value;
+    
+    if (!nyTilDato) {
+        nyTilDato = addDaysLocal(getTodayLocal(), 365);
+    }
+    
+    if (nyTilDato <= currentLockerData.til_dato) {
+        visBeskjed("ADVARSEL", `Ny sluttdato må være etter nåværende sluttdato (${formatDateForDisplay(currentLockerData.til_dato)})`, "error");
+        return;
+    }
+    
+    const noOverlap = await checkLockerOverlap(currentLockerNumber, currentLockerData.fra_dato, nyTilDato, currentLockerData.id);
+    if (!noOverlap) return;
+    
+    try {
+        const { error } = await sb
+            .from('skapleie')
+            .update({
+                til_dato: nyTilDato,
+                oppdatert_at: new Date().toISOString()
+            })
+            .eq('id', currentLockerData.id);
+        
+        if (error) throw error;
+        
+        visBeskjed("SUKSESS", `Skap ${currentLockerNumber} er forlenget til ${formatDateForDisplay(nyTilDato)}`, "success");
+        
+        await fetchLockers();
+        await fetchExpiringLockers();
+        
+        selectLocker(currentLockerNumber);
+        
+    } catch (err) {
+        console.error("Feil ved forlengelse:", err);
+        visBeskjed("FEIL", "Kunne ikke forlenge leie. Prøv igjen.", "error");
+    }
+};
+
+// --- FRIGJØR SKAP ---
+window.releaseLocker = async function() {
+    if (!currentLockerData) {
+        visBeskjed("FEIL", "Kunne ikke finne nåværende leie", "error");
+        return;
+    }
+    
+    try {
+        const { error } = await sb
+            .from('skapleie')
+            .update({
+                status: 'Ledig',
+                medlem_id: null,
+                fra_dato: null,
+                til_dato: null,
+                notater: null,
+                oppdatert_at: new Date().toISOString()
+            })
+            .eq('id', currentLockerData.id);
+        
+        if (error) throw error;
+        
+        visBeskjed("SUKSESS", `Skap ${currentLockerNumber} er frigjort`, "success");
+        
+        clearLockerForm();
+        await fetchLockers();
+        await fetchExpiringLockers();
+        
+        document.getElementById('skap-panel').style.display = 'none';
+        
+    } catch (err) {
+        console.error("Feil ved frigjøring:", err);
+        visBeskjed("FEIL", "Kunne ikke frigjøre skap. Prøv igjen.", "error");
+    }
+};
+
+// --- LISTE OVER UTLØPENDE SKAP ---
+async function fetchExpiringLockers() {
+    const container = document.getElementById('skap-expiring-body');
+    if (!container) return;
+    
+    const today = getTodayLocal();
+    const fourteenDaysLater = addDaysLocal(today, 14);
+    
+    try {
+        const { data, error } = await sb
+            .from('skapleie')
+            .select('*, medlemmer(id, fornavn, etternavn, tlf_mobil)')
+            .eq('status', 'Opptatt')
+            .order('til_dato', { ascending: true });
+        
+        if (error) throw error;
+        
+        const expiring = data.filter(lease => lease.til_dato <= fourteenDaysLater);
+        
+        if (expiring.length === 0) {
+            container.innerHTML = '<p style="color: var(--tekst-lys); text-align: center;">✅ Ingen skap utløper i løpet av 14 dager</p>';
+            return;
+        }
+        
+        let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+        
+        expiring.forEach(lease => {
+            const daysLeft = Math.ceil((parseLocalDate(lease.til_dato) - parseLocalDate(today)) / (1000 * 60 * 60 * 24));
+            const isExpired = daysLeft < 0;
+            const name = lease.medlemmer ? `${lease.medlemmer.fornavn} ${lease.medlemmer.etternavn}` : 'Ukjent';
+            
+            html += `
+                <div style="padding: 10px; background: ${isExpired ? '#fee' : '#fff3cd'}; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>🎱 Skap ${lease.skap_nummer}</strong><br>
+                        <span style="font-size: 13px;">👤 ${escapeHtml(name)}</span><br>
+                        <span style="font-size: 12px; color: #666;">Utløper: ${formatDateForDisplay(lease.til_dato)}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-weight: bold; color: ${isExpired ? 'var(--advarsel)' : '#856404'};">
+                            ${isExpired ? 'UTLØPT' : `${daysLeft} dager igjen`}
+                        </span>
+                        <button class="btn" style="background: var(--marine); padding: 5px 10px; font-size: 11px; margin-top: 5px;" onclick="selectLocker(${lease.skap_nummer})">Vis skap</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+        
+    } catch (err) {
+        console.error("Feil ved henting av utløpende skap:", err);
+        container.innerHTML = '<p style="color: var(--advarsel); text-align: center;">❌ Kunne ikke laste liste</p>';
+    }
 }
 
-function goToMemberRegistration(input) {
-    showModule('medlem');
-    document.getElementById('p-search-input').value = input;
-    runSearch();
+// --- HJELPEFUNKSJONER ---
+function clearLockerForm() {
+    currentLockerNumber = null;
+    currentLockerData = null;
+    selectedLockerMember = null;
+    
+    document.getElementById('skap-search').value = '';
+    document.getElementById('skap-tenant-name').value = '';
+    document.getElementById('skap-selected-member').style.display = 'none';
+    document.getElementById('skap-start').value = '';
+    document.getElementById('skap-end').value = '';
+    document.getElementById('skap-note').value = '';
+    
+    removeLockerSearchBubble();
 }
 
-function prepareLockerLease(id, name) {
-    lockerTargetMemberId = id;
-    document.getElementById('locker-target-name').innerText = "Valgt: " + name;
-    document.getElementById('locker-final-fields').style.display = 'block';
-    document.getElementById('locker-search-results').innerHTML = '';
+function getTodayLocal() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
-async function saveLockerLease() {
-    showLoader(true);
-    const { error } = await sb.from('skapleie').update({
-        status: 'Opptatt', medlem_id: lockerTargetMemberId,
-        fra_dato: document.getElementById('locker-start').value,
-        til_dato: document.getElementById('locker-end').value,
-        notater: document.getElementById('locker-note').value
-    }).eq('skap_nummer', selectedLockerNum);
-    if (error) alert("Feil: " + error.message);
-    else { await loadLockers(); selectLocker(selectedLockerNum); }
-    showLoader(false);
+function addDaysLocal(dateStr, days) {
+    const date = parseLocalDate(dateStr);
+    date.setDate(date.getDate() + days);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
-async function releaseLocker() {
-    if (!confirm(`Frigjøre skap ${selectedLockerNum}?`)) return;
-    showLoader(true);
-    await sb.from('skapleie').update({ status: 'Ledig', medlem_id: null, fra_dato: null, til_dato: null, notater: null }).eq('skap_nummer', selectedLockerNum);
-    await loadLockers();
-    document.getElementById('locker-panel').style.display = 'none';
-    document.getElementById('locker-msg').style.display = 'block';
-    showLoader(false);
+function parseLocalDate(dateStr) {
+    if (!dateStr) return null;
+    const parts = dateStr.split('-');
+    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
 }
 
-loadLockers();
+function formatDateForDisplay(isoDate) {
+    if (!isoDate) return '';
+    const parts = isoDate.split('-');
+    return `${parts[2]}.${parts[1]}.${parts[0]}`;
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+
+// --- LAST INN SKAP ---
+window.loadLockers = async function() {
+    await fetchLockers();
+    await fetchExpiringLockers();
+};
+
+// --- ATTACH EVENTS ---
+window.attachLockerEvents = function() {
+    const searchInput = document.getElementById('skap-search');
+    if (searchInput) {
+        searchInput.removeEventListener('input', window.handleLockerSearch);
+        searchInput.addEventListener('input', window.handleLockerSearch);
+    }
+};
+
+// Initialiser
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        window.attachLockerEvents();
+    }, 500);
+});

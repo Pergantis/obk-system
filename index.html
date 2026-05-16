@@ -6,6 +6,7 @@
     <title>Oslo Biljardklubb - System</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -24,7 +25,8 @@
     <button class="nav-btn" id="btn-medlem" onclick="showModule('medlem'); toggleMenu('close')">👤 PERIODEKORT</button>
     <button class="nav-btn" id="btn-skap" onclick="showModule('skap'); toggleMenu('close')">🔐 SKAPLEIE</button>
     <button class="nav-btn" id="btn-vaktplan" onclick="showModule('vaktplan'); toggleMenu('close')">📅 VAKTPLAN</button>
-    <button class="nav-btn" id="btn-hjelp" onclick="showModule('hjelp'); toggleMenu('close')">❓ VEILEDNING</button>
+    <!-- <button class="nav-btn" id="btn-admin" onclick="showModule('admin'); toggleMenu('close')">⚙️ KONTROLLPANEL</button> -->
+   <!-- <button class="nav-btn" id="btn-hjelp" onclick="showModule('hjelp'); toggleMenu('close')">❓ VEILEDNING</button> -->
 </nav>
 
 <main>
@@ -87,127 +89,232 @@
 
     <div id="error-log" class="alert-box alert-danger" style="display:none;"></div>
     <div id="sync-loader">Synkroniserer...</div>
+<!-- MODUL: KONTROLLPANEL -->
+<section id="mod-admin" class="module">
+    <h1>Kontrollpanel</h1>
+    
+    <!-- ETASJE 1: DASHBOARD (Nå med 3 bokser) -->
+    <div class="split-container">
+        <!-- Boks 1: Historikk -->
+        <div class="admin-card card-blue" style="flex: 1;">
+            <h3>Siste bordleier</h3>
+            <div id="admin-bord-logg">Laster logg...</div>
+            <button class="btn" style="margin-top:10px; background:var(--marine)" onclick="lastMerLogg()">Se mer</button>
+        </div>
+        
+        <!-- Boks 2: Varsel Periodekort -->
+        <div class="admin-card card-gold" style="flex: 1;">
+            <h3>Periodekort som utløper snart</h3>
+            <div id="admin-varsel-periode">Laster...</div>
+        </div>
+        
+        <!-- Boks 3: Varsel Skapleie -->
+        <div class="admin-card card-green" style="flex: 1;">
+            <h3>Skapleie utløper snart eller er utløpt</h3>
+            <div id="admin-varsel-skap">Laster...</div>
+        </div>
+    </div>
+
+    <!-- ETASJE 2: MEDLEMSTABELL (Nederst) -->
+    <div class="admin-card card-marine">
+        <h3>Medlemsadministrasjon</h3>
+        <div id="admin-medlem-filter">
+
+       
+
+        </div>
+        <div id="admin-medlem-liste"></div>
+    </div>
+</section>
 
     <!-- MODUL: BORDLEIE -->
     <section id="mod-bord" class="module active">
         <h1>Bordkontrollen</h1>
         <div id="bord-grid" class="bord-grid">Laster bord...</div>
+            <!-- MODUL: BORDLEIE Historikk -->
+<section id="mod-bord" class="module active">
+    <h1>Bordhistorikk</h1>
+    <div id="bord-grid" class="bord-grid"></div>
+    
+    <!-- NY HISTORIKK-TABELL - Legges til her -->
+    <div class="admin-card card-marine" style="margin-top: 30px;">
+        <div class="table-header-row">
+            <h3>📋 Dagens bordhistorikk</h3>
+            <span class="history-count" id="history-count">0 bord i dag</span>
+        </div>
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Bordnr.</th>
+                        <th>Kundenavn</th>
+                        <th>Starttid</th>
+                        <th>Sluttid</th>
+                        <th>Varighet</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body">
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding: 30px; color: var(--tekst-lys);">
+                            ⏳ Laster dagens bordhistorikk...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
     </section>
 
     <!-- MODUL: PERIODEKORT -->
     <section id="mod-medlem" class="module">
-        <h1>Periodekort Administrasjon</h1>
-        <div class="split-container">
-            <div class="column-form">
-                <div class="admin-card card-blue">
-                    <h3>Finn Medlem</h3>
-                    <label>Søk etter medlem</label>
-                    <input type="text" id="p-search-input" placeholder="Mobil, fornavn eller etternavn..." class="input-field" onkeyup="if(event.key==='Enter') runSearch()">
-                    <button class="btn" style="background: var(--marine)" onclick="runSearch()">SØK</button>
-                    <div id="p-search-results"></div>
+    <div class="member-container">
+        <aside class="member-sidebar">
+            <div class="admin-card card-marine no-margin">
+                <div class="sidebar-header">
+                    <h3>Periodekort</h3>
+                    </div>
+
+                <div class="search-section">
+                    <label>Finn medlem</label>
+                    <div class="search-wrapper">
+                        <input type="text" id="m-search" class="admin-search-input" placeholder="Søk på fornavn eller etternavn...">
+                        <div id="m-search-results" class="floating-results"></div>
+                    </div>
                 </div>
 
-                <div id="p-form-box" class="admin-card card-gold" style="display:none;">
-                    <h3 id="p-display-name">Navn</h3>
-                    <div id="p-existing-warning" class="alert-box alert-warning" style="display:none;"></div>
-                   <label>E-post</label>
-                    <input type="email" id="p-edit-email" class="input-field" value="dummy@dummy.net" disabled>
-                    <label>Mobilnummer</label>
-                    <input type="tel" id="p-edit-phone" class="input-field" value="99999999" disabled>
-                    <div class="admin-card" style="background: #fffdf5; border-top: none; padding: 10px; margin-bottom: 15px;">
-                        <label id="p-date-label">Nytt periodekort</label>
-                        <div class="split-container" style="gap: 10px;">
-                            <div style="flex:1"><label>Start</label><input type="date" id="p-start-date" class="input-field"></div>
-                            <div style="flex:1"><label>Slutt</label><input type="date" id="p-end-date" class="input-field"></div>
+                <hr class="divider">
+
+                <div class="form-section">
+                    <div class="input-group">
+                        <div class="input-half">
+                            <label>Fornavn</label>
+                            <input type="text" id="m-fornavn" class="input-field" placeholder="Fornavn">
+                        </div>
+                        <div class="input-half">
+                            <label>Etternavn</label>
+                            <input type="text" id="m-etternavn" class="input-field" placeholder="Etternavn">
                         </div>
                     </div>
-                    <button class="btn" style="background: var(--biljard-gronn); margin-bottom: 10px;" onclick="saveMemberPassUpdate()">LAGRE ENDRINGER & KORT</button>
-                    <button class="btn" style="background: #95a5a6;" onclick="cancelSelection()">AVBRYT</button>
-                </div>
 
-                <div id="p-new-member-box" class="admin-card card-marine" style="display:none;">
-                    <h3>Registrer Nytt Medlem</h3>
-                    <div id="n-warning" class="alert-box alert-danger" style="display:none;"></div>
-                    <label>Fornavn <span class="req">*</span></label>
-                    <input type="text" id="n-fn" class="input-field">
-                    <label>Etternavn <span class="req">*</span></label>
-                    <input type="text" id="n-en" class="input-field">
-                   <label>E-post</label>
-                    <input type="email" id="p-edit-email" class="input-field" value="dummy@dummy.net" disabled>                    
-                    <label>Mobilnummer</label>
-                    <input type="tel" id="p-edit-phone" class="input-field" value="99999999" disabled>                    
-                    <div class="admin-card" style="background: #f0f7ff; border-top: none; padding: 10px; margin-bottom: 15px;">
-                        <label>Periodekort (valgfritt)</label>
-                        <div class="split-container" style="gap: 10px;">
-                            <div style="flex:1"><input type="date" id="n-start" class="input-field"></div>
-                            <div style="flex:1"><input type="date" id="n-end" class="input-field"></div>
+                    <div class="input-group">
+                        <div class="input-half">
+                            <label>Startdato</label>
+                            <input type="date" id="m-start" class="input-field">
+                        </div>
+                        <div class="input-half">
+                            <label>Sluttdato</label>
+                            <input type="date" id="m-slutt" class="input-field">
                         </div>
                     </div>
-                    <button class="btn" id="n-btn-save" style="background: var(--marine); margin-bottom: 10px;" onclick="registerBrandNewMember()">LAGRE NYTT MEDLEM</button>
-                    <button class="btn" id="n-btn-force" style="display:none; background: var(--advarsel); margin-bottom: 10px;" onclick="registerBrandNewMember(true)">JA, JEG ER SIKKER - LAGRE LIKEVEL</button>
-                    <button class="btn" style="background: #95a5a6;" onclick="cancelSelection()">AVBRYT</button>
                 </div>
-            </div>
 
-            <div class="column-list">
-                <div class="admin-card card-green">
-                    <h3>Aktive Periodekort</h3>
-                    <table>
-                        <thead>
-                            <tr><th>Navn</th><th>Mobil</th><th>Utløper</th><th>Status</th></tr>
-                        </thead>
-                        <tbody id="p-active-table-body"></tbody>
-                    </table>
+                <div class="button-row">
+                    <button class="btn btn-renew" id="btn-renew">FORNYELSE</button>
+                    <button class="btn btn-cancel" id="btn-cancel">AVBRYT</button>
                 </div>
             </div>
+        </aside>
+<!-- Liste med aktive periodekort -->
+        <div class="member-main">
+    <div class="admin-card card-hvit no-margin">
+        <div class="table-header-row">
+            <h3>Aktive Periodekort</h3>
+            <span class="member-count">Viser aktive medlemmer med periodekort </span>
         </div>
-    </section>
+        
+        <div class="table-responsive">
+            <table class="member-table">
+                <thead>
+                    <tr>
+                        <th>Fornavn</th>
+                        <th>Etternavn</th>
+                        <th>Sluttdato</th>
+                        <th>Rest. Dager</th>
+                    </tr>
+                </thead>
+                <tbody id="member-table-body">
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding: 20px; color: var(--tekst-lys);">
+                            Søk etter medlem eller vent på at listen lastes...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+    </div>
+    <!-- Liste med aktive periodekort Slutt -->
+    </section>  
+    <!-- Her slutter modulen periodekort -->
 
     <!-- MODUL: SKAPLEIE -->
-    <section id="mod-skap" class="module">
-        <h1>Skaputleie</h1>
-        <div class="split-container">
-            <div class="column-form">
-                <div class="admin-card card-marine">
-                    <h3>Oversikt (1-100)</h3>
-                    <button class="btn" style="background: var(--marine); width: auto; padding: 5px 15px; margin-bottom: 10px; font-size: 11px;" onclick="generateExpiryPDF()">🖨️ LAST NED UTLØPSLISTE (PDF)</button>
-                    <div class="locker-grid" id="locker-grid-visual"></div>
-                </div>
-            </div>
-            <div class="column-side">
-                <div id="locker-panel" class="admin-card card-gold" style="display:none;">
-                    <h2 id="selected-locker-title" style="margin-top:0;">Skap X</h2>
-                    <div id="locker-rent-form" style="display:none;">
-                        <label>Søk leietager (Fornavn, Etternavn eller Mobil)</label>
-                        <input type="text" id="locker-search-input" class="input-field" onkeyup="searchMemberForLocker()">
-                        <div id="locker-search-results"></div>
-                        <div id="locker-final-fields" style="display:none; margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
-                            <p id="locker-target-name" style="font-weight:bold; color:var(--marine);"></p>
-                            <label>Fra dato</label>
-                            <input type="date" id="locker-start" class="input-field">
-                            <label>Til dato</label>
-                            <input type="date" id="locker-end" class="input-field">
-                            <label>Notat</label>
-                            <input type="text" id="locker-note" class="input-field" placeholder="F.eks. Skap-nøkkel utlevert">
-                            <button class="btn" style="background:var(--biljard-gronn)" onclick="saveLockerLease()">LAGRE UTLEIE</button>
-                        </div>
-                    </div>
-                    <div id="locker-info-panel" style="display:none;">
-                        <div class="admin-card" style="background:#f0f7ff; border-top:none; margin-bottom:15px;">
-                            <div id="locker-info-name" style="font-weight:bold; font-size:18px;"></div>
-                            <div id="locker-info-phone" style="font-size:14px; color:var(--tekst-lys);"></div>
-                            <div id="locker-info-dates" style="font-size:14px; margin-top:10px; font-weight:500;"></div>
-                        </div>
-                        <label>Notat:</label>
-                        <p id="locker-info-note" style="font-style:italic; font-size:14px; color:var(--tekst-lys); background:#f9f9f9; padding:10px; border-radius:5px;"></p>
-                        <button class="btn" style="background:var(--biljard-blaa); margin-bottom: 8px;" onclick="showRenewalForm()">➕ FORLENG LEIE</button>
-                        <button class="btn" style="background:var(--advarsel)" onclick="releaseLocker()">FRIGJØR SKAP</button>
-                    </div>
-                </div>
-                <p id="locker-msg" style="color:var(--tekst-lys); text-align:center; margin-top:50px;">Klikk på et skap for å se detaljer eller leie ut.</p>
+<!-- MODUL: SKAPLEIE -->
+<section id="mod-skap" class="module">
+    <h1>🔐 Skaputleie</h1>
+    
+    <div class="skap-split-container">
+        <!-- Venstre: Skapgrid -->
+        <div class="skap-left">
+            <div class="admin-card card-marine" style="margin-bottom: 0;">
+                <h3 style="font-size: 22px;">🎱 Skapoversikt (1-100) Grønn = Ledig, Rød = Opptatt, Gul = Utløpt eller utløper snart</h3>
+                <button class="btn" style="background: var(--marine); width: auto; padding: 5px 15px; margin-bottom: 15px; font-size: 11px;" onclick="generateExpiryPDF()">🖨️ LAST NED UTLØPSLISTE (PDF)</button>
+                <div class="locker-grid" id="locker-grid-visual"></div>
             </div>
         </div>
-    </section>
+        
+        <!-- Høyre: Skjema og lister -->
+        <div class="skap-right">
+            <!-- Søk etter leietager -->
+            <div class="admin-card card-gold">
+                <h3>🔍 Søk leietager</h3>
+                <div class="search-wrapper">
+                    <input type="text" id="skap-search" class="input-field" placeholder="Søk på fornavn, etternavn eller mobil...">
+                </div>
+                <div id="skap-selected-member" style="display: none; margin-top: 10px; padding: 10px; background: #e8f0fe; border-radius: 12px;">
+                    <strong>Valgt medlem:</strong> <span id="skap-selected-name"></span>
+                    <button class="btn" style="background: #95a5a6; padding: 5px 10px; margin-top: 5px; font-size: 12px;" onclick="clearSelectedLockerMember()">Fjern</button>
+                </div>
+            </div>
+            
+            <!-- Skjema for valgt skap -->
+            <div id="skap-panel" class="admin-card card-marine" style="display: none;">
+                <h3 id="skap-selected-title">Skap <span id="skap-number">X</span></h3>
+                <div id="skap-current-lease" style="display: none; margin-bottom: 15px; padding: 10px; background: var(--info-gul); border-radius: 12px;">
+                    <strong>Nåværende leietager:</strong> <span id="skap-current-tenant"></span><br>
+                    <strong>Periode:</strong> <span id="skap-current-period"></span>
+                </div>
+                
+                <label>Leietager</label>
+                <input type="text" id="skap-tenant-name" class="input-field" readonly style="background: #f0f0f0;">
+                
+                <label>Fra dato</label>
+                <input type="date" id="skap-start" class="input-field">
+                
+                <label>Til dato</label>
+                <input type="date" id="skap-end" class="input-field">
+                
+                <label>Notat</label>
+                <input type="text" id="skap-note" class="input-field" placeholder="F.eks. Skap-nøkkel utlevert">
+                
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn" id="skap-save-btn" style="background: var(--biljard-gronn);">📝 LAGRE UTLEIE</button>
+                    <button class="btn" id="skap-renew-btn" style="background: var(--biljard-blaa); display: none;">➕ FORLENG LEIE</button>
+                    <button class="btn" id="skap-release-btn" style="background: var(--advarsel); display: none;">🔓 FRIGJØR SKAP</button>
+                </div>
+            </div>
+            
+            <!-- Liste: Skap som utløper snart -->
+            <div class="admin-card card-green" id="skap-expiring-list">
+                <h3>⚠️ Skap som utløper snart (≤14 dager) eller har utløpt</h3>
+                <div id="skap-expiring-body" style="max-height: 300px; overflow-y: auto;">
+                    <p style="color: var(--tekst-lys); text-align: center;">Laster...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
     <!-- MODUL: HJELP -->
     <section id="mod-hjelp" class="module">
@@ -250,11 +357,100 @@
     </div>
 </div>
 
+
+
+<!-- CUSTOM ALERT SPESIELT TILPASSET FOR BILJARDEN -->
+<div id="custom-alert" class="c-modal" style="display:none;">
+    <div class="c-modal-content">
+        <div id="alert-header" class="c-modal-header">
+            <h3 id="alert-title">BEKREFTELSE</h3>
+        </div>
+        <div class="c-modal-body">
+            <div id="alert-icon">🎱</div>
+            <p id="alert-message">Meldingen vises her.</p>
+            <button onclick="lukkBeskjed()" class="btn" style="background:var(--gull); min-width:100px;">OK</button>
+        </div>
+    </div>
+</div>
+
+<!--SLUTT- CUSTOM ALERT SPESIELT TILPASSET FOR BILJARDEN -->
+
+<!-- BEKREFTELSESMODAL (JA/NEI) -->
+<div id="custom-confirm" class="c-modal" style="display:none;">
+    <div class="c-modal-content">
+        <div class="c-modal-header">
+            <h3 id="confirm-title">BEKREFTELSE</h3>
+        </div>
+        <div class="c-modal-body">
+            <div id="confirm-icon">🤔</div>
+            <p id="confirm-message">Er du sikker?</p>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                <button id="confirm-yes" class="btn" style="background: var(--marine); min-width: 100px;">JA</button>
+                <button id="confirm-no" class="btn" style="background: #95a5a6; color: black; min-width: 100px;">NEI</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- SLUTT-BEKREFTELSESMODAL (JA/NEI) -->
+ 
+<!-- MODAL: REGISTRER NYTT MEDLEM -->
+<div id="new-member-modal" class="modal-overlay" style="display: none;">
+    <div class="admin-card" style="width: 450px; max-width: 90%; margin: 0;">
+        <h2 style="margin-top: 0; color: var(--marine);">🎱 Nytt medlem i Oslo Biljardklubb</h2>
+        
+        <div class="input-group" style="gap: 15px;">
+            <div class="input-half">
+                <label>Fornavn <span style="color: var(--advarsel);">*</span></label>
+                <input type="text" id="new-fornavn" class="input-field" placeholder="Ola">
+            </div>
+            <div class="input-half">
+                <label>Etternavn <span style="color: var(--advarsel);">*</span></label>
+                <input type="text" id="new-etternavn" class="input-field" placeholder="Nordmann">
+            </div>
+        </div>
+        
+        <div class="input-group" style="gap: 15px;">
+            <div class="input-half">
+                <label>Mobil</label>
+                <input type="tel" id="new-mobil" class="input-field" disabled style="background: #e0e0e0; color: #888;" placeholder="🔒 Kommer snart">
+            </div>
+            <div class="input-half">
+                <label>Epost</label>
+                <input type="email" id="new-epost" class="input-field" disabled style="background: #e0e0e0; color: #888;" placeholder="🔒 Kommer snart">
+            </div>
+        </div>
+        
+        <hr style="margin: 20px 0; border-color: #eee;">
+        
+        <div class="input-group" style="gap: 15px;">
+            <div class="input-half">
+                <label>Startdato (valgfritt)</label>
+                <input type="date" id="new-startdato" class="input-field">
+            </div>
+            <div class="input-half">
+                <label>Sluttdato (valgfritt)</label>
+                <input type="date" id="new-sluttdato" class="input-field">
+            </div>
+        </div>
+        
+        <p style="font-size: 12px; color: #888; margin: 10px 0 20px 0;">
+            💡 Fyll ut start- og sluttdato for å opprette periodekort samtidig
+        </p>
+        
+        <div style="display: flex; gap: 15px; margin-top: 10px;">
+            <button class="btn" id="confirm-new-member" style="background: var(--marine);">OPPRETT MEDLEM</button>
+            <button class="btn" id="cancel-new-member" style="background: #95a5a6; color: black;">AVBRYT</button>
+        </div>
+    </div>
+</div>
+<!-- SLUTT-MODAL: REGISTRER NYTT MEDLEM -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="app.js"></script>
-<script src="tables.js"></script>
 <script src="members.js"></script>
+<script src="tables.js"></script>
 <script src="lockers.js"></script>
 <script src="vaktplan.js"></script>
+<script src="maintenance.js"></script>
 </body>
 </html>

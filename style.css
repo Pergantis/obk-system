@@ -373,7 +373,9 @@ label {
 .locker-grid {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
-    gap: 8px;
+    column-gap: 4px;  /* Horisontal avstand (mellom kolonner) */
+    row-gap: 10px;    /* Vertikal avstand (mellom rader) */
+    justify-content: center;
 }
 
 .locker-box {
@@ -384,10 +386,12 @@ label {
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 24px;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.1s;
+    width: 50%;
+    margin: 0 auto; 
 }
 
 .locker-box.occupied {
@@ -983,6 +987,7 @@ label {
     .print-table th {
         background-color: #f2f2f2 !important;
         -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     .print-header {
@@ -1060,3 +1065,521 @@ label {
     color: #999;
     cursor: not-allowed;
     border-color: #ddd;
+}
+/* --- MODAL SENTRERING & STIL --- */
+.modal-overlay {
+    position: fixed; /* Låser den til skjermen, ikke bare beholderen */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Legger den helt øverst */
+}
+
+/* Gjør selve admin-kortet i modalen renere */
+.modal-overlay .admin-card {
+    position: relative;
+    margin: 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* --- SØKEFELT (PILLEFORM) --- */
+.admin-search-input {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 25px; /* Gjør det rundt og pent */
+    border: 1px solid #ddd;
+    font-size: 14px;
+    margin-bottom: 15px;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.admin-search-input:focus {
+    border-color: var(--marine);
+}
+
+/* --- TABELL-KNAPPER (MOBILVENNLIG) --- */
+.admin-action-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.btn-icon {
+    height: 44px; /* Minimum høyde for fingre */
+    width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 18px; /* Gjør emojien stor */
+}
+
+/* --- TREKKSPILL (ACCORDION) STIL --- */
+.admin-accordion {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.admin-accordion-header {
+    padding: 15px;
+    background: #f8f9fa;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    border-bottom: 1px solid #eee;
+}
+
+.admin-accordion-content {
+    padding: 10px;
+    display: none; /* Skjult som standard */
+}
+
+.admin-accordion.open .admin-accordion-content {
+    display: block;
+}
+/* Toast-notifikasjon stil */
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--marine);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 9999;
+    transition: transform 0.4s ease-out;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast.success { border-bottom: 4px solid var(--biljard-gronn); }
+.toast.error { border-bottom: 4px solid var(--advarsel); }
+
+/* START ---Stil for vår egen alert-boks */
+.c-modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7); /* Mørk bakgrunn */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.c-modal-content {
+    background: white;
+    width: 90%;
+    max-width: 450px;
+    border-radius: 15px;
+    overflow: hidden;
+    border: 3px solid var(--biljard-gronn);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    text-align: center;
+}
+.c-modal-header {
+    background: var(--marine);
+    color: white;
+    padding: 10px;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+.c-modal-body {
+    padding: 30px;
+}
+#alert-icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+}
+#alert-message {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 25px;
+    color: var(--marine);
+}
+
+/* SLUTT -- Stil for vår egen alert-boks */
+
+/* Start--- NYTT DESIGN FOR MEDLEMSMODUL Periode kort --- */
+
+.member-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    height: 100%;
+}
+
+.member-sidebar {
+    width: 350px;
+    position: sticky; /* Låst ved rulling */
+    top: 20px;
+    flex-shrink: 0;
+}
+
+.no-margin { margin: 0; }
+
+.sidebar-header h3 {
+    margin: 0 0 15px 0;
+    color: var(--marine);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.divider {
+    border: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin: 20px 0;
+}
+
+/* Søk */
+.search-wrapper { position: relative; }
+.floating-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgb(87, 130, 155);
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    z-index: 100;
+    display: none; /* Vises ved søk */
+}
+
+/* Skjema Layout */
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.input-half { flex: 1; }
+
+.member-sidebar label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--marine);
+    margin-bottom: 5px;
+}
+
+/* Knapper */
+.button-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-renew { background: var(--biljard-gronn) !important; color: white; font-weight: bold; }
+.btn-save { background: var(--marine) !important; border: 1px solid var(--gull); color: var(--gull); }
+.btn-cancel { background: #95a5a6 !important; color: white; }
+
+/* Mobil-tilpasning */
+@media (max-width: 768px) {
+    .member-container { flex-direction: column; }
+    .member-sidebar { width: 100%; position: relative; }
+    .input-group { flex-direction: column; }
+}
+/* Mobil-tilpasning slutt */
+/* Denne koden lager stilen for det nye skjemaet ditt */
+.member-sidebar .admin-card {
+    background-color: #9fc5e8 !important; /* Din valgte farge */
+    border: 2px solid var(--marine);      /* En mørk ramme rundt */
+}
+
+/* Gjør teksten mørk så den er lett å lese på den lyse bakgrunnen */
+.member-sidebar label {
+    color: var(--marine) !important;
+    font-weight: bold;
+}
+
+/* Overskriften inne i skjemaet */
+.sidebar-header h3 {
+    color: var(--marine) !important;
+}
+/* Stopp--- NYTT DESIGN FOR MEDLEMSMODUL periode kort --- */
+
+/* --- DESIGN FOR Periodekort tabell --- */
+
+.table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.member-count {
+    font-size: 12px;
+    background: var(--krem);
+    padding: 5px 10px;
+    border-radius: 4px;
+    color: var(--marine);
+    font-weight: bold;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.member-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+/* Kolonneoverskrifter med mørk bakgrunn og hvit skrift */
+.member-table th {
+    background-color: var(--marine); /* Samme som nav-menyen */
+    color: white;
+    text-align: left;
+    padding: 12px 15px;
+    font-weight: 500;
+    text-transform: capitalize; /* Sikrer stor forbokstav */
+    border-bottom: 2px solid var(--gull); /* En tynn gullstripe for stil */
+}
+
+.member-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    color: var(--tekst-mork);
+    font-size: 14px;
+}
+
+/* Zebra-striper for bedre lesbarhet */
+.member-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Fremheving av rad ved mouseover */
+.member-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.card-hvit {
+    background: white;
+    border: 1px solid #ddd;
+}
+/* --- DESIGN FOR Periodekort tabell SLUTT --- */
+
+/* --- HISTORIKK-TABELL (Dagens utleier) --- */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.history-table th {
+    background-color: var(--marine);
+    color: white;
+    text-align: left;
+    padding: 12px 15px;
+    font-weight: 500;
+    border-bottom: 2px solid var(--gull);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.history-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+    color: var(--tekst-mork);
+    font-size: 14px;
+}
+
+/* Mørkere zebra-striping */
+.history-table tbody tr:nth-child(even) {
+    background-color: #e8e8e8;  /* Mørkere enn før */
+}
+
+.history-table tbody tr:nth-child(odd) {
+    background-color: #f5f5f5;
+}
+
+/* Hover-effekt */
+.history-table tbody tr:hover {
+    background-color: #d0d0d0;
+    cursor: default;
+}
+
+.history-count {
+    font-size: 13px;
+    background: var(--marine);
+    color: var(--gull);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+/* Scrollbar-styling for historikkboksen */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: var(--marine);
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: var(--gull);
+}
+/* --- HISTORIKK-TABELL (Dagens utleier)SLUTT--- */
+/* --- SØKERESULTAT BOBLE (Google-style) --- */
+.search-bubble {
+    position: relative;  /* Viktig: ikke absolute */
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 8px;
+    margin-bottom: 20px;  /* Ekstra luft under boblen */
+    border: 1px solid #ddd;
+}
+/* --- KNAPP I SØKEBOBLE --- */
+.search-bubble-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--marine);
+    color: white;
+    border: none;
+    border-radius: 60px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 8px;
+    font-size: 14px;
+    transition: opacity 0.2s;
+}
+
+.search-bubble-btn:hover {
+    opacity: 0.9;
+}
+
+.search-bubble-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.1s;
+}
+
+.search-bubble-item:hover {
+    background-color: #e8f0fe;
+}
+
+.search-bubble-item:last-child {
+    border-bottom: none;
+}
+
+.search-bubble-name {
+    font-weight: bold;
+    color: var(--marine);
+    font-size: 14px;
+}
+
+.search-bubble-phone {
+    font-size: 12px;
+    color: #666;
+    margin-left: 8px;
+}
+
+.search-bubble-status {
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+.search-bubble-status.active {
+    color: var(--biljard-gronn);
+}
+
+.search-bubble-status.expired {
+    color: var(--advarsel);
+}
+
+.search-bubble-status.none {
+    color: #888;
+}
+
+.search-wrapper {
+    position: static;
+}
+/* ---SLUTT- SØKERESULTAT BOBLE (Google-style) --- */
+
+/* --- MODAL Z-INDEX HIERARKI --- */
+#custom-alert,
+#custom-confirm {
+    z-index: 30000 !important;
+}
+
+#new-member-modal,
+#modal-overlay {
+    z-index: 20000;
+}
+
+.pin-overlay {
+    z-index: 40000 !important;
+}
+/* --- SKAPLEIE NY LAYOUT --- */
+.skap-split-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    align-items: start;
+}
+
+.skap-left {
+    min-width: 0;
+}
+
+.skap-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+#skap-selected-title {
+    font-size: 30px;
+}
+
+/* Skjul dato-felter i modalen når åpnet fra skapleie */
+#new-member-modal.skap-mode .pass-dates-section {
+    display: none;
+}
+
+/* Responsiv: mobil */
+@media (max-width: 768px) {
+    .skap-split-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}

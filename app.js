@@ -1,4 +1,4 @@
-const sb = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.KEY);
+window.sb = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.KEY);
 
 let selectedMemberId = null;
 
@@ -11,9 +11,12 @@ function showModule(id) {
     
     // Spesifikke lastinger per modul
     if (id === 'bord') loadTables();
-    if (id === 'medlem') loadActivePasses();
-    if (id === 'skap') loadLockers();
+    if (id === 'medlem') updateMemberModule();
+    if (id === 'skap') {
+    loadLockers();
+    }
     if (id === 'vaktplan') initVaktplan();
+    if (id === 'admin') initAdminPanel(); 
 }
 
 function showLoader(show) { document.getElementById('sync-loader').style.display = show ? 'block' : 'none'; }
@@ -21,7 +24,7 @@ function showError(msg) { const el = document.getElementById('error-log'); el.in
 
 window.addEventListener('load', () => {
     loadTables();
-    loadActivePasses();
+    updateMemberModule();
     loadLockers();
 });
 // --- VAKTPLAN PROTOTYPE LOGIKK ---
@@ -301,6 +304,97 @@ function sjekkEksisterendeSession() {
         visPinModal();
     }
 }
+// Enkel og pen beskjed i stedet for stygg alert()
+function showToast(message, type = 'success') {
+    // Fjern gammel toast hvis den finnes
+    const oldToast = document.querySelector('.toast');
+    if (oldToast) oldToast.remove();
 
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = (type === 'success' ? '✅ ' : '⚠️ ') + message;
+    
+    document.body.appendChild(toast);
+
+    // Vis den (liten delay for at animasjonen skal starte)
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    // Fjern den etter 3 sekunder
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+    }, 3000);
+}
+// START-Funksjon for å vise vår egen stilinge alert
+window.visBeskjed = function(tittel, melding, type = 'success') {
+    const modal = document.getElementById('custom-alert');
+    const tittelFelt = document.getElementById('alert-title');
+    const meldingFelt = document.getElementById('alert-message');
+    const innhold = document.querySelector('.c-modal-content');
+    
+    tittelFelt.innerText = tittel.toUpperCase();
+    meldingFelt.innerText = melding;
+    
+    // Tilpass farge etter type
+    if (type === 'error') {
+        innhold.style.borderColor = 'red';
+    } else {
+        innhold.style.borderColor = 'var(--biljard-gronn)';
+    }
+
+    modal.style.display = 'flex';
+};
+
+// Funksjon for å lukke
+window.lukkBeskjed = function() {
+    document.getElementById('custom-alert').style.display = 'none';
+};
+// SLUTT-Funksjon for å vise vår egen stilinge alert
 // Start systemet
 sjekkEksisterendeSession();
+
+// --- BEKREFTELSESMODAL (JA/NEI) ---
+let confirmCallback = null;
+
+window.visBekreftelse = function(tittel, melding, emoji, onConfirm, onCancel) {
+    const modal = document.getElementById('custom-confirm');
+    const tittelFelt = document.getElementById('confirm-title');
+    const meldingFelt = document.getElementById('confirm-message');
+    const iconFelt = document.getElementById('confirm-icon');
+    const jaKnapp = document.getElementById('confirm-yes');
+    const neiKnapp = document.getElementById('confirm-no');
+    
+    // Sett innhold
+    tittelFelt.innerText = tittel.toUpperCase();
+    meldingFelt.innerText = melding;
+    iconFelt.innerText = emoji || '🤔';
+    
+    // Lagre callbacks
+    confirmCallback = { onConfirm, onCancel };
+    
+    // Fjern gamle event listeners for å unngå duplikater
+    const newJaKnapp = jaKnapp.cloneNode(true);
+    const newNeiKnapp = neiKnapp.cloneNode(true);
+    jaKnapp.parentNode.replaceChild(newJaKnapp, jaKnapp);
+    neiKnapp.parentNode.replaceChild(newNeiKnapp, neiKnapp);
+    
+    // Legg til nye event listeners
+    newJaKnapp.addEventListener('click', () => {
+        modal.style.display = 'none';
+        if (confirmCallback && confirmCallback.onConfirm) {
+            confirmCallback.onConfirm();
+        }
+        confirmCallback = null;
+    });
+    
+    newNeiKnapp.addEventListener('click', () => {
+        modal.style.display = 'none';
+        if (confirmCallback && confirmCallback.onCancel) {
+            confirmCallback.onCancel();
+        }
+        confirmCallback = null;
+    });
+    
+    // Vis modalen
+    modal.style.display = 'flex';
+};
