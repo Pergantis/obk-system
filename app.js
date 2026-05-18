@@ -15,6 +15,7 @@ function showModule(id) {
     if (id === 'skap') {
     loadLockers();
     }
+    if (id === 'turnering') initTurnering();
     if (id === 'vaktplan') initVaktplan();
     if (id === 'admin') initAdminPanel(); 
 }

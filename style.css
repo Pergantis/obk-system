@@ -1583,3 +1583,362 @@ label {
         gap: 20px;
     }
 }
+/* Turnering modul */
+.turnering-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+@media (max-width: 768px) {
+    .turnering-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.turnering-skjema, .turnering-resultat {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-gruppe {
+    margin-bottom: 20px;
+}
+
+.form-gruppe label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.form-gruppe input, .form-gruppe select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 16px;
+}
+
+.prosent-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.prosent-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.sats-rad {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 5px;
+    margin-bottom: 5px;
+    align-items: center;
+}
+
+.sats-rad label {
+    font-size: 12px;
+    margin-bottom: 0;
+}
+
+.sats-navn-input, .sats-antall-input, .sats-avgift-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+}
+
+.btn-slett {
+    background: var(--advarsel);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-small {
+    background: var(--marine);
+    padding: 8px 16px;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.btn-lagre {
+    background: var(--biljard-gronn);
+    width: 100%;
+    margin-top: 20px;
+}
+
+.resultat-oppsummering {
+    background: #f5f5f5;
+    border-radius: 16px;
+    padding: 15px;
+}
+
+.resultat-rad {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.resultat-seksjon {
+    margin: 15px 0;
+    padding: 10px;
+    background: white;
+    border-radius: 12px;
+}
+
+.resultat-seksjon h4 {
+    margin: 0 0 10px 0;
+    color: var(--marine);
+}
+
+.utbetalt {
+    background: var(--biljard-gronn);
+    color: white;
+    padding: 10px;
+    border-radius: 12px;
+    margin-top: 10px;
+}
+
+.avsetning {
+    color: var(--advarsel);
+}
+
+.total-klubb {
+    background: var(--marine);
+    color: white;
+}
+
+.total-klubb h4 {
+    color: white;
+}
+
+.sats-detaljer {
+    margin-top: 20px;
+}
+
+.sats-tabell {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.sats-tabell th, .sats-tabell td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.sok-container {
+    position: relative;
+}
+
+.readonly-felt {
+    background: #f0f0f0;
+    margin-top: 8px;
+}
+
+.search-bubble {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 100;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.boble-item {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    background: rgb(228, 197, 197); 
+    color: #333; 
+}
+
+.boble-item:hover {
+    background: var(--marine);  /* Blå bakgrunn ved hover */
+    color: white;               /* Hvit tekst ved hover */
+}
+
+.hidden {
+    display: none;
+}
+/* Premie modell - radioknapper */
+.premie-modell {
+    margin-bottom: 20px;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 16px;
+}
+
+.radiogruppe {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 12px;
+}
+
+.radio-label:hover {
+    background: #e0e0e0;
+}
+
+.radio-label input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+/* Prosentvisning som etikett */
+.prosent-visning {
+    display: flex;
+    gap: 20px;
+    margin-top: 8px;
+}
+
+.prosent-boks {
+    background: var(--marine);
+    color: white;
+    border-radius: 16px;
+    padding: 6px 12px;
+    text-align: center;
+    flex: 1;
+}
+
+.prosent-tall {
+    font-size: 18px;
+    font-weight: bold;
+    display: inline;
+}
+
+.prosent-label {
+    font-size: 12px;
+    opacity: 0.9;
+    display: inline;
+}
+/* Utbetalingsplan */
+.utbetalingsplan {
+    background: #f5f5f5;
+    border-radius: 16px;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.utbetalingsrad {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.utbetalingsplan.situasjon-c {
+    background: #fff3cd;
+    border: 1px solid var(--advarsel);
+}
+
+.varsel-boks {
+    background: var(--advarsel);
+    color: white;
+    padding: 12px;
+    border-radius: 12px;
+    margin-top: 15px;
+    font-size: 13px;
+}
+
+.avstem-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 16px;
+}
+
+.feilmelding {
+    background: #ffebee;
+    padding: 10px;
+    border-radius: 12px;
+    margin-top: 10px;
+}
+.avstemming-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.avstemming-input, .utbetalingsplan-input {
+    background: #f5f5f5;
+    border-radius: 16px;
+    padding: 15px;
+}
+
+.avstemming-rad {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.avstemming-rad label {
+    font-weight: normal;
+    margin: 0;
+}
+
+.avstem-input {
+    width: 120px;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: right;
+}
+
+.avvik {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 2px solid var(--advarsel);
+    font-weight: bold;
+}
+.utbetalingsrad {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.utbetalingsrad.sum {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 2px solid var(--biljard-gronn);
+    font-weight: bold;
+}
+@media (max-width: 768px) {
+    .avstemming-grid {
+        grid-template-columns: 1fr;
+    }
+}

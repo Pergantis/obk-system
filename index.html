@@ -24,12 +24,19 @@
     <button class="nav-btn active" id="btn-bord" onclick="showModule('bord'); toggleMenu('close')">🎱 BORDLEIE</button>
     <button class="nav-btn" id="btn-medlem" onclick="showModule('medlem'); toggleMenu('close')">👤 PERIODEKORT</button>
     <button class="nav-btn" id="btn-skap" onclick="showModule('skap'); toggleMenu('close')">🔐 SKAPLEIE</button>
+    <button class="nav-btn" id="btn-turnering" onclick="showModule('turnering'); toggleMenu('close')">🏆 TURNERING</button>
     <button class="nav-btn" id="btn-vaktplan" onclick="showModule('vaktplan'); toggleMenu('close')">📅 VAKTPLAN</button>
     <!-- <button class="nav-btn" id="btn-admin" onclick="showModule('admin'); toggleMenu('close')">⚙️ KONTROLLPANEL</button> -->
    <!-- <button class="nav-btn" id="btn-hjelp" onclick="showModule('hjelp'); toggleMenu('close')">❓ VEILEDNING</button> -->
 </nav>
 
 <main>
+    <!-- Turnering modul -->
+<div id="mod-turnering" class="module hidden">
+    <h2>🏆 Turnering</h2>
+    <div id="turnering-container"></div>
+</div>
+
 <!-- MODUL: VAKTPLAN -->
 <section id="mod-vaktplan" class="module">
     <div class="vakt-header">
@@ -248,6 +255,36 @@
     <!-- Liste med aktive periodekort Slutt -->
     </section>  
     <!-- Her slutter modulen periodekort -->
+     
+     <!-- Modal for avstemming -->
+<div id="avstemming-modal" class="c-modal" style="display:none;">
+    <div class="c-modal-content" style="max-width: 500px;">
+        <h3>📊 Avstemming av betalinger</h3>
+        <p>Registrer mottatte betalinger for denne turneringen.</p>
+        
+        <div class="form-gruppe">
+            <label>💳 Vipps mottatt (kr)</label>
+            <input type="number" id="avstem-vipps" value="0" step="100" class="avstem-input">
+        </div>
+        
+        <div class="form-gruppe">
+            <label>💰 Kontant mottatt (kr)</label>
+            <input type="number" id="avstem-kontant" value="0" step="100" class="avstem-input">
+        </div>
+        
+        <div class="form-gruppe">
+            <label>💳 Kort mottatt (kr)</label>
+            <input type="number" id="avstem-kort" value="0" step="100" class="avstem-input">
+        </div>
+        
+        <div id="avstem-feil" class="feilmelding" style="color:red; display:none;"></div>
+        
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn" onclick="lukkAvstemmingModal()">Avbryt</button>
+            <button class="btn" style="background:var(--biljard-gronn);" onclick="bekreftAvstemming()">Bekreft og vis utbetaling</button>
+        </div>
+    </div>
+</div>
 
     <!-- MODUL: SKAPLEIE -->
 <section id="mod-skap" class="module">
@@ -257,7 +294,7 @@
         <!-- Venstre: Skapgrid -->
         <div class="skap-left">
             <div class="admin-card card-marine" style="margin-bottom: 0;">
-                <h3 style="font-size: 22px;">🎱 Skapoversikt (1-100) Grønn = Ledig, Rød = Opptatt, Gul = Utløpt eller utløper snart</h3>
+                <h3 style="font-size: 22px;">🎱Grønn = Ledig, Rød = Opptatt, Gul = Utløpt / utløper</h3>
                 <button class="btn" style="background: var(--marine); width: auto; padding: 5px 15px; margin-bottom: 15px; font-size: 11px;" onclick="generateExpiryPDF()">🖨️ LAST NED UTLØPSLISTE (PDF)</button>
                 <div class="locker-grid" id="locker-grid-visual"></div>
             </div>
@@ -451,5 +488,6 @@
 <script src="lockers.js"></script>
 <script src="vaktplan.js"></script>
 <script src="maintenance.js"></script>
+<script src="tournament.js"></script>
 </body>
 </html>
