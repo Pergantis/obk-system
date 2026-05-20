@@ -6,6 +6,7 @@
     <title>Oslo Biljardklubb - System</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="logoobk.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -26,7 +27,7 @@
     <button class="nav-btn" id="btn-skap" onclick="showModule('skap'); toggleMenu('close')">🔐 SKAPLEIE</button>
     <button class="nav-btn" id="btn-turnering" onclick="showModule('turnering'); toggleMenu('close')">🏆 TURNERING</button>
     <button class="nav-btn" id="btn-vaktplan" onclick="showModule('vaktplan'); toggleMenu('close')">📅 VAKTPLAN</button>
-    <!-- <button class="nav-btn" id="btn-admin" onclick="showModule('admin'); toggleMenu('close')">⚙️ KONTROLLPANEL</button> -->
+    <button class="nav-btn" id="btn-admin" onclick="showModule('admin'); toggleMenu('close')">⚙️ KONTROLLPANEL</button>
    <!-- <button class="nav-btn" id="btn-hjelp" onclick="showModule('hjelp'); toggleMenu('close')">❓ VEILEDNING</button> -->
 </nav>
 
@@ -100,37 +101,79 @@
 <section id="mod-admin" class="module">
     <h1>Kontrollpanel</h1>
     
-    <!-- ETASJE 1: DASHBOARD (Nå med 3 bokser) -->
-    <div class="split-container">
-        <!-- Boks 1: Historikk -->
-        <div class="admin-card card-blue" style="flex: 1;">
-            <h3>Siste bordleier</h3>
-            <div id="admin-bord-logg">Laster logg...</div>
-            <button class="btn" style="margin-top:10px; background:var(--marine)" onclick="lastMerLogg()">Se mer</button>
+    <!-- 2 kolonner med CSS Grid -->
+    <div class="admin-grid-2cols">       
+        
+        <!-- Venstre kolonne -->
+        <div class="admin-col-left">
+            
+            <!-- Boks 1: Medlemsadmin (skjema) -->
+            <div class="admin-card card-marine">
+                <h3>📝 Medlemsadmin</h3>
+                    <div id="admin-medlem-skjema">
+    <!-- Søkefelt -->
+    <div class="search-wrapper" style="position: relative; margin-bottom: 20px;">
+        <input type="text" id="admin-member-search" class="input-field" placeholder="🔍 Søk medlem (minst 3 bokstaver)...">
+        <div id="admin-search-bubble" class="search-bubble" style="display: none;"></div>
+    </div>
+    
+    <div class="member-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label>FORNAVN *</label>
+                <input type="text" id="admin-fornavn" class="input-field" placeholder="Ola">
+            </div>
+            <div class="form-group">
+                <label>ETTERNAVN *</label>
+                <input type="text" id="admin-etternavn" class="input-field" placeholder="Nordmann">
+            </div>
         </div>
         
-        <!-- Boks 2: Varsel Periodekort -->
-        <div class="admin-card card-gold" style="flex: 1;">
-            <h3>Periodekort som utløper snart</h3>
-            <div id="admin-varsel-periode">Laster...</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>MOBIL</label>
+                <input type="text" id="admin-mobil" class="input-field" disabled placeholder="🔒 Kommer snart">
+            </div>
+            <div class="form-group">
+                <label>EPOST</label>
+                <input type="email" id="admin-epost" class="input-field" disabled placeholder="🔒 Kommer snart">
+            </div>
         </div>
         
-        <!-- Boks 3: Varsel Skapleie -->
-        <div class="admin-card card-green" style="flex: 1;">
-            <h3>Skapleie utløper snart eller er utløpt</h3>
-            <div id="admin-varsel-skap">Laster...</div>
+        <div class="form-buttons">
+            <button class="btn" style="background: var(--biljard-gronn);" onclick="adminOpprettMedlem()">💾 OPPRETT</button>
+            <button class="btn" style="background: var(--marine);" onclick="adminRedigerMedlem()">✏️ REDIGER</button>
+            <button class="btn" style="background: var(--advarsel);" onclick="adminSlettMedlem()">🗑️ SLETT</button>
+            <button class="btn" style="background: #95a5a6;" onclick="adminAvbryt()">✖️ AVBRYT</button>
         </div>
     </div>
-
-    <!-- ETASJE 2: MEDLEMSTABELL (Nederst) -->
-    <div class="admin-card card-marine">
-        <h3>Medlemsadministrasjon</h3>
-        <div id="admin-medlem-filter">
-
-       
-
+</div>
+</div>
+            
+            <!-- Boks 2: Skapleie varsler -->
+            <div class="admin-card card-green">
+                <h3>🔐 Skapleie utløper snart</h3>
+                <div id="admin-varsel-skap">Laster...</div>
+            </div>
         </div>
-        <div id="admin-medlem-liste"></div>
+        
+        <!-- Høyre kolonne -->
+        <div class="admin-col-right">
+            
+            <!-- Boks 3: Periodekort varsler -->
+            <div class="admin-card card-gold">
+                <h3>📊 Periodekort som utløper snart</h3>
+                <div id="admin-varsel-periode">Laster...</div>
+            </div>
+            
+            <!-- Boks 4: Rapporter -->
+            <div class="admin-card card-blue">
+                <h3>📈 Rapporter</h3>
+                <div id="admin-rapporter">
+                    <p style="color: var(--tekst-lys);">Kommer snart...</p>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -294,11 +337,7 @@
         <!-- Venstre: Skapgrid -->
         <div class="skap-left">
             <div class="admin-card card-marine" style="margin-bottom: 0;">
-<<<<<<< HEAD
-                <h3 style="font-size: 22px;">🎱Grønn = Ledig, Rød = Opptatt, Gul = Utløpt / utløper</h3>
-=======
                 <h3 style="font-size: 22px;">🎱 Skap Grønn = Ledig, Rød = Opptatt, Gul = Utløpt / utløper snart</h3>
->>>>>>> e76c4a72f86fa2963e6bdb9a93bcd9b37147c8de
                 <button class="btn" style="background: var(--marine); width: auto; padding: 5px 15px; margin-bottom: 15px; font-size: 11px;" onclick="generateExpiryPDF()">🖨️ LAST NED UTLØPSLISTE (PDF)</button>
                 <div class="locker-grid" id="locker-grid-visual"></div>
             </div>

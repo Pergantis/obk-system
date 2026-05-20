@@ -142,13 +142,19 @@ async function searchMembers(query) {
 }
 
 function renderSearchBubble(members) {
-    removeSearchBubble();
+    // Fjern eksisterende boble FØR vi legger til ny
+    const modMedlem = document.getElementById('mod-medlem');
+    if (modMedlem) {
+        const existing = modMedlem.querySelector('.search-bubble');
+        if (existing) existing.remove();
+    }
     
-    const searchWrapper = document.querySelector('.search-wrapper');
+    const searchWrapper = document.querySelector('#mod-medlem .search-wrapper');
     if (!searchWrapper) return;
     
     const bubble = document.createElement('div');
     bubble.className = 'search-bubble';
+    bubble.setAttribute('data-module', 'medlem'); // Merk boblen
     
     members.forEach(member => {
         const item = document.createElement('div');
@@ -182,33 +188,54 @@ function renderSearchBubble(members) {
         bubble.appendChild(item);
     });
     
-    searchWrapper.appendChild(bubble);
+        searchWrapper.appendChild(bubble);
+        bubble.style.position = 'absolute';
+        bubble.style.top = '100%';
+        bubble.style.left = '0';
+        bubble.style.right = '0';
+        bubble.style.zIndex = '1000';
 }
 
 function showNoResultsBubble() {
+    // Fjern eksisterende boble først
     removeSearchBubble();
-    const searchWrapper = document.querySelector('.search-wrapper');
+    
+    // Finn RIKTIG search-wrapper (innenfor periodekort-modulen)
+    const searchWrapper = document.querySelector('#mod-medlem .search-wrapper');
     if (!searchWrapper) return;
     
     const bubble = document.createElement('div');
     bubble.className = 'search-bubble';
+    bubble.style.position = 'absolute';
+    bubble.style.top = '100%';
+    bubble.style.left = '0';
+    bubble.style.right = '0';
+    bubble.style.zIndex = '1000';
+    
     bubble.innerHTML = `
         <div class="search-bubble-item" style="text-align: center;">
             <div style="margin-bottom: 10px;">😕 Ingen medlemmer funnet</div>
             <button class="search-bubble-btn" id="show-register-modal-btn">➕ Registrer nytt medlem</button>
         </div>
     `;
+    
     searchWrapper.appendChild(bubble);
     
     const registerBtn = document.getElementById('show-register-modal-btn');
     if (registerBtn) {
-        registerBtn.addEventListener('click', openNewMemberModal);
+        registerBtn.addEventListener('click', () => {
+            openNewMemberModal();
+        });
     }
 }
 
 function removeSearchBubble() {
-    const existing = document.querySelector('.search-bubble');
-    if (existing) existing.remove();
+    // Fjern KUN boblen som er innenfor periodekort-modulen
+    const modMedlem = document.getElementById('mod-medlem');
+    if (modMedlem) {
+        const existing = modMedlem.querySelector('.search-bubble');
+        if (existing) existing.remove();
+    }
 }
 
 // --- MODAL FUNKSJONER ---

@@ -5,6 +5,14 @@ let selectedMemberId = null;
 function showModule(id) {
     document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    // Fjern alle bobler når man bytter modul
+    // Fjern bobler kun fra den modulen som skjules
+document.querySelectorAll('.module').forEach(module => {
+    if (!module.classList.contains('active')) {
+        const bobler = module.querySelectorAll('.search-bubble');
+        bobler.forEach(b => b.remove());
+    }
+});
     
     document.getElementById('mod-' + id).classList.add('active');
     document.getElementById('btn-' + id).classList.add('active');

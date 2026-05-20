@@ -876,6 +876,9 @@ label {
         width: 100% !important;
         margin-bottom: 20px;
     }
+    #mod-skap .search-wrapper {
+    position: relative;
+}
 
     .locker-grid {
         grid-template-columns: repeat(10, 1fr) !important;
@@ -1532,7 +1535,7 @@ label {
 }
 
 .search-wrapper {
-    position: static;
+    position: relative;
 }
 /* ---SLUTT- SØKERESULTAT BOBLE (Google-style) --- */
 
@@ -1639,21 +1642,23 @@ label {
 .sats-rad {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr auto;
-    gap: 5px;
-    margin-bottom: 5px;
+    gap: 8px;
+    margin-bottom: 8px;
     align-items: center;
 }
 
 .sats-rad label {
-    font-size: 12px;
-    margin-bottom: 0;
+    font-size: 15px;
+    margin-bottom: 0px;
+    display: block;
 }
 
 .sats-navn-input, .sats-antall-input, .sats-avgift-input {
     width: 100%;
-    padding: 8px;
+    padding: 6px;
     border: 1px solid #ddd;
     border-radius: 12px;
+       margin-top: 2px;
 }
 
 .btn-slett {
@@ -1941,4 +1946,222 @@ label {
     .avstemming-grid {
         grid-template-columns: 1fr;
     }
+}
+/* Søkeboble for skap - Alternativ A */
+.search-bubble-member {
+    border-bottom: 1px solid #eee;
+    padding: 8px;
+}
+
+.search-bubble-member:last-child {
+    border-bottom: none;
+}
+
+.search-bubble-member-info {
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 8px;
+}
+
+.search-bubble-member-info:hover {
+    background: #f0f0f0;
+}
+
+.search-bubble-skap-list {
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.search-bubble-skap-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    margin: 3px 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.search-bubble-skap-item:hover {
+    background: var(--marine);
+    color: white;
+}
+
+.search-bubble-ingen-skap {
+    padding: 5px 0 5px 15px;
+    font-style: italic;
+}
+
+.search-bubble-name {
+    font-weight: bold;
+    display: block;
+}
+
+.search-bubble-phone {
+    font-size: 11px;
+    color: #666;
+}
+/* Kontrollpanel - 2 kolonner */
+.admin-grid-2cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .admin-grid-2cols {
+        grid-template-columns: 1fr;
+    }
+}
+
+.admin-col-left,
+.admin-col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+/* Medlemsskjema i kontrollpanelet */
+.member-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.form-hint {
+    font-size: 12px;
+    color: #888;
+    margin: 5px 0;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+/* Søk i kontrollpanelet */
+#admin-medlem-skjema .search-wrapper {
+    position: relative;
+}
+
+#admin-search-bubble {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.search-bubble-item {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.search-bubble-item:hover {
+    background: var(--marine);
+    color: white;
+}
+
+.search-bubble-name {
+    font-weight: bold;
+    display: block;
+}
+
+.search-bubble-phone {
+    font-size: 11px;
+    color: #666;
+}
+
+.search-bubble-item:hover .search-bubble-phone {
+    color: white;
+}
+/* Kontrollpanel - 2 kolonner */
+.admin-grid-2cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+/* Mobil: 1 kolonne */
+@media (max-width: 768px) {
+    .admin-grid-2cols {
+        grid-template-columns: 1fr;
+    }
+}
+/* Søkeboble - periodekort */
+#mod-medlem .search-bubble {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff0f0;  /* Lys rosa bakgrunn */
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#mod-medlem .search-bubble-item {
+    padding: 12px;         /* Større padding = større tekstområde */
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 15px;       /* Større tekst */
+}
+
+#mod-medlem .search-bubble-item:hover {
+    background: #ffe0e0;   /* Lysere rosa ved hover */
+}
+
+#mod-medlem .search-bubble-name {
+    font-weight: bold;
+    font-size: 18px;       /* Større navn */
+    display: block;
+}
+
+#mod-medlem .search-bubble-phone {
+     font-weight: bold;
+    font-size: 13px;       /* Større telefonnummer */
+    color: #3a2f2f;
+}
+
+#mod-medlem .search-bubble-status {
+     font-weight: bold;
+    font-size: 12px;
+    margin-top: 4px;
 }

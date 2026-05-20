@@ -159,13 +159,13 @@ function renderTurneringSkjema() {
                     <label>🏆 Premiefordeling:</label>
                     <div class="radiogruppe">
                         <label class="radio-label">
-                            <input type="radio" name="premiemodell" value="1" checked> Modell 1: 1.=50%, 2.=25%, 3.=12,5% + 12,5%
+                            <input type="radio" name="premiemodell" value="1" checked> Premie 1. til 3. plass: 1.=50%, 2.=25%, 3.=12,5% + 12,5%
                         </label>
                         <label class="radio-label">
-                            <input type="radio" name="premiemodell" value="2"> Modell 2: 1.=66%, 2.=34%
+                            <input type="radio" name="premiemodell" value="2"> Premie 1. og 2. plass: 1.=66%, 2.=34%
                         </label>
                         <label class="radio-label">
-                            <input type="radio" name="premiemodell" value="3"> Modell 3: 1.=36%, 2.=18%, 3.=12% + 12%, 5.=5,5% × 4 stk
+                            <input type="radio" name="premiemodell" value="3"> Premie 1. til 5. plass: 1.=36%, 2.=18%, 3.=12% + 12%, 5.=5,5% × 4 stk
                         </label>
                     </div>
                 </div>
@@ -208,7 +208,7 @@ function renderSatser() {
                     <input type="text" value="Sats ${i}" placeholder="Navn" class="sats-navn-input">
                 </div>
                 <div class="sats-antall">
-                    <label>Antall</label>
+                    <label>Antall spillere</label>
                     <input type="number" value="0" min="0" class="sats-antall-input" data-sats="${i}">
                 </div>
                 <div class="sats-avgift">

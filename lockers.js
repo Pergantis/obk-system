@@ -48,6 +48,7 @@ function renderLockerGrid(lockers) {
 
 // --- VELG SKAP ---
 async function selectLocker(skapNummer) {
+    removeLockerSearchBubble();
     currentLockerNumber = skapNummer;
     
     const { data } = await sb
@@ -126,6 +127,7 @@ window.handleLockerSearch = function(e) {
 
 async function searchLockerMembers(query) {
     try {
+        // Hent medlemmer som matcher søket
         const { data: members, error } = await sb
             .from('medlemmer')
             .select('id, fornavn, etternavn, tlf_mobil')
@@ -139,38 +141,117 @@ async function searchLockerMembers(query) {
             return;
         }
         
-        renderLockerSearchBubble(members);
+        // Hent skap for disse medlemmene
+        const memberIds = members.map(m => m.id);
+        const { data: lockers, error: lockerError } = await sb
+            .from('skapleie')
+            .select('skap_nummer, til_dato, status, medlem_id')
+            .in('medlem_id', memberIds)
+            .eq('status', 'Opptatt');
+        
+        if (lockerError) throw lockerError;
+        
+        // Bygg et map: medlem_id -> liste over skap
+        const memberLockers = {};
+        lockers.forEach(locker => {
+            if (!memberLockers[locker.medlem_id]) {
+                memberLockers[locker.medlem_id] = [];
+            }
+            memberLockers[locker.medlem_id].push(locker);
+        });
+        
+        renderLockerSearchBubble(members, memberLockers);
         
     } catch (err) {
         console.error("Søkefeil:", err);
     }
 }
-
-function renderLockerSearchBubble(members) {
+function renderLockerSearchBubble(members, memberLockers) {
     removeLockerSearchBubble();
     
-    const searchWrapper = document.querySelector('#mod-skap .search-wrapper');
-    if (!searchWrapper) return;
+    const inputEl = document.getElementById('skap-search');
+    if (!inputEl) return;
     
     const bubble = document.createElement('div');
     bubble.className = 'search-bubble';
     
+    const today = getTodayLocal();
+    
     members.forEach(member => {
-        const item = document.createElement('div');
-        item.className = 'search-bubble-item';
+        const lockers = memberLockers[member.id] || [];
         
-        item.innerHTML = `
-            <div>
-                <span class="search-bubble-name">${escapeHtml(member.fornavn)} ${escapeHtml(member.etternavn)}</span>
-                <span class="search-bubble-phone">📱 ${member.tlf_mobil || 'Ingen telefon'}</span>
-            </div>
+        // Medlem container
+        const memberDiv = document.createElement('div');
+        memberDiv.className = 'search-bubble-member';
+        
+        // Medlem info (klikkbart)
+        const memberInfo = document.createElement('div');
+        memberInfo.className = 'search-bubble-member-info';
+        memberInfo.innerHTML = `
+            <span class="search-bubble-name">${escapeHtml(member.fornavn)} ${escapeHtml(member.etternavn)}</span>
+            <span class="search-bubble-phone">📱 ${member.tlf_mobil || 'Ingen telefon'}</span>
         `;
+        memberInfo.addEventListener('click', () => selectLockerMember(member));
+        memberDiv.appendChild(memberInfo);
         
-        item.addEventListener('click', () => selectLockerMember(member));
-        bubble.appendChild(item);
+        // Skap liste (hvis medlem har skap)
+        if (lockers.length > 0) {
+            const skapListe = document.createElement('div');
+            skapListe.className = 'search-bubble-skap-list';
+            
+            lockers.forEach(locker => {
+                const isExpired = locker.til_dato && locker.til_dato < today;
+                const daysLeft = locker.til_dato ? Math.ceil((parseLocalDate(locker.til_dato) - parseLocalDate(today)) / (1000 * 60 * 60 * 24)) : 0;
+                
+                const skapItem = document.createElement('div');
+                skapItem.className = 'search-bubble-skap-item';
+                skapItem.innerHTML = `
+                    🎱 <strong>Skap ${locker.skap_nummer}</strong>
+                    <span style="font-size: 11px; ${isExpired ? 'color: var(--advarsel);' : 'color: #666;'}">
+                        ${isExpired ? 'UTLØPT' : `Utløper: ${formatDateForDisplay(locker.til_dato)} (${daysLeft} dager)`}
+                    </span>
+                `;
+                skapItem.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                     removeLockerSearchBubble(); 
+                    selectLocker(locker.skap_nummer);
+                });
+                skapListe.appendChild(skapItem);
+            });
+            
+            memberDiv.appendChild(skapListe);
+        } else {
+            // Ingen skap - vis melding
+            const ingenSkap = document.createElement('div');
+            ingenSkap.className = 'search-bubble-ingen-skap';
+            ingenSkap.innerHTML = `<span style="font-size: 11px; color: #999;">📍 Ingen skap leid</span>`;
+            memberDiv.appendChild(ingenSkap);
+        }
+        
+        bubble.appendChild(memberDiv);
     });
     
-    searchWrapper.appendChild(bubble);
+    // Posisjoner boblen
+    const rect = inputEl.getBoundingClientRect();
+    bubble.style.position = 'fixed';
+    bubble.style.top = (rect.bottom + 5) + 'px';
+    bubble.style.left = rect.left + 'px';
+    bubble.style.width = rect.width + 'px';
+    bubble.style.maxHeight = '400px';
+    bubble.style.overflowY = 'auto';
+    bubble.style.zIndex = '10000';
+    
+    document.body.appendChild(bubble);
+    
+    // Lukk boble ved klikk utenfor
+    setTimeout(() => {
+        document.addEventListener('click', function closeBubble(e) {
+            if (!bubble.contains(e.target) && e.target !== inputEl) {
+                bubble.remove();
+                document.removeEventListener('click', closeBubble);
+            }
+        });
+    }, 100);
 }
 
 function showNoLockerResultsBubble() {
@@ -199,11 +280,17 @@ function showNoLockerResultsBubble() {
 }
 
 function removeLockerSearchBubble() {
-    const existing = document.querySelector('#mod-skap .search-bubble');
-    if (existing) existing.remove();
+    // Fjern fra #mod-skap (gammel plassering)
+    const existingInMod = document.querySelector('#mod-skap .search-bubble');
+    if (existingInMod) existingInMod.remove();
+    
+    // Fjern fra document.body (ny plassering med fixed position)
+    const existingInBody = document.body.querySelector('.search-bubble');
+    if (existingInBody) existingInBody.remove();
 }
 
 function selectLockerMember(member) {
+    removeLockerSearchBubble();
     selectedLockerMember = member;
     
     const tenantNameInput = document.getElementById('skap-tenant-name');
