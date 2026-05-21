@@ -696,7 +696,7 @@ async function utførLagring() {
         console.error('Feil ved lagring:', error);
         visBeskjed('Feil ved lagring', error.message, 'error');
     } else {
-        console.log('Lagret成功:', data);
+        console.log('Lagret:', data);
         visBeskjed('✅ Turnering lagret!', `Turneringen er lagret i databasen.\nID: ${data[0].id}`, 'success');
         
         // Last om siden etter 1.5 sekund

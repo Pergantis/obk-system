@@ -31,6 +31,15 @@ document.querySelectorAll('.module').forEach(module => {
 function showLoader(show) { document.getElementById('sync-loader').style.display = show ? 'block' : 'none'; }
 function showError(msg) { const el = document.getElementById('error-log'); el.innerText = msg; el.style.display = 'block'; }
 
+// Fjerner tegn som kan bryte PostgREST-filter eller utvide ilike-wildcard.
+// Brukes på fritekst-input før den interpoleres inn i .or()/.ilike()-filter.
+// NB: apostrof ' og bindestrek - er bevisst IKKE i strippe-settet — de finnes i
+// legitime navn (O'Brien, Anne-Marie). Supabase-klienten URL-encoder dem.
+function sanitizeSearchQuery(query) {
+    if (!query) return '';
+    return String(query).replace(/[,():%_*\\"\r\n]/g, '');
+}
+
 window.addEventListener('load', () => {
     loadTables();
     updateMemberModule();
