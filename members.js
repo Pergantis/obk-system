@@ -684,16 +684,20 @@ async function fetchActivePasses() {
     const today = getTodayLocal();
 
     try {
+        // !inner gjør joinen påkrevd; .eq('medlemmer.er_aktiv', true) filtrerer
+        // bort periodekort som tilhører soft-slettede medlemmer (jf. samme
+        // filter i searchMembers og searchLockerMembers).
         const { data, error } = await sb
             .from('periodekort')
             .select(`
                 slutt_dato,
                 medlem_id,
-                medlemmer (
+                medlemmer!inner (
                     fornavn,
                     etternavn
                 )
             `)
+            .eq('medlemmer.er_aktiv', true)
             .gte('slutt_dato', today);
 
         if (error) throw error;

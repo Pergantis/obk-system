@@ -16,10 +16,13 @@ async function initVaktplan() {
     
     showLoader(true);
     
-    // Hent alle medlemmer med poeng_benyttet
+    // Hent ALLE medlemmer (også soft-slettede) — vi trenger dem i cachen
+    // for å rendre historiske vakter og poengoversikten korrekt. Datalist-
+    // autocomplete filtreres til kun aktive lenger ned så man ikke kan
+    // tilordne en soft-slettet frivillig til en ny vakt.
     const { data: members, error: memberError } = await sb.from('medlemmer')
-        .select('id, fornavn, etternavn, tlf_mobil, poeng_benyttet');
-    
+        .select('id, fornavn, etternavn, tlf_mobil, poeng_benyttet, er_aktiv');
+
     if (memberError) {
         console.error("Feil ved henting av medlemmer:", memberError);
         showError("Kunne ikke hente medlemmer: " + memberError.message);
@@ -34,10 +37,14 @@ async function initVaktplan() {
 }
 
 // Fyller <datalist id="medlem-liste"> som vaktplan-inputs slår opp i.
+// Kun aktive medlemmer — soft-slettede skal ikke kunne tilordnes nye vakter,
+// men beholdes i alleMedlemmerCache for at historiske vakter og poeng-
+// oversikten skal kunne vise navnene deres.
 function oppdaterMedlemDatalist() {
     const list = document.getElementById('medlem-liste');
     if (!list) return;
     list.innerHTML = alleMedlemmerCache
+        .filter(m => m.er_aktiv !== false)
         .map(m => `<option value="${escapeHtml(m.fornavn)} ${escapeHtml(m.etternavn)}">📱 ${escapeHtml(m.tlf_mobil || '')}</option>`)
         .join('');
 }
