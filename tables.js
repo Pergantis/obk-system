@@ -1,25 +1,18 @@
 // --- BORDKONTROLL LOGIKK ---
 let tableData = [];
 let currentStoppingId = null;
+let confirmStopInProgress = false; // hindrer dobbelt-trykk på BEKREFT
 
 // Henter status på alle 20 bordene fra Supabase
 async function loadTables() {
-     // Last historikk med en gang også
-    await loadTodayHistory();  // <-- LEGG TIL ØVERST    
+    await loadTodayHistory();
     const { data, error } = await sb.from('bord_status').select('*').order('bord_nummer');
-    if (!error) { 
-        // Lagre det brukeren eventuelt skriver akkurat nå før vi tegner på nytt
-        const activeId = document.activeElement ? document.activeElement.id : null;
-        const currentInputs = {};
-        
-        tableData.forEach(b => {
-            const input = document.getElementById(`name-${b.bord_nummer}`);
-            if (input) currentInputs[b.bord_nummer] = input.value;
-        });
-
-        tableData = data; 
-        renderGrid(currentInputs, activeId); 
+    if (error) {
+        console.error("Feil ved henting av bord-status:", error);
+        return;
     }
+    tableData = data;
+    refreshGrid();
 }
 // Henter dagens ferdige utleier fra historikktabellen
 async function loadTodayHistory() {
@@ -147,7 +140,52 @@ function formatNorwegianDate(isoString) {
     return `${dag}.${maned}.${ar} ${timer}:${minutter}`;
 }
 
-// Tegner opp bordene i rutenettet
+// Oppdaterer rutenettet. Hvis grid'en allerede er tegnet og ingen bord har
+// endret status, oppdateres kun timer-teksten — input-felter, markør og
+// tekstmarkering forblir urørt. Full re-render skjer kun ved status-endring
+// eller første tegning.
+function refreshGrid() {
+    const grid = document.getElementById('bord-grid');
+    if (!grid) return;
+
+    const existingCards = grid.querySelectorAll('[data-bord]');
+    let needsFullRender = existingCards.length !== tableData.length;
+
+    if (!needsFullRender) {
+        for (const b of tableData) {
+            const card = grid.querySelector(`[data-bord="${b.bord_nummer}"]`);
+            if (!card) { needsFullRender = true; break; }
+            const isActive = b.status === 'Opptatt';
+            if (card.dataset.active !== String(isActive)) { needsFullRender = true; break; }
+        }
+    }
+
+    if (needsFullRender) {
+        // Bevar input-verdier og fokus før full re-render
+        const activeId = document.activeElement ? document.activeElement.id : null;
+        const savedInputs = {};
+        existingCards.forEach(card => {
+            const num = card.dataset.bord;
+            const input = card.querySelector(`#name-${num}`);
+            if (input) savedInputs[num] = input.value;
+        });
+        renderGrid(savedInputs, activeId);
+        return;
+    }
+
+    // Kun timer-oppdatering på aktive bord — rører ikke input på ledige.
+    for (const b of tableData) {
+        if (b.status !== 'Opptatt' || !b.start_tid) continue;
+        const card = grid.querySelector(`[data-bord="${b.bord_nummer}"]`);
+        const timerEl = card?.querySelector('.timer-text');
+        if (!timerEl) continue;
+        const start = new Date(b.start_tid);
+        const diff = Math.floor((new Date() - start) / 60000);
+        timerEl.innerText = diff + ' min';
+    }
+}
+
+// Tegner opp bordene i rutenettet (full re-render).
 function renderGrid(savedNames = {}, focusId = null) {
     const grid = document.getElementById('bord-grid');
     if (!grid) return;
@@ -156,7 +194,7 @@ function renderGrid(savedNames = {}, focusId = null) {
         const isActive = b.status === 'Opptatt';
         const start = b.start_tid ? new Date(b.start_tid) : null;
         const diff = start ? Math.floor((new Date() - start) / 60000) : 0;
-        
+
         let borderTopClass = b.bord_nummer <= 10 ? 'card-blue' : (b.bord_nummer <= 16 ? 'card-marine' : 'card-gold');
         let soneClass = b.bord_nummer <= 10 ? 'bg-sone-blaa' : (b.bord_nummer <= 16 ? 'bg-sone-graa' : 'bg-sone-beige');
         const applyClass = isActive ? 'active' : soneClass;
@@ -165,20 +203,20 @@ function renderGrid(savedNames = {}, focusId = null) {
         const temporaryName = savedNames[b.bord_nummer] || "";
 
         return `
-            <div class="admin-card table-card ${borderTopClass} ${applyClass}">
+            <div class="admin-card table-card ${borderTopClass} ${applyClass}" data-bord="${b.bord_nummer}" data-active="${isActive}">
                 <h3>Bord ${b.bord_nummer}</h3>
                 <div class="timer-text">${isActive ? diff + ' min' : 'LEDIG'}</div>
-                
-                ${isActive ? 
-                    `<div style="font-size:12px; color:var(--biljard-gronn); font-weight:bold; margin-bottom:10px; height:20px;">👤 ${escapeHtml(b.kunde_navn || 'Anonym')}</div>` : 
-                    `<input type="text" id="name-${b.bord_nummer}" class="input-field" 
-                        style="padding:5px; margin-bottom:5px; text-align:center; background: rgba(255,255,255,0.5);" 
+
+                ${isActive ?
+                    `<div style="font-size:12px; color:var(--biljard-gronn); font-weight:bold; margin-bottom:10px; height:20px;">👤 ${escapeHtml(b.kunde_navn || 'Anonym')}</div>` :
+                    `<input type="text" id="name-${b.bord_nummer}" class="input-field"
+                        style="padding:5px; margin-bottom:5px; text-align:center; background: rgba(255,255,255,0.5);"
                         placeholder="Navn" value="${escapeHtml(temporaryName)}">`
                 }
-                
-                <button class="btn" 
-                    style="background:${isActive ? 'var(--advarsel)' : 'var(--marine)'}" 
-                    onclick="${isActive ? `openModal(${b.bord_nummer}, '${b.start_tid}', '${b.kunde_navn}')` : `startTable(${b.bord_nummer})` }">
+
+                <button class="btn"
+                    style="background:${isActive ? 'var(--advarsel)' : 'var(--marine)'}"
+                    onclick="${isActive ? `openModal(${b.bord_nummer})` : `startTable(${b.bord_nummer})` }">
                     ${isActive ? 'STOPP' : 'START'}
                 </button>
             </div>`;
@@ -197,66 +235,122 @@ function renderGrid(savedNames = {}, focusId = null) {
     }
 }
 
-// ... resten av funksjonene (startTable, openModal, confirmStop, closeModal) forblir like ...
 async function startTable(id) {
     const nameInput = document.getElementById(`name-${id}`);
     const name = nameInput ? nameInput.value : "";
     showLoader(true);
-    await sb.from('bord_status').update({ 
-        status: 'Opptatt', 
-        start_tid: new Date().toISOString(), 
-        kunde_navn: name 
-    }).eq('bord_nummer', id);
-    showLoader(false); 
-    loadTables();
+    try {
+        const { error } = await sb.from('bord_status').update({
+            status: 'Opptatt',
+            start_tid: new Date().toISOString(),
+            kunde_navn: name
+        }).eq('bord_nummer', id);
+
+        if (error) {
+            console.error("Feil ved start av bord:", error);
+            visBeskjed("FEIL", `Klarte ikke starte bord ${id}. Prøv igjen.`, "error");
+            return;
+        }
+        await loadTables();
+    } finally {
+        showLoader(false);
+    }
 }
 
-function openModal(id, start, name) {
+function openModal(id) {
+    const bord = tableData.find(b => b.bord_nummer === id);
+    if (!bord || !bord.start_tid) return;
     currentStoppingId = id;
-    const diff = Math.max(1, Math.floor((new Date() - new Date(start)) / 60000));
+    // Pause polling mens modalen er åpen — så en poll-tick ikke kan
+    // klabbe tableData mens brukeren bekrefter, eller skrive duplikater
+    // hvis en annen klient har frigjort bordet samtidig.
+    stopBordPolling();
+    const diff = Math.max(1, Math.floor((new Date() - new Date(bord.start_tid)) / 60000));
     document.getElementById('modal-minutes').innerText = diff;
-    document.getElementById('modal-player').innerText = "👤 " + (name && name !== 'null' ? name : 'Anonym');
+    document.getElementById('modal-player').innerText = "👤 " + (bord.kunde_navn || 'Anonym');
     document.getElementById('modal-overlay').style.display = 'flex';
 }
 
 async function confirmStop() {
-    showLoader(true);
-    
-    // 1. Hent bord-data før vi sletter/endrer det
-    const bord = tableData.find(b => b.bord_nummer === currentStoppingId);
-    if (bord && bord.start_tid) {
-        const start = new Date(bord.start_tid);
-        const slutt = new Date();
-        const varighet = Math.max(1, Math.floor((slutt - start) / 60000));
+    if (confirmStopInProgress) return;
 
-        // 2. Lagre til historikk
-        await sb.from('bord_leie_historikk').insert({
+    const bord = tableData.find(b => b.bord_nummer === currentStoppingId);
+    if (!bord || !bord.start_tid) {
+        closeModal();
+        return;
+    }
+
+    try {
+        // Sett flagget INNE i try slik at finally-blokken garantert resetter den
+        // selv hvis en av de neste linjene kaster.
+        confirmStopInProgress = true;
+        showLoader(true);
+        const slutt = new Date();
+        const varighet = Math.max(1, Math.floor((slutt - new Date(bord.start_tid)) / 60000));
+
+        // 1. Lagre til historikk FØRST. Hvis dette feiler skal bordet IKKE
+        //    frigjøres — ellers mister vi utleien fra historikken.
+        const { error: histError } = await sb.from('bord_leie_historikk').insert({
             bord_nummer: bord.bord_nummer,
             kunde_navn: bord.kunde_navn,
             start_tid: bord.start_tid,
             slutt_tid: slutt.toISOString(),
             varighet_minutter: varighet
         });
+
+        if (histError) {
+            console.error("Feil ved lagring av bord-historikk:", histError);
+            visBeskjed("FEIL", "Klarte ikke lagre utleien i historikken. Bordet er IKKE frigjort. Prøv igjen.", "error");
+            return;
+        }
+
+        // 2. Frigjør bordet. Hvis dette feiler er historikken allerede skrevet,
+        //    så vi må advare brukeren om at de IKKE må trykke STOPP igjen
+        //    (det ville lagt inn en duplikat-rad i historikken).
+        const { error: statusError } = await sb.from('bord_status').update({
+            status: 'Ledig',
+            start_tid: null,
+            kunde_navn: null
+        }).eq('bord_nummer', currentStoppingId);
+
+        if (statusError) {
+            console.error("Feil ved frigjøring av bord:", statusError);
+            visBeskjed(
+                "ADVARSEL",
+                `Utleien er notert som ferdig, men status-oppdateringen for bord ${bord.bord_nummer} feilet. Last inn siden på nytt — IKKE trykk STOPP igjen (det vil opprette duplikat i historikken).`,
+                "error"
+            );
+            return;
+        }
+
+        await loadTables();
+    } finally {
+        showLoader(false);
+        confirmStopInProgress = false;
+        closeModal();
     }
+}
 
-    // 3. Frigjør bordet
-    await sb.from('bord_status').update({ 
-        status: 'Ledig', 
-        start_tid: null, 
-        kunde_navn: null 
-    }).eq('bord_nummer', currentStoppingId);
-    
+function closeModal() {
     document.getElementById('modal-overlay').style.display = 'none';
-    showLoader(false); 
-    
-    // 4. Oppdater både bord OG historikk
-    await loadTables();
-    await loadTodayHistory();  // <-- LEGG TIL DENNE LINJEN
+    // Gjenoppta polling kun hvis brukeren fortsatt er på bord-modulen.
+    if (document.getElementById('mod-bord')?.classList.contains('active')) {
+        startBordPolling();
+    }
 }
 
-function closeModal() { 
-    document.getElementById('modal-overlay').style.display = 'none'; 
+// --- POLLING ---
+// Pollingen starter/stoppes fra showModule() i app.js — slik at vi ikke
+// kjører unødige DB-spørringer mens brukeren er på en annen modul.
+let bordPollId = null;
+
+function startBordPolling() {
+    if (bordPollId !== null) return;
+    bordPollId = setInterval(loadTables, 10000);
 }
 
-// Oppdaterer hvert 10. sekund
-setInterval(loadTables, 10000);
+function stopBordPolling() {
+    if (bordPollId === null) return;
+    clearInterval(bordPollId);
+    bordPollId = null;
+}
