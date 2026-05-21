@@ -181,39 +181,34 @@
     <section id="mod-bord" class="module active">
         <h1>Bordkontrollen</h1>
         <div id="bord-grid" class="bord-grid">Laster bord...</div>
-            <!-- MODUL: BORDLEIE Historikk -->
-<section id="mod-bord" class="module active">
-    <h1>Bordhistorikk</h1>
-    <div id="bord-grid" class="bord-grid"></div>
-    
-    <!-- NY HISTORIKK-TABELL - Legges til her -->
-    <div class="admin-card card-marine" style="margin-top: 30px;">
-        <div class="table-header-row">
-            <h3>📋 Dagens bordhistorikk</h3>
-            <span class="history-count" id="history-count">0 bord i dag</span>
+
+        <!-- Historikk-tabell -->
+        <div class="admin-card card-marine" style="margin-top: 30px;">
+            <div class="table-header-row">
+                <h3>📋 Dagens bordhistorikk</h3>
+                <span class="history-count" id="history-count">0 bord i dag</span>
+            </div>
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Bordnr.</th>
+                            <th>Kundenavn</th>
+                            <th>Starttid</th>
+                            <th>Sluttid</th>
+                            <th>Varighet</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <tr>
+                            <td colspan="5" style="text-align:center; padding: 30px; color: var(--tekst-lys);">
+                                ⏳ Laster dagens bordhistorikk...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Bordnr.</th>
-                        <th>Kundenavn</th>
-                        <th>Starttid</th>
-                        <th>Sluttid</th>
-                        <th>Varighet</th>
-                    </tr>
-                </thead>
-                <tbody id="history-table-body">
-                    <tr>
-                        <td colspan="5" style="text-align:center; padding: 30px; color: var(--tekst-lys);">
-                            ⏳ Laster dagens bordhistorikk...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
     </section>
 
     <!-- MODUL: PERIODEKORT -->
@@ -426,17 +421,7 @@
     </div>
 </div>
 
-<!-- PIN MODAL (vises av JS) -->
 <datalist id="medlem-liste"></datalist>
-<div id="vakt-pin-modal" class="modal-overlay" style="display:none;">
-    <div class="admin-card" style="width:300px; text-align:center;">
-        <h3>Tast PIN-kode</h3>
-        <input type="password" id="vakt-pin-input" class="input-field" maxlength="4">
-        <div id="vakt-pin-error" style="color:var(--advarsel); display:none;">Feil kode!</div>
-        <button class="btn" style="background:var(--marine);" onclick="verifyVaktPin()">LÅS OPP</button>
-        <button class="btn" style="background:#95a5a6;" onclick="closeVaktPin()">AVBRYT</button>
-    </div>
-</div>
 
 
 
@@ -525,7 +510,6 @@
     </div>
 </div>
 <!-- SLUTT-MODAL: REGISTRER NYTT MEDLEM -->
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="app.js"></script>
 <script src="members.js"></script>

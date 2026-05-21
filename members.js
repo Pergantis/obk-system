@@ -1,39 +1,9 @@
 // members.js - Håndterer periodekort og medlemsliste
+// Dato-hjelpere (getTodayLocal, parseLocalDate, addDaysLocal, formatDateForDisplay) bor i app.js.
 
 // --- GLOBALE VARIABLER ---
 let selectedMemberForPass = null;
 let latestPassForMember = null;
-
-// --- HJELPEFUNKSJONER FOR DATO (LOKAL TIDSSONE) ---
-
-function getTodayLocal() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-function parseLocalDate(dateStr) {
-    if (!dateStr) return null;
-    const parts = dateStr.split('-');
-    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-}
-
-function addDaysLocal(dateStr, days) {
-    const date = parseLocalDate(dateStr);
-    date.setDate(date.getDate() + days);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-function formatDateForDisplay(isoDate) {
-    if (!isoDate) return '';
-    const parts = isoDate.split('-');
-    return `${parts[2]}.${parts[1]}.${parts[0]}`;
-}
 
 // --- INITIALISERING ---
 async function updateMemberModule() {
@@ -783,11 +753,6 @@ function renderMemberTable(members) {
 
     const countLabel = document.querySelector('.member-count');
     if (countLabel) countLabel.innerText = `Aktive kort: ${members.length}`;
-}
-
-function escapeHtml(str) {
-    if (!str) return "";
-    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 }
 
 // Initialiser ved lasting

@@ -26,11 +26,21 @@ async function initVaktplan() {
     } else {
         alleMedlemmerCache = members || [];
         console.log(`Hentet ${alleMedlemmerCache.length} medlemmer`);
+        oppdaterMedlemDatalist();
     }
-    
+
     await lastVaktplan();
     showLoader(false);
     isLoadingVaktplan = false;
+}
+
+// Fyller <datalist id="medlem-liste"> som vaktplan-inputs slår opp i.
+function oppdaterMedlemDatalist() {
+    const list = document.getElementById('medlem-liste');
+    if (!list) return;
+    list.innerHTML = alleMedlemmerCache
+        .map(m => `<option value="${escapeHtml(m.fornavn)} ${escapeHtml(m.etternavn)}">📱 ${escapeHtml(m.tlf_mobil || '')}</option>`)
+        .join('');
 }
 
 // 2. Hent vakter - FIXET
@@ -140,12 +150,6 @@ function tegnVaktplanMatrise(monthString) {
         tbody.appendChild(tr);
         ukeTeller++;
     }
-}
-
-// Hjelpefunksjon for å unngå XSS — escaper også " og ' for attributt-kontekst
-function escapeHtml(str) {
-    if (!str) return "";
-    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 }
 
 // 4. NY forbedret lagringsfunksjon
@@ -415,10 +419,6 @@ function oppdaterGrensesnitt(laast) {
         btn.style.background = "var(--marine)";
         btn.style.color = "white";
     }
-}
-
-function closeVaktPin() {
-    document.getElementById('vakt-pin-modal').style.display = 'none';
 }
 
 // 8. Legg til event listener for månedsvelger

@@ -197,12 +197,6 @@ function renderGrid(savedNames = {}, focusId = null) {
     }
 }
 
-// Hjelpefunksjon for å unngå krasj ved spesialtegn i navn
-function escapeHtml(str) {
-    if (!str) return "";
-    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-}
-
 // ... resten av funksjonene (startTable, openModal, confirmStop, closeModal) forblir like ...
 async function startTable(id) {
     const nameInput = document.getElementById(`name-${id}`);

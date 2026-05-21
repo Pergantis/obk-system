@@ -40,6 +40,45 @@ function sanitizeSearchQuery(query) {
     return String(query).replace(/[,():%_*\\"\r\n]/g, '');
 }
 
+// Escaper HTML-spesialtegn — bruk før innsetting i innerHTML eller value="...".
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+
+// --- DATO-HJELPERE (LOKAL TIDSSONE) ---
+// Norge er UTC+1/+2 — bruk disse i stedet for toISOString().split('T')[0]
+// for å unngå off-by-one nær midnatt.
+
+function getTodayLocal() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function parseLocalDate(dateStr) {
+    if (!dateStr) return null;
+    const parts = dateStr.split('-');
+    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+}
+
+function addDaysLocal(dateStr, days) {
+    const date = parseLocalDate(dateStr);
+    date.setDate(date.getDate() + days);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function formatDateForDisplay(isoDate) {
+    if (!isoDate) return '';
+    const parts = isoDate.split('-');
+    return `${parts[2]}.${parts[1]}.${parts[0]}`;
+}
+
 window.addEventListener('load', () => {
     loadTables();
     updateMemberModule();
@@ -99,16 +138,6 @@ showModule = function(id) {
     originalShowModule(id);
     if (id === 'vaktplan') renderVaktplanPrototype();
 };
-// Fyller datalisten for vaktplanen med alle medlemmer
-async function oppdaterSokeListe() {
-    const { data } = await sb.from('medlemmer').select('fornavn, etternavn, tlf_mobil');
-    const list = document.getElementById('medlem-liste');
-    if (list && data) {
-        list.innerHTML = data.map(m => `<option value="${m.fornavn} ${m.etternavn}">📱 ${m.tlf_mobil}</option>`).join('');
-    }
-}
-// Kjør denne når siden lastes
-window.addEventListener('load', oppdaterSokeListe);
 // --- MOBIL-MENY LOGIKK ---
 
 /**
