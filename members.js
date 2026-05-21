@@ -71,10 +71,11 @@ async function searchMembers(query) {
             .from('medlemmer')
             .select('id, fornavn, etternavn, tlf_mobil')
             .or(`fornavn.ilike.%${safe}%,etternavn.ilike.%${safe}%,tlf_mobil.ilike.%${safe}%`)
+            .eq('er_aktiv', true)
             .limit(10);
-        
+
         if (error) throw error;
-        
+
         if (!members || members.length === 0) {
             showNoResultsBubble();
             return;

@@ -132,11 +132,14 @@ async function searchLockerMembers(query) {
         const safe = sanitizeSearchQuery(query);
         // Unngå "match alle" hvis input består av bare strippede spesialtegn
         if (!safe) return;
-        // Hent medlemmer som matcher søket
+        // Hent medlemmer som matcher søket. er_aktiv-filter for å skjule
+        // soft-slettede medlemmer (jf. maintenance.js adminSlettMedlem som
+        // setter er_aktiv = false i stedet for å slette raden).
         const { data: members, error } = await sb
             .from('medlemmer')
             .select('id, fornavn, etternavn, tlf_mobil')
             .or(`fornavn.ilike.%${safe}%,etternavn.ilike.%${safe}%,tlf_mobil.ilike.%${safe}%`)
+            .eq('er_aktiv', true)
             .limit(10);
         
         if (error) throw error;
