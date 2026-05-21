@@ -79,11 +79,8 @@ async function HentVarslerPeriode() {
 // Henter skapleie som utgår eller har utgått
  async function HentVarslerSkap() {
     const container = document.getElementById('admin-varsel-skap');
-    // iDag som Date brukes lenger ned i utlop < iDag-sjekken; window-filteret
-    // bruker lokale dato-hjelpere så UTC-konvertering ikke skubber 14-dagers-
-    // grensen feil rundt midnatt norsk tid.
-    const iDag = new Date();
-    const om14DagerStr = addDaysLocal(getTodayLocal(), 14);
+    const iDagStr = getTodayLocal();
+    const om14DagerStr = addDaysLocal(iDagStr, 14);
 
     const { data, error } = await sb
         .from('skapleie')
@@ -103,12 +100,11 @@ async function HentVarslerPeriode() {
     }
 
     container.innerHTML = data.map(s => {
-        const [y, m, d] = s.til_dato.split('-');
-        const utlop = new Date(y, m - 1, d);
-        const erUtlopt = utlop < iDag;
-        const kontaktet = s.sist_kontaktet ? `(Kontaktet: ${new Date(s.sist_kontaktet).toLocaleDateString('no-NO')})` : "";
-        const datoStreng = utlop.toLocaleDateString('no-NO');
-        
+        // Strengsammenligning på YYYY-MM-DD = leksikografisk = kronologisk.
+        const erUtlopt = s.til_dato < iDagStr;
+        const kontaktet = s.sist_kontaktet ? `(Kontaktet: ${formatDateForDisplay(s.sist_kontaktet)})` : "";
+        const datoStreng = formatDateForDisplay(s.til_dato);
+
         const farge = erUtlopt ? "red" : "#2980b9";
         const statusTekst = erUtlopt ? "⚠️ UTLØPT:" : "🕒 Utløper:";
         
