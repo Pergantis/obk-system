@@ -705,12 +705,3 @@ async function utførLagring() {
         }, 1500);
     }
 }
-
-// HTML escape for sikkerhet
-function escapeHtml(str) {
-    if (!str) return "";
-    return String(str).replace(/[&<>"']/g, function(m) {
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return map[m];
-    });
-}

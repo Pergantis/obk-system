@@ -1,14 +1,5 @@
 // maintenance.js
 
-// Hjelpefunksjon for å unngå XSS
-function escapeHtml(str) {
-    if (!str) return "";
-    return String(str).replace(/[&<>"']/g, function(m) {
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return map[m];
-    });
-}
-
 async function initAdminPanel() {
     try {
         await HentVarslerPeriode();
