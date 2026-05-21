@@ -93,7 +93,8 @@ async function searchMembers(query) {
 
         if (passError) throw passError;
 
-        // Map: medlem_id → seneste slutt_dato
+        // Map: medlem_id → seneste slutt_dato. Avhenger av .order(...desc) over —
+        // første gang vi ser et medlem_id i loopen, har vi pr. definisjon høyeste slutt_dato.
         const seneste = {};
         (passes || []).forEach(p => {
             if (!(p.medlem_id in seneste)) seneste[p.medlem_id] = p.slutt_dato;

@@ -637,10 +637,15 @@ function genererPDF(data, today) {
     doc.setTextColor(80, 80, 80);
     doc.text(`Dato: ${formatDateForDisplay(today)}`, 14, 37);
 
-    // Tabell
+    // Tabell. Strip kontrolltegn (TAB, CR, LF, m.fl.) fra navn/mobil før de
+    // sendes til autoTable — ellers kan en innlimt newline i et navn bryte
+    // radhøyder eller bytte linje midt i en celle.
+    const stripCtrl = s => String(s ?? '').replace(/[\x00-\x1f\x7f]/g, ' ').trim();
     const rows = data.map(lease => {
-        const name = lease.medlemmer ? `${lease.medlemmer.fornavn} ${lease.medlemmer.etternavn}` : 'Ukjent';
-        const phone = lease.medlemmer?.tlf_mobil || 'Ikke registrert';
+        const name = lease.medlemmer
+            ? stripCtrl(`${lease.medlemmer.fornavn} ${lease.medlemmer.etternavn}`)
+            : 'Ukjent';
+        const phone = stripCtrl(lease.medlemmer?.tlf_mobil) || 'Ikke registrert';
         const isExpired = lease.til_dato < today;
         return [
             String(lease.skap_nummer),
