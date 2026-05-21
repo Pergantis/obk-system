@@ -431,10 +431,15 @@ function oppdaterGrensesnitt(laast) {
     }
 }
 
-// 8. Legg til event listener for månedsvelger
+// 8. Default-måned og event listener for månedsvelger
 document.addEventListener('DOMContentLoaded', () => {
     const monthPicker = document.getElementById('vakt-month-picker');
     if (monthPicker) {
+        // Default til inneværende måned hvis ingen verdi er satt — slipper å
+        // hardkode "2026-05" i HTML og bli stående i fortiden.
+        if (!monthPicker.value) {
+            monthPicker.value = getTodayLocal().slice(0, 7);
+        }
         monthPicker.addEventListener('change', () => {
             if (document.getElementById('mod-vaktplan').classList.contains('active')) {
                 lastVaktplan();
