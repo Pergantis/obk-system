@@ -237,18 +237,28 @@ async function lagreVaktFraInput(inputElement) {
     showLoader(false);
 }
 
-// 5. Poengberegning - FIXET (KUN fortid og i dag)
+// Hvor langt tilbake i tid vi henter vakter for poengberegning. Settes
+// konservativt høyt (5 år) for å unngå at langtidsmedlemmer mister opptjente
+// poeng. Skal justeres ned hvis tabellen vokser merkbart — eller helst
+// erstattes med en server-side aggregert view i Supabase.
+const VAKT_POENG_MAANEDER_TILBAKE = 60;
+
+// 5. Poengberegning - KUN fortid og i dag
 async function beregnOgVisPoeng() {
-    // Hent ALLE vakter
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - VAKT_POENG_MAANEDER_TILBAKE);
+    const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}`;
+
     const { data: alleVakter, error } = await sb
         .from('vaktplan')
-        .select('maaned, dato, hoved_vakt_id, ekstra_vakt_id');
-    
+        .select('maaned, dato, hoved_vakt_id, ekstra_vakt_id')
+        .gte('maaned', cutoffStr);
+
     if (error) {
         console.error("Feil ved henting av vakter for poeng:", error);
         return;
     }
-    
+
     if (!alleVakter) return;
 
     const iDag = new Date();

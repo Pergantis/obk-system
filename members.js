@@ -81,21 +81,31 @@ async function searchMembers(query) {
         }
         
         const today = getTodayLocal();
-        
-        for (const member of members) {
-            const { data: passes } = await sb
-                .from('periodekort')
-                .select('slutt_dato')
-                .eq('medlem_id', member.id)
-                .order('slutt_dato', { ascending: false })
-                .limit(1);
-            
-            if (!passes || passes.length === 0) {
+        const memberIds = members.map(m => m.id);
+
+        // Hent alle periodekort for søketreffene i én spørring (ikke én per medlem).
+        // Vi finner det siste kortet per medlem ved å sortere synkende på slutt_dato.
+        const { data: passes, error: passError } = await sb
+            .from('periodekort')
+            .select('medlem_id, slutt_dato')
+            .in('medlem_id', memberIds)
+            .order('slutt_dato', { ascending: false });
+
+        if (passError) throw passError;
+
+        // Map: medlem_id → seneste slutt_dato
+        const seneste = {};
+        (passes || []).forEach(p => {
+            if (!(p.medlem_id in seneste)) seneste[p.medlem_id] = p.slutt_dato;
+        });
+
+        members.forEach(member => {
+            const endDate = seneste[member.id];
+            if (!endDate) {
                 member.status = 'none';
                 member.statusText = 'Ingen kort';
                 member.latestEndDate = null;
             } else {
-                const endDate = passes[0].slutt_dato;
                 member.latestEndDate = endDate;
                 if (endDate >= today) {
                     member.status = 'active';
@@ -105,8 +115,8 @@ async function searchMembers(query) {
                     member.statusText = 'Utløpt';
                 }
             }
-        }
-        
+        });
+
         renderSearchBubble(members);
         
     } catch (err) {

@@ -603,64 +603,81 @@ window.generateExpiryPDF = async function() {
     }
 };
 
-// Hjelpefunksjon for å generere PDF
+// Genererer og laster ned PDF via jsPDF + autotable. Erstatter den gamle
+// window.open + print()-løsningen som ble blokkert av popup-blockere.
 function genererPDF(data, today) {
-    let tableRows = '';
-    data.forEach(lease => {
+    if (!window.jspdf?.jsPDF) {
+        visBeskjed("FEIL", "PDF-biblioteket er ikke lastet. Last siden på nytt og prøv igjen.", "error");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    if (typeof doc.autoTable !== 'function') {
+        visBeskjed("FEIL", "PDF-tabell-pluginet er ikke lastet. Last siden på nytt og prøv igjen.", "error");
+        return;
+    }
+
+    // Header
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(26, 47, 60); // marine
+    doc.text('Oslo Biljardklubb', 14, 18);
+
+    doc.setDrawColor(201, 168, 76); // gull
+    doc.setLineWidth(0.8);
+    doc.line(14, 21, 196, 21);
+
+    doc.setFontSize(13);
+    doc.text('Utløpsliste skap — 30 dager frem', 14, 30);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Dato: ${formatDateForDisplay(today)}`, 14, 37);
+
+    // Tabell
+    const rows = data.map(lease => {
         const name = lease.medlemmer ? `${lease.medlemmer.fornavn} ${lease.medlemmer.etternavn}` : 'Ukjent';
         const phone = lease.medlemmer?.tlf_mobil || 'Ikke registrert';
         const isExpired = lease.til_dato < today;
-        const statusText = isExpired ? 'UTLØPT' : 'Utløper snart';
-        
-        tableRows += `
-            <tr>
-                <td style="border: 1px solid #ddd; padding: 8px;">${lease.skap_nummer}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${escapeHtml(name)}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${phone}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${formatDateForDisplay(lease.fra_dato)}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${formatDateForDisplay(lease.til_dato)}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; color: ${isExpired ? '#e74c3c' : '#e67e22'}; font-weight: bold;">${statusText}</td>
-            </tr>
-        `;
+        return [
+            String(lease.skap_nummer),
+            name,
+            phone,
+            formatDateForDisplay(lease.fra_dato),
+            formatDateForDisplay(lease.til_dato),
+            isExpired ? 'UTLØPT' : 'Utløper snart'
+        ];
     });
-    
-    const totalHtml = `
-        <html>
-        <head>
-            <title>OBK - Utløpsliste skap</title>
-            <meta charset="UTF-8">
-        </head>
-        <body style="font-family: Arial, sans-serif; margin: 40px;">
-            <h1 style="color: #1a2f3c; border-bottom: 2px solid #c9a84c; padding-bottom: 10px;">🎱 Oslo Biljardklubb</h1>
-            <h2 style="color: #1a2f3c;">Utløpsliste skap - 30 dager frem</h2>
-            <p>Dato: ${formatDateForDisplay(today)}</p>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                <thead>
-                    <tr style="background-color: #1a2f3c; color: white;">
-                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Skap nr.</th>
-                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Leietager</th>
-                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Mobil</th>
-                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Fra dato</th>
-                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Til dato</th>
-                        <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${tableRows}
-                </tbody>
-            </table>
-            <div style="margin-top: 40px; font-size: 12px; color: #666; text-align: center;">
-                Rapporten er generert automatisk av OBK Administrasjonssystem.
-            </div>
-        </body>
-        </html>
-    `;
-    
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(totalHtml);
-    printWindow.document.close();
-    printWindow.print();
-};
+
+    doc.autoTable({
+        startY: 42,
+        head: [['Skap nr.', 'Leietager', 'Mobil', 'Fra dato', 'Til dato', 'Status']],
+        body: rows,
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [26, 47, 60], textColor: 255, fontStyle: 'bold' },
+        columnStyles: { 0: { halign: 'center' }, 5: { fontStyle: 'bold' } },
+        didParseCell: (hookData) => {
+            // Farg status-kolonnen rød for UTLØPT, oransje for "Utløper snart"
+            if (hookData.section === 'body' && hookData.column.index === 5) {
+                hookData.cell.styles.textColor = hookData.cell.raw === 'UTLØPT'
+                    ? [231, 76, 60]   // advarsel-rød
+                    : [230, 126, 34]; // oransje
+            }
+        }
+    });
+
+    // Footer
+    const finalY = doc.lastAutoTable.finalY || 42;
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text('Rapporten er generert automatisk av OBK Administrasjonssystem.', 14, finalY + 12);
+
+    // Filnavn: obk-skap-utlopsliste-YYYY-MM-DD.pdf
+    doc.save(`obk-skap-utlopsliste-${today}.pdf`);
+}
 
 // --- HJELPEFUNKSJONER ---
 function clearLockerForm() {
