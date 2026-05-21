@@ -79,15 +79,17 @@ async function HentVarslerPeriode() {
 // Henter skapleie som utgår eller har utgått
  async function HentVarslerSkap() {
     const container = document.getElementById('admin-varsel-skap');
+    // iDag som Date brukes lenger ned i utlop < iDag-sjekken; window-filteret
+    // bruker lokale dato-hjelpere så UTC-konvertering ikke skubber 14-dagers-
+    // grensen feil rundt midnatt norsk tid.
     const iDag = new Date();
-    const om14Dager = new Date();
-    om14Dager.setDate(iDag.getDate() + 14);
+    const om14DagerStr = addDaysLocal(getTodayLocal(), 14);
 
     const { data, error } = await sb
         .from('skapleie')
         .select('skap_nummer, til_dato, sist_kontaktet, medlemmer(fornavn, etternavn)')
         .eq('status', 'Opptatt')
-        .lte('til_dato', om14Dager.toISOString().split('T')[0])
+        .lte('til_dato', om14DagerStr)
         .order('til_dato');
 
     if (error) {
@@ -127,7 +129,7 @@ async function HentVarslerPeriode() {
 
 async function markerKontaktet(nr) {
     const { error } = await sb.from('skapleie')
-        .update({ sist_kontaktet: new Date().toISOString().split('T')[0] })
+        .update({ sist_kontaktet: getTodayLocal() })
         .eq('skap_nummer', nr);
     if (!error) HentVarslerSkap();
 }

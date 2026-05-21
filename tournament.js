@@ -51,7 +51,7 @@ function renderTurneringSkjema() {
             <div class="turnering-skjema">
                 <div class="form-gruppe">
                     <label>📅 Dato</label>
-                    <input type="date" id="tur-dato" value="${new Date().toISOString().split('T')[0]}">
+                    <input type="date" id="tur-dato" value="${getTodayLocal()}">
                 </div>
                 
                 <div class="form-gruppe">
