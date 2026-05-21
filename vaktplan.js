@@ -142,15 +142,10 @@ function tegnVaktplanMatrise(monthString) {
     }
 }
 
-// Hjelpefunksjon for å unngå XSS
+// Hjelpefunksjon for å unngå XSS — escaper også " og ' for attributt-kontekst
 function escapeHtml(str) {
     if (!str) return "";
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 }
 
 // 4. NY forbedret lagringsfunksjon
@@ -173,7 +168,7 @@ async function lagreVaktFraInput(inputElement) {
         );
         
         if (!medlem) {
-            alert(`Fant ikke medlemmet "${verdi}". Vennligst velg fra listen.`);
+            visBeskjed("FEIL", `Fant ikke medlemmet "${verdi}". Vennligst velg fra listen.`, "error");
             // Restore forrige verdi
             await lastVaktplan();
             return;
@@ -232,7 +227,7 @@ async function lagreVaktFraInput(inputElement) {
     } catch (error) {
         console.error("Feil ved lagring:", error);
         showError("Kunne ikke lagre vakt: " + error.message);
-        alert("Feil ved lagring: " + error.message);
+        visBeskjed("FEIL", "Feil ved lagring: " + error.message, "error");
     }
     
     showLoader(false);
