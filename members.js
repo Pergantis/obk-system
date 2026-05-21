@@ -7,7 +7,6 @@ let latestPassForMember = null;
 
 // --- INITIALISERING ---
 async function updateMemberModule() {
-    console.log("Oppdaterer medlemsmodulen...");
     await fetchActivePasses();
     attachEventListeners();
 }

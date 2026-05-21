@@ -25,7 +25,6 @@ async function initVaktplan() {
         showError("Kunne ikke hente medlemmer: " + memberError.message);
     } else {
         alleMedlemmerCache = members || [];
-        console.log(`Hentet ${alleMedlemmerCache.length} medlemmer`);
         oppdaterMedlemDatalist();
     }
 
@@ -50,9 +49,7 @@ async function lastVaktplan() {
     
     const monthVal = monthPicker.value;
     if (!monthVal) return;
-    
-    console.log("Laster vaktplan for måned:", monthVal);
-    
+
     const { data, error } = await sb
         .from('vaktplan')
         .select(`
@@ -70,7 +67,6 @@ async function lastVaktplan() {
         return;
     }
 
-    console.log(`Fant ${data?.length || 0} vakter for ${monthVal}`);
     currentVaktplanData = data || [];
     
     tegnVaktplanMatrise(monthVal);
@@ -222,9 +218,7 @@ async function lagreVaktFraInput(inputElement) {
         }
         
         if (result.error) throw result.error;
-        
-        console.log(`Lagret ${type}vakt for dato ${dato}.${maaned}`);
-        
+
         // Last alt på nytt for å oppdatere visningen
         await lastVaktplan();
         
