@@ -81,7 +81,7 @@ async function selectLocker(skapNummer) {
         currentLeaseDiv.style.display = 'block';
         // escapeHtml på alt som kommer fra DB — medlemsnavn er fri tekst og
         // kan inneholde <, > eller " som ellers tolkes som markup i innerHTML.
-        document.getElementById('skap-current-tenant').innerHTML = `${escapeHtml(data.medlemmer?.fornavn)} ${escapeHtml(data.medlemmer?.etternavn)} (📱 ${escapeHtml(data.medlemmer?.tlf_mobil) || 'Ingen'})`;
+        document.getElementById('skap-current-tenant').innerHTML = `${escapeHtml(data.medlemmer?.fornavn)} ${escapeHtml(data.medlemmer?.etternavn)} (📱 ${escapeHtml(data.medlemmer?.tlf_mobil || 'Ingen')})`;
         document.getElementById('skap-current-period').innerHTML = `${formatDateForDisplay(data.fra_dato)} - ${formatDateForDisplay(data.til_dato)}`;
         
         tenantNameInput.value = `${data.medlemmer?.fornavn || ''} ${data.medlemmer?.etternavn || ''}`;
@@ -307,7 +307,7 @@ function selectLockerMember(member) {
     
     tenantNameInput.value = `${member.fornavn} ${member.etternavn}`;
     // escapeHtml fordi navn/mobil interpoleres inn i innerHTML.
-    selectedNameSpan.innerHTML = `${escapeHtml(member.fornavn)} ${escapeHtml(member.etternavn)} (📱 ${escapeHtml(member.tlf_mobil) || 'Ingen'})`;
+    selectedNameSpan.innerHTML = `${escapeHtml(member.fornavn)} ${escapeHtml(member.etternavn)} (📱 ${escapeHtml(member.tlf_mobil || 'Ingen')})`;
     selectedDiv.style.display = 'block';
     
     removeLockerSearchBubble();
