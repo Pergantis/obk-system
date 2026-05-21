@@ -94,10 +94,13 @@ function handleSearchInput(e) {
 
 async function searchMembers(query) {
     try {
+        const safe = sanitizeSearchQuery(query);
+        // Unngå "match alle" hvis input består av bare strippede spesialtegn
+        if (!safe) return;
         const { data: members, error } = await sb
             .from('medlemmer')
             .select('id, fornavn, etternavn, tlf_mobil')
-            .or(`fornavn.ilike.%${query}%,etternavn.ilike.%${query}%,tlf_mobil.ilike.%${query}%`)
+            .or(`fornavn.ilike.%${safe}%,etternavn.ilike.%${safe}%,tlf_mobil.ilike.%${safe}%`)
             .limit(10);
         
         if (error) throw error;

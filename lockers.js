@@ -127,11 +127,14 @@ window.handleLockerSearch = function(e) {
 
 async function searchLockerMembers(query) {
     try {
+        const safe = sanitizeSearchQuery(query);
+        // Unngå "match alle" hvis input består av bare strippede spesialtegn
+        if (!safe) return;
         // Hent medlemmer som matcher søket
         const { data: members, error } = await sb
             .from('medlemmer')
             .select('id, fornavn, etternavn, tlf_mobil')
-            .or(`fornavn.ilike.%${query}%,etternavn.ilike.%${query}%,tlf_mobil.ilike.%${query}%`)
+            .or(`fornavn.ilike.%${safe}%,etternavn.ilike.%${safe}%,tlf_mobil.ilike.%${safe}%`)
             .limit(10);
         
         if (error) throw error;
