@@ -1,0 +1,39 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor / IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies (om noen noensinne legges til)
+node_modules/
+
+# Lokale secrets / overrides
+.env
+.env.*
+!.env.example
+pin-config.js
+config.local.js
+
+# Build / artefakter
+dist/
+build/
+coverage/
+
+# Testdata / dumper som skal være lokale
+*.bak
+*.tmp
+*.local

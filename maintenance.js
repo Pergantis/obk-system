@@ -41,36 +41,37 @@ async function HentVarslerPeriode() {
     
     const unikeKort = Object.values(senestePerMedlem);
     
-    // Filtrer på de som utløper i dag eller innen 9 dager
-    const idag = new Date();
-    idag.setHours(0, 0, 0, 0);
-    
-    const om9Dager = new Date();
-    om9Dager.setDate(idag.getDate() + 9);
-    om9Dager.setHours(23, 59, 59, 999);
-    
-    const utlopende = unikeKort.filter(kort => {
-        const sluttDato = new Date(kort.slutt_dato);
-        return sluttDato >= idag && sluttDato <= om9Dager;
-    });
-    
-    // Sorter stigende (nærmest først)
-    utlopende.sort((a, b) => new Date(a.slutt_dato) - new Date(b.slutt_dato));
-    
+    // Filtrer på de som utløper i dag eller innen 9 dager. Bruk lokale
+    // dato-strenger (YYYY-MM-DD) — new Date(slutt_dato) ville tolket DB-
+    // verdien som UTC-midnatt, som er +1/+2 timer foran lokal midnatt og
+    // gir off-by-one i daysLeft-beregningen rundt midnatt norsk tid.
+    const idagStr = getTodayLocal();
+    const om9DagerStr = addDaysLocal(idagStr, 9);
+
+    const utlopende = unikeKort.filter(kort =>
+        kort.slutt_dato >= idagStr && kort.slutt_dato <= om9DagerStr
+    );
+
+    // Sorter stigende (nærmest først) — string-compare på YYYY-MM-DD
+    // tilsvarer kronologisk sortering.
+    utlopende.sort((a, b) => a.slutt_dato.localeCompare(b.slutt_dato));
+
     if (utlopende.length === 0) {
         container.innerHTML = "<p style='color:green;'>Ingen kort utløper snart.</p>";
         return;
     }
-    
+
+    const idagDate = parseLocalDate(idagStr);
     container.innerHTML = utlopende.map(kort => {
-        const sluttDato = new Date(kort.slutt_dato);
-        const daysLeft = Math.ceil((sluttDato - idag) / (1000 * 60 * 60 * 24));
+        // Math.round i stedet for Math.ceil — DST-overganger gir 23-/25-
+        // timersdøgn som ellers kunne skubbet beregningen én dag.
+        const daysLeft = Math.round((parseLocalDate(kort.slutt_dato) - idagDate) / (1000 * 60 * 60 * 24));
         const isUrgent = daysLeft <= 7;
-        
+
         return `
             <div style="font-size:12px; margin-bottom:5px; padding:5px; border-bottom:1px solid #eee; ${isUrgent ? 'font-weight:bold; color:black;' : ''}">
                 <strong>${escapeHtml(kort.medlemmer.fornavn)} ${escapeHtml(kort.medlemmer.etternavn)}</strong><br>
-                Utløper: ${kort.slutt_dato.split('-').reverse().join('.')} (${daysLeft} dager)
+                Utløper: ${formatDateForDisplay(kort.slutt_dato)} (${daysLeft} dager)
             </div>
         `;
     }).join('');
@@ -79,15 +80,14 @@ async function HentVarslerPeriode() {
 // Henter skapleie som utgår eller har utgått
  async function HentVarslerSkap() {
     const container = document.getElementById('admin-varsel-skap');
-    const iDag = new Date();
-    const om14Dager = new Date();
-    om14Dager.setDate(iDag.getDate() + 14);
+    const iDagStr = getTodayLocal();
+    const om14DagerStr = addDaysLocal(iDagStr, 14);
 
     const { data, error } = await sb
         .from('skapleie')
         .select('skap_nummer, til_dato, sist_kontaktet, medlemmer(fornavn, etternavn)')
         .eq('status', 'Opptatt')
-        .lte('til_dato', om14Dager.toISOString().split('T')[0])
+        .lte('til_dato', om14DagerStr)
         .order('til_dato');
 
     if (error) {
@@ -101,12 +101,11 @@ async function HentVarslerPeriode() {
     }
 
     container.innerHTML = data.map(s => {
-        const [y, m, d] = s.til_dato.split('-');
-        const utlop = new Date(y, m - 1, d);
-        const erUtlopt = utlop < iDag;
-        const kontaktet = s.sist_kontaktet ? `(Kontaktet: ${new Date(s.sist_kontaktet).toLocaleDateString('no-NO')})` : "";
-        const datoStreng = utlop.toLocaleDateString('no-NO');
-        
+        // Strengsammenligning på YYYY-MM-DD = leksikografisk = kronologisk.
+        const erUtlopt = s.til_dato < iDagStr;
+        const kontaktet = s.sist_kontaktet ? `(Kontaktet: ${formatDateForDisplay(s.sist_kontaktet)})` : "";
+        const datoStreng = formatDateForDisplay(s.til_dato);
+
         const farge = erUtlopt ? "red" : "#2980b9";
         const statusTekst = erUtlopt ? "⚠️ UTLØPT:" : "🕒 Utløper:";
         
@@ -127,7 +126,7 @@ async function HentVarslerPeriode() {
 
 async function markerKontaktet(nr) {
     const { error } = await sb.from('skapleie')
-        .update({ sist_kontaktet: new Date().toISOString().split('T')[0] })
+        .update({ sist_kontaktet: getTodayLocal() })
         .eq('skap_nummer', nr);
     if (!error) HentVarslerSkap();
 }

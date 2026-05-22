@@ -16,16 +16,18 @@ async function initVaktplan() {
     
     showLoader(true);
     
-    // Hent alle medlemmer med poeng_benyttet
+    // Hent ALLE medlemmer (også soft-slettede) — vi trenger dem i cachen
+    // for å rendre historiske vakter og poengoversikten korrekt. Datalist-
+    // autocomplete filtreres til kun aktive lenger ned så man ikke kan
+    // tilordne en soft-slettet frivillig til en ny vakt.
     const { data: members, error: memberError } = await sb.from('medlemmer')
-        .select('id, fornavn, etternavn, tlf_mobil, poeng_benyttet');
-    
+        .select('id, fornavn, etternavn, tlf_mobil, poeng_benyttet, er_aktiv');
+
     if (memberError) {
         console.error("Feil ved henting av medlemmer:", memberError);
         showError("Kunne ikke hente medlemmer: " + memberError.message);
     } else {
         alleMedlemmerCache = members || [];
-        console.log(`Hentet ${alleMedlemmerCache.length} medlemmer`);
         oppdaterMedlemDatalist();
     }
 
@@ -35,10 +37,14 @@ async function initVaktplan() {
 }
 
 // Fyller <datalist id="medlem-liste"> som vaktplan-inputs slår opp i.
+// Kun aktive medlemmer — soft-slettede skal ikke kunne tilordnes nye vakter,
+// men beholdes i alleMedlemmerCache for at historiske vakter og poeng-
+// oversikten skal kunne vise navnene deres.
 function oppdaterMedlemDatalist() {
     const list = document.getElementById('medlem-liste');
     if (!list) return;
     list.innerHTML = alleMedlemmerCache
+        .filter(m => m.er_aktiv !== false)
         .map(m => `<option value="${escapeHtml(m.fornavn)} ${escapeHtml(m.etternavn)}">📱 ${escapeHtml(m.tlf_mobil || '')}</option>`)
         .join('');
 }
@@ -50,9 +56,7 @@ async function lastVaktplan() {
     
     const monthVal = monthPicker.value;
     if (!monthVal) return;
-    
-    console.log("Laster vaktplan for måned:", monthVal);
-    
+
     const { data, error } = await sb
         .from('vaktplan')
         .select(`
@@ -70,7 +74,6 @@ async function lastVaktplan() {
         return;
     }
 
-    console.log(`Fant ${data?.length || 0} vakter for ${monthVal}`);
     currentVaktplanData = data || [];
     
     tegnVaktplanMatrise(monthVal);
@@ -222,9 +225,7 @@ async function lagreVaktFraInput(inputElement) {
         }
         
         if (result.error) throw result.error;
-        
-        console.log(`Lagret ${type}vakt for dato ${dato}.${maaned}`);
-        
+
         // Last alt på nytt for å oppdatere visningen
         await lastVaktplan();
         
@@ -431,10 +432,15 @@ function oppdaterGrensesnitt(laast) {
     }
 }
 
-// 8. Legg til event listener for månedsvelger
+// 8. Default-måned og event listener for månedsvelger
 document.addEventListener('DOMContentLoaded', () => {
     const monthPicker = document.getElementById('vakt-month-picker');
     if (monthPicker) {
+        // Default til inneværende måned hvis ingen verdi er satt — slipper å
+        // hardkode "2026-05" i HTML og bli stående i fortiden.
+        if (!monthPicker.value) {
+            monthPicker.value = getTodayLocal().slice(0, 7);
+        }
         monthPicker.addEventListener('change', () => {
             if (document.getElementById('mod-vaktplan').classList.contains('active')) {
                 lastVaktplan();
