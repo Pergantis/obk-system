@@ -122,6 +122,7 @@ document.addEventListener('click', function(e) {
 });
 // --- PIN-LÅS SYSTEM ---
 const PINKODE = "19891989";
+const PIN_SESSION_MS = 2 * 60 * 60 * 1000; // 2 timer
 let pinTimer = null;
 let pinTimeout = null;
 
@@ -212,7 +213,7 @@ function startPinSession() {
     
     // Lagre i sessionStorage
     sessionStorage.setItem('pin_auth', 'true');
-    sessionStorage.setItem('pin_expiry', Date.now() + (2 * 60 * 60 * 1000));
+    sessionStorage.setItem('pin_expiry', Date.now() + PIN_SESSION_MS);
     
     oppdaterNedtelling();
     
@@ -222,7 +223,7 @@ function startPinSession() {
     // Auto-lås etter 2 timer
     pinTimeout = setTimeout(() => {
         lockSystem();
-    }, 2 * 60 * 60 * 1000);
+    }, PIN_SESSION_MS);
 }
 
 function oppdaterNedtelling() {
