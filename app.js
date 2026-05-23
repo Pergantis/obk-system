@@ -1,7 +1,5 @@
 window.sb = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.KEY);
 
-let selectedMemberId = null;
-
 function showModule(id) {
     document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
