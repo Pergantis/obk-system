@@ -160,7 +160,7 @@ async function searchLockerMembers(query) {
         
         // Bygg et map: medlem_id -> liste over skap
         const memberLockers = {};
-        lockers.forEach(locker => {
+        (lockers || []).forEach(locker => {
             if (!memberLockers[locker.medlem_id]) {
                 memberLockers[locker.medlem_id] = [];
             }
