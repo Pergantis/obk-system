@@ -399,7 +399,7 @@ function visVaktplanPinModal() {
 
 function verifyVaktplanPin() {
     const input = document.getElementById('vaktplan-pin-input').value;
-    if (input === "1989") { // Bruker de første 4 sifrene av hoved-PIN
+    if (input === "0555") {
         const section = document.getElementById('mod-vaktplan');
         section.classList.remove('edit-locked');
         oppdaterGrensesnitt(false);
