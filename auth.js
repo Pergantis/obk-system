@@ -158,6 +158,17 @@ function setupLogin() {
     });
 }
 
+// Re-sjekk session-expiry når tab-en kommer tilbake fra suspend.
+// setInterval-callbacks kan stå stille mens tab-en er skjult (typisk
+// laptop som sover). Når brukeren kommer tilbake vil neste tick gi
+// riktig 'tid igjen' uansett, men hvis sessionen allerede er utløpt
+// vil vi at det skal skje umiddelbart — ikke vente på neste sekund.
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && window.authExpiry) {
+        oppdaterNedtelling();
+    }
+});
+
 // Initialiser auth – kjør med en gang
 function initAuth() {
     if (document.readyState === 'loading') {
