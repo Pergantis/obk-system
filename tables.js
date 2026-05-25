@@ -1,4 +1,6 @@
 // --- BORDKONTROLL LOGIKK ---
+const BORD_POLL_INTERVAL_MS = 10000;
+
 let tableData = [];
 let currentStoppingId = null;
 let confirmStopInProgress = false; // hindrer dobbelt-trykk på BEKREFT
@@ -342,7 +344,7 @@ let bordPollId = null;
 
 function startBordPolling() {
     if (bordPollId !== null) return;
-    bordPollId = setInterval(loadTables, 10000);
+    bordPollId = setInterval(loadTables, BORD_POLL_INTERVAL_MS);
 }
 
 function stopBordPolling() {

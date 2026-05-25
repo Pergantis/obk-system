@@ -10,7 +10,6 @@ let lockerSearchTimeout = null;
 async function fetchLockers() {
     const { data, error } = await sb.from('skapleie').select('*');
     if (!error && data) {
-        window.lockersData = data;
         renderLockerGrid(data);
     } else if (error) {
         console.error("Feil ved henting av skap:", error);
@@ -161,7 +160,7 @@ async function searchLockerMembers(query) {
         
         // Bygg et map: medlem_id -> liste over skap
         const memberLockers = {};
-        lockers.forEach(locker => {
+        (lockers || []).forEach(locker => {
             if (!memberLockers[locker.medlem_id]) {
                 memberLockers[locker.medlem_id] = [];
             }
