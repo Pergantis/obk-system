@@ -15,6 +15,27 @@
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
+    <!-- PÅLOGGINGSSKJERM -->
+<div id="login-screen" class="login-container">
+    <div class="login-box">
+        <img src="logoobk.png" alt="OBK Logo" class="login-logo">
+        <h2>🎱 Bak disken</h2>
+        <p>For support, kontakt Pergantis på 926 41 953</p>
+        
+        <div class="login-form">
+            <div class="login-field">
+                <label>Brukernavn / E-post</label>
+                <input type="email" id="login-email" class="input-field" value="bakdisken@gmail.com">
+            </div>
+            <div class="login-field">
+                <label>Passord</label>
+                <input type="password" id="login-password" class="input-field" placeholder="••••••••">
+            </div>
+            <div id="login-error" class="login-error" style="display: none;"></div>
+            <button class="btn" id="login-btn" style="background: var(--biljard-gronn); width: 100%;">🔓 LOGG INN</button>
+        </div>
+    </div>
+</div>
 
 <!-- Mobil-header -->
 <header class="mobile-header">
@@ -34,6 +55,8 @@
     <button class="nav-btn" id="btn-vaktplan" onclick="showModule('vaktplan'); toggleMenu('close')">📅 VAKTPLAN</button>
     <button class="nav-btn" id="btn-admin" onclick="showModule('admin'); toggleMenu('close')">⚙️ KONTROLLPANEL</button>
    <!-- <button class="nav-btn" id="btn-hjelp" onclick="showModule('hjelp'); toggleMenu('close')">❓ VEILEDNING</button> -->
+        <!-- LOGG UT KNAPP -->
+    <button class="nav-btn" id="btn-logout" onclick="loggUt()" style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1);">🚪 LOGG UT</button>
 </nav>
 
 <main>
@@ -173,11 +196,13 @@
             
             <!-- Boks 4: Rapporter -->
             <div class="admin-card card-blue">
-                <h3>📈 Rapporter</h3>
+    <h3>📈 Rapporter</h3>
                 <div id="admin-rapporter">
-                    <p style="color: var(--tekst-lys);">Kommer snart...</p>
+                    <button class="btn" style="background: var(--marine); width: 100%;" onclick="visUtloptRapportModal()">
+                        📊 Utløpte periodekort (180 dager)
+                    </button>
                 </div>
-            </div>
+</div>
         </div>
     </div>
 </section>
@@ -273,25 +298,11 @@
             <span class="member-count">Viser aktive medlemmer med periodekort </span>
         </div>
         
-        <div class="table-responsive">
-            <table class="member-table">
-                <thead>
-                    <tr>
-                        <th>Fornavn</th>
-                        <th>Etternavn</th>
-                        <th>Sluttdato</th>
-                        <th>Rest. Dager</th>
-                    </tr>
-                </thead>
-                <tbody id="member-table-body">
-                    <tr>
-                        <td colspan="4" style="text-align:center; padding: 20px; color: var(--tekst-lys);">
-                            Søk etter medlem eller vent på at listen lastes...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+<div id="member-cards-container">
+    <div id="member-table-body" class="periodekort-grid">
+        <!-- Kortene vises her -->
+    </div>
+</div>
     </div>
     </div>
     </div>
@@ -325,6 +336,19 @@
         <div style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn" onclick="lukkAvstemmingModal()">Avbryt</button>
             <button class="btn" style="background:var(--biljard-gronn);" onclick="bekreftAvstemming()">Bekreft og vis utbetaling</button>
+        </div>
+    </div>
+</div>
+<!-- Modal for utløpt rapport -->
+<div id="utlopt-rapport-modal" class="c-modal" style="display:none;">
+    <div class="c-modal-content" style="max-width: 90%; max-height: 80vh; overflow-y: auto;">
+        <h3>📊 Utløpte periodekort (siste 180 dager)</h3>
+        <div id="utlopt-rapport-innhold">
+            <p style="text-align: center; padding: 40px;">Laster rapport...</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+            <button class="btn" style="background: var(--biljard-gronn);" onclick="lastNedUtloptRapportPDF()">📥 Last ned PDF</button>
+            <button class="btn" style="background: #95a5a6;" onclick="lukkUtloptRapportModal()">Lukk</button>
         </div>
     </div>
 </div>
@@ -515,7 +539,9 @@
     </div>
 </div>
 <!-- SLUTT-MODAL: REGISTRER NYTT MEDLEM -->
+
 <script src="supabase-config.js"></script>
+<script src="auth.js"></script>
 <script src="app.js"></script>
 <script src="members.js"></script>
 <script src="tables.js"></script>

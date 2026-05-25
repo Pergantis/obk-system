@@ -388,6 +388,210 @@ async function adminSlettMedlem() {
         }
     );
 }
+// Variabel for å lagre rapportdata til PDF
+let sisteRapportData = [];
+
+// Åpner modal og henter rapport
+async function visUtloptRapportModal() {
+    const modal = document.getElementById('utlopt-rapport-modal');
+    const innhold = document.getElementById('utlopt-rapport-innhold');
+    
+    modal.style.display = 'flex';
+    innhold.innerHTML = '<p style="text-align: center; padding: 40px;">Laster rapport...</p>';
+    
+    try {
+        const rapportData = await hentUtloptRapport();
+        sisteRapportData = rapportData;
+        visRapportTabell(rapportData);
+    } catch (err) {
+        console.error('Feil ved henting av rapport:', err);
+        innhold.innerHTML = '<p style="text-align: center; padding: 40px; color: red;">Feil ved henting av rapport</p>';
+    }
+}
+
+// Henter data fra databasen
+async function hentUtloptRapport() {
+    const iDag = new Date();
+    const iDagStr = iDag.toISOString().split('T')[0];
+    
+    // Beregn dato for 180 dager siden
+    const for180DagerSiden = new Date();
+    for180DagerSiden.setDate(iDag.getDate() - 180);
+    const for180DagerSidenStr = for180DagerSiden.toISOString().split('T')[0];
+    
+    // Hent alle periodekort med medlemdata
+    const { data, error } = await sb
+        .from('periodekort')
+        .select(`
+            start_dato,
+            slutt_dato,
+            medlem_id,
+            medlemmer (
+                fornavn,
+                etternavn,
+                er_aktiv
+            )
+        `)
+        .gte('slutt_dato', for180DagerSidenStr)
+        .lte('slutt_dato', iDagStr)
+        .order('slutt_dato', { ascending: false });
+    
+    if (error) throw error;
+    
+    if (!data || data.length === 0) return [];
+    
+    // Filtrer ut medlemmer som har aktivt kort (slutt_dato >= i dag)
+    const { data: aktiveKort, error: aktivError } = await sb
+        .from('periodekort')
+        .select('medlem_id')
+        .gte('slutt_dato', iDagStr);
+    
+    if (aktivError) throw aktivError;
+    
+    const aktiveMedlemmer = new Set(aktiveKort.map(k => k.medlem_id));
+    
+    // Filtrer: kun medlemmer UTEN aktivt kort
+    const utloptData = data.filter(kort => !aktiveMedlemmer.has(kort.medlem_id));
+    
+    // Sorter: fornavn + etternavn stigende, deretter slutt_dato synkende
+    utloptData.sort((a, b) => {
+        const navnA = `${a.medlemmer.fornavn} ${a.medlemmer.etternavn}`;
+        const navnB = `${b.medlemmer.fornavn} ${b.medlemmer.etternavn}`;
+        if (navnA < navnB) return -1;
+        if (navnA > navnB) return 1;
+        // Samme navn – sorter på slutt_dato synkende
+        return b.slutt_dato.localeCompare(a.slutt_dato);
+    });
+    
+    return utloptData;
+}
+
+// Viser tabell i modal
+function visRapportTabell(data) {
+    const innhold = document.getElementById('utlopt-rapport-innhold');
+    
+    if (data.length === 0) {
+        innhold.innerHTML = '<p style="text-align: center; padding: 40px;">✅ Ingen utløpte periodekort siste 180 dager</p>';
+        return;
+    }
+    
+    let html = `
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+                <tr style="background: var(--marine); color: white;">
+                    <th style="padding: 10px; text-align: left;">Fornavn</th>
+                    <th style="padding: 10px; text-align: left;">Etternavn</th>
+                    <th style="padding: 10px; text-align: left;">Startdato</th>
+                    <th style="padding: 10px; text-align: left;">Sluttdato</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    data.forEach(kort => {
+        html += `
+            <tr style="border-bottom: 1px solid #ddd;">
+                <td style="padding: 8px;">${escapeHtml(kort.medlemmer.fornavn)}</td>
+                <td style="padding: 8px;">${escapeHtml(kort.medlemmer.etternavn)}</td>
+                <td style="padding: 8px;">${formatDateForDisplay(kort.start_dato)}</td>
+                <td style="padding: 8px;">${formatDateForDisplay(kort.slutt_dato)}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+        <p style="margin-top: 15px; font-size: 12px; color: #666;">📊 Totalt: ${data.length} utløpte periodekort</p>
+    `;
+    
+    innhold.innerHTML = html;
+}
+
+// Lukker modal
+function lukkUtloptRapportModal() {
+    document.getElementById('utlopt-rapport-modal').style.display = 'none';
+}
+
+// Genererer og laster ned PDF
+function lastNedUtloptRapportPDF() {
+    if (!sisteRapportData || sisteRapportData.length === 0) {
+        visBeskjed('Ingen data', 'Det er ingen data å laste ned', 'error');
+        return;
+    }
+    
+    const iDag = new Date();
+    const datoStr = iDag.toLocaleDateString('no-NO');
+    const filnavn = `obk_utlopt_rapport_${iDag.toISOString().split('T')[0]}.pdf`;
+    
+    // Bygg HTML for PDF
+    let tableRows = '';
+    sisteRapportData.forEach(kort => {
+        tableRows += `
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${escapeHtml(kort.medlemmer.fornavn)}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${escapeHtml(kort.medlemmer.etternavn)}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${formatDateForDisplay(kort.start_dato)}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${formatDateForDisplay(kort.slutt_dato)}</td>
+            </tr>
+        `;
+    });
+    
+    const pdfHtml = `
+        <html>
+        <head>
+            <title>OBK - Utløpte periodekort</title>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                h1 { color: #1a2f3c; border-bottom: 2px solid #c9a84c; padding-bottom: 10px; }
+                .dato { color: #666; margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th { background: #1a2f3c; color: white; padding: 10px; text-align: left; }
+                td { border: 1px solid #ddd; padding: 8px; }
+                .footer { margin-top: 40px; font-size: 12px; color: #666; text-align: center; }
+            </style>
+        </head>
+        <body>
+            <h1>🎱 Oslo Biljardklubb</h1>
+            <h2>Utløpte periodekort (siste 180 dager)</h2>
+            <div class="dato">Rapport generert: ${datoStr}</div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fornavn</th>
+                        <th>Etternavn</th>
+                        <th>Startdato</th>
+                        <th>Sluttdato</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                Totalt: ${sisteRapportData.length} utløpte periodekort<br>
+                Rapporten er generert automatisk av OBK Administrasjonssystem.
+            </div>
+        </body>
+        </html>
+    `;
+    
+    // Bruk jsPDF og html2canvas (må lastes inn)
+    const win = window.open();
+    win.document.write(pdfHtml);
+    win.document.close();
+    win.print();
+}
+
+// Hjelpefunksjon for datoformat
+function formatDateForDisplay(isoDate) {
+    if (!isoDate) return '';
+    const parts = isoDate.split('-');
+    return `${parts[2]}.${parts[1]}.${parts[0]}`;
+}
 
 // Oppdater adminAvbryt
 function adminAvbryt() {

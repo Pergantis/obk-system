@@ -680,13 +680,14 @@ function clearForm() {
 
 // --- AKTIVE PERIODEKORT (LISTE TIL HØYRE) ---
 async function fetchActivePasses() {
-    const tableBody = document.getElementById('member-table-body');
+   const tableBody = document.getElementById('member-table-body');
     const today = getTodayLocal();
 
     try {
         const { data, error } = await sb
             .from('periodekort')
             .select(`
+                start_dato,
                 slutt_dato,
                 medlem_id,
                 medlemmer (
@@ -698,10 +699,10 @@ async function fetchActivePasses() {
 
         if (error) throw error;
 
-        if (!data || data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">Ingen aktive periodekort funnet</td></tr>';
-            return;
-        }
+if (!data || data.length === 0) {
+    container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--tekst-lys);">Ingen aktive periodekort funnet</div>';
+    return;
+}
 
         const uniqueMembers = {};
         data.forEach(row => {
@@ -715,53 +716,94 @@ async function fetchActivePasses() {
             a.slutt_dato.localeCompare(b.slutt_dato)
         );
 
-        renderMemberTable(sortedList);
+      renderMemberCards(sortedList);
 
     } catch (err) {
         console.error("Feil ved henting av periodekort:", err);
     }
 }
 
-function renderMemberTable(members) {
-    const tableBody = document.getElementById('member-table-body');
+// Viser periodekort som 3D kort (grid)
+function renderMemberCards(members) {
+    const container = document.getElementById('member-table-body');
     const today = getTodayLocal();
+    const todayDate = parseLocalDate(today);
 
-    tableBody.innerHTML = '';
+    if (!members || members.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--tekst-lys);">Ingen aktive periodekort funnet</div>';
+        return;
+    }
 
+    // Lag grid container
+   let html = '';
+    
     members.forEach(m => {
         const sluttDato = m.slutt_dato;
-        
-        const todayDate = parseLocalDate(today);
         const endDate = parseLocalDate(sluttDato);
         const diffTime = endDate - todayDate;
         const dagerIgjen = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        let dagerTekst = "";
-        let stil = "";
-
+        // Bestem fargekode
+        let fargeKlasse = '';
+        let borderFarge = '';
+        let bakgrunnFarge = '';
+        
         if (dagerIgjen === 0) {
-            dagerTekst = "Utløper i dag";
-            stil = "font-weight: bold; color: black;";
+            fargeKlasse = 'utloper-i-dag';
+            borderFarge = '#f44336';
+            bakgrunnFarge = '#bb1b33';
         } else if (dagerIgjen < 7 && dagerIgjen > 0) {
-            dagerTekst = `${dagerIgjen} dager`;
-            stil = "font-weight: bold; color: black;";
+            fargeKlasse = 'snart';
+            borderFarge = '#684d24';
+            bakgrunnFarge = '#bb4747f3';
         } else if (dagerIgjen < 0) {
-            dagerTekst = "Utløpt";
-            stil = "font-weight: bold; color: var(--advarsel);";
+            // Skal ikke skje siden vi filtrerer, men for sikkerhet
+            fargeKlasse = 'utlopt';
+            borderFarge = '#9e9e9e';
+            bakgrunnFarge = '#f5f5f5';
         } else {
-            dagerTekst = `${dagerIgjen} dager`;
+            fargeKlasse = 'god-tid';
+            borderFarge = '#4caf50';
+            bakgrunnFarge = '#548859';
         }
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${escapeHtml(m.medlemmer.fornavn)}</td>
-            <td>${escapeHtml(m.medlemmer.etternavn)}</td>
-            <td>${formatDateForDisplay(sluttDato)}</td>
-            <td style="${stil}">${dagerTekst}</td>
+        
+        // Dager tekst
+        let dagerTekst = '';
+        if (dagerIgjen === 0) {
+            dagerTekst = '⚠️ Utløper i dag';
+        } else if (dagerIgjen < 7 && dagerIgjen > 0) {
+            dagerTekst = `⏱ ${dagerIgjen} dager igjen`;
+        } else {
+            dagerTekst = `✅ ${dagerIgjen} dager igjen`;
+        }
+        
+        html += `
+            <div class="periodekort-card ${fargeKlasse}" style="border-left: 5px solid ${borderFarge}; background: linear-gradient(135deg, #fff 0%, ${bakgrunnFarge} 100%);">
+                <div class="card-navn">${escapeHtml(m.medlemmer.fornavn)} ${escapeHtml(m.medlemmer.etternavn)}</div>
+                <div class="card-dato">
+                    <span>📅</span>
+                    <span>Utløper: ${formatDateForDisplay(sluttDato)}</span>
+                </div>
+                <div class="card-dager">
+                    <span>${dagerTekst}</span>
+                    <div class="card-rediger" 
+                        data-medlem-id="${m.medlem_id}" 
+                        data-medlem-fornavn="${escapeHtml(m.medlemmer.fornavn)}" 
+                        data-medlem-etternavn="${escapeHtml(m.medlemmer.etternavn)}"
+                        data-start-dato="${m.start_dato || ''}" 
+                        data-slutt-dato="${sluttDato}">
+                        ✏️
+                    </div>
+                </div>
+            </div>
         `;
-        tableBody.appendChild(tr);
     });
 
+    
+   html += '';
+    container.innerHTML = html;
+    setupRedigerIkoner();
+    // Oppdater telling
     const countLabel = document.querySelector('.member-count');
     if (countLabel) countLabel.innerText = `Aktive kort: ${members.length}`;
 }
@@ -772,3 +814,60 @@ window.addEventListener('load', () => {
         attachEventListeners();
     }, 500);
 });
+// Setter opp event listeners for alle rediger-ikoner
+function setupRedigerIkoner() {
+    const ikoner = document.querySelectorAll('.card-rediger');
+    ikoner.forEach(ikon => {
+        ikon.removeEventListener('click', handleRedigerKlikk);
+        ikon.addEventListener('click', handleRedigerKlikk);
+    });
+}
+
+// Håndterer klikk på rediger-ikon
+function handleRedigerKlikk(e) {
+    e.stopPropagation();
+    
+    const ikon = e.currentTarget;
+    const medlemId = ikon.dataset.medlemId;
+    const fornavn = ikon.dataset.medlemFornavn;
+    const etternavn = ikon.dataset.medlemEtternavn;
+    const startDato = ikon.dataset.startDato;
+    const sluttDato = ikon.dataset.sluttDato;
+    
+    // Velg medlem (setter selectedMemberForPass)
+    selectMemberById(medlemId, fornavn, etternavn, startDato, sluttDato);
+}
+// Velger medlem og fyller skjema med eksisterende periodekort-data
+async function selectMemberById(medlemId, fornavn, etternavn, startDato, sluttDato) {
+    // Sett selectedMemberForPass
+    selectedMemberForPass = { id: medlemId, fornavn, etternavn };
+    
+    // Fyll navn i skjema
+    document.getElementById('m-fornavn').value = fornavn;
+    document.getElementById('m-etternavn').value = etternavn;
+    
+    // Hent siste periodekort for å foreslå datoer
+    const { data: passes } = await sb
+        .from('periodekort')
+        .select('start_dato, slutt_dato')
+        .eq('medlem_id', medlemId)
+        .order('slutt_dato', { ascending: false })
+        .limit(1);
+    
+    if (passes && passes.length > 0) {
+        latestPassForMember = passes[0];
+        suggestDates();
+    } else {
+        // Ingen eksisterende kort – bruk dagens dato + 30 dager
+        const today = getTodayLocal();
+        document.getElementById('m-start').value = today;
+        document.getElementById('m-slutt').value = addDaysLocal(today, 30);
+    }
+    
+    // Fjern eventuell søkeboble
+    removeSearchBubble();
+    
+    // Rull skjemaet synlig
+    const sidebar = document.querySelector('.member-sidebar');
+    if (sidebar) sidebar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}

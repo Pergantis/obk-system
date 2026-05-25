@@ -2092,7 +2092,7 @@ label {
 
 .search-bubble-item:hover {
     background: var(--marine);
-    color: white;
+    color: rgb(145, 67, 67);
 }
 
 .search-bubble-name {
@@ -2164,4 +2164,226 @@ label {
      font-weight: bold;
     font-size: 12px;
     margin-top: 4px;
+}
+/* Periodekort – 3D kort grid */
+.periodekort-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 10px 0;
+}
+
+/* Kortet */
+.periodekort-card {
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 
+        0 1px 1px rgba(0,0,0,0.05),
+        0 2px 2px rgba(0,0,0,0.05),
+        0 4px 4px rgba(0,0,0,0.05),
+        0 8px 8px rgba(0,0,0,0.05),
+        0 16px 16px rgba(0,0,0,0.05);
+    transition: box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.periodekort-card:hover {
+    box-shadow: 
+        0 1px 1px rgba(0,0,0,0.05),
+        0 2px 2px rgba(0,0,0,0.05),
+        0 4px 4px rgba(0,0,0,0.05),
+        0 8px 8px rgba(0,0,0,0.05),
+        0 24px 24px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+/* Navn */
+.card-navn {
+    font-size: 22px;
+    font-weight: bold;
+    color: #1a2f3c;
+    margin-bottom: 12px;
+}
+
+/* Dato linje */
+.card-dato {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+     font-weight: bold;
+    color: #555;
+    margin-bottom: 12px;
+}
+
+/* Dager igjen + rediger */
+.card-dager {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Redigeringsikon */
+.card-rediger {
+    background: #1a2f3c;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.card-rediger:hover {
+    background: #c9a84c;
+}
+
+/* Mobil: 1 kort per rad */
+@media (max-width: 768px) {
+    .periodekort-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* Fiks for å sikre at grid fyller bredden */
+.member-main {
+    width: 100%;
+    overflow: visible;
+}
+
+.admin-card.card-hvit {
+    width: 100%;
+}
+
+#member-cards-container {
+    width: 100%;
+}
+
+.periodekort-grid {
+    width: 100%;
+}
+/* PÅLOGGING */
+.login-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a2f3c 0%, #2c4a5c 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.login-box {
+    background: white;
+    border-radius: 24px;
+    padding: 40px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.login-logo {
+    width: 100px;
+    margin-bottom: 20px;
+}
+
+.login-box h2 {
+    color: #1a2f3c;
+    margin-bottom: 10px;
+}
+
+.login-box p {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.login-field {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.login-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.login-field input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 16px;
+}
+
+.login-error {
+    background: #ffebee;
+    color: #f44336;
+    padding: 10px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+/* Skjul alt innhold når ikke pålogget */
+body.logged-out main,
+body.logged-out nav,
+body.logged-out .mobile-header {
+    display: none;
+}
+
+/* Vis innhold når pålogget */
+body.logged-in main,
+body.logged-in nav,
+body.logged-in .mobile-header {
+    display: block;
+}
+/* Skjul påloggingsskjerm når pålogget */
+body.logged-in #login-screen {
+    display: none !important;
+}
+
+/* Vis påloggingsskjerm når ikke pålogget */
+body.logged-out #login-screen {
+    display: flex !important;
+}
+/* Skjul mobil-header på PC (skjermer over 768px) */
+@media (min-width: 769px) {
+    .mobile-header {
+        display: none !important;
+    }
+}
+
+/* Vis kun på mobil (under 768px) */
+@media (max-width: 768px) {
+    .mobile-header {
+        display: flex !important;
+    }
+}
+#main-nav {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Full høyde */
+    overflow-y: auto;
+}
+
+.nav-logo-top {
+    flex-shrink: 0;
+}
+
+#btn-logout {
+    margin-top: auto !important;
+    margin-bottom: 20px;
 }
