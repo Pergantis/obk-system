@@ -1,5 +1,7 @@
 // auth.js - Håndterer pålogging med Supabase Auth
 
+const PIN_SESSION_MS = 2 * 60 * 60 * 1000; // 2 timer
+
 // Sjekker om bruker er pålogget ved sidelasting
 async function sjekkPålogget() {
     try {
@@ -36,8 +38,8 @@ function startPåloggetSession() {
     // Auto-logout etter 2 timer
     window.authTimeout = setTimeout(() => {
         loggUt();
-    }, 2 * 60 * 60 * 1000);
-    
+    }, PIN_SESSION_MS);
+
 }
 
 // Logger ut
