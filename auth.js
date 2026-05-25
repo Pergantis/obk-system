@@ -12,7 +12,8 @@ async function sjekkPålogget() {
             document.body.classList.add('logged-in');
             document.body.classList.remove('logged-out');
             startPåloggetSession();
-            
+            visAuthStatusBar();
+
             // Last inn moduler (hvis de finnes)
             if (typeof loadTables === 'function') setTimeout(loadTables, 100);
             if (typeof updateMemberModule === 'function') setTimeout(updateMemberModule, 100);
@@ -29,32 +30,72 @@ async function sjekkPålogget() {
     }
 }
 
-// Starter pålogget sesjon (setter timer)
+// Starter pålogget sesjon: setter wall-clock expiry og 1Hz nedtelling
+// som både oppdaterer UI og logger ut når tiden er ute.
+//
+// Wall-clock i stedet for setTimeout fordi setTimeout-timing kan drifte
+// hvis tab-en suspenderes (laptop sover, mobil bytter app). Date.now()
+// gir alltid faktisk tid uansett om intervall-callbacks har stått stille.
 function startPåloggetSession() {
-    // Fjern eventuelle gamle timere
     if (window.authTimer) clearInterval(window.authTimer);
-    if (window.authTimeout) clearTimeout(window.authTimeout);
-    
-    // Auto-logout etter 2 timer
-    window.authTimeout = setTimeout(() => {
-        loggUt();
-    }, PIN_SESSION_MS);
 
+    window.authExpiry = Date.now() + PIN_SESSION_MS;
+    window.authTimer = setInterval(oppdaterNedtelling, 1000);
+}
+
+// Sjekker tid igjen mot wall-clock og logger ut om utløpt. Kalles
+// hvert sekund av authTimer, og umiddelbart på visibilitychange.
+function oppdaterNedtelling() {
+    if (!window.authExpiry) return;
+
+    const igjenMs = window.authExpiry - Date.now();
+    if (igjenMs <= 0) {
+        loggUt();
+        return;
+    }
+
+    const totalSek = Math.floor(igjenMs / 1000);
+    const timer = Math.floor(totalSek / 3600);
+    const minutter = String(Math.floor((totalSek % 3600) / 60)).padStart(2, '0');
+
+    const timerEl = document.getElementById('session-timer');
+    if (timerEl) timerEl.innerText = `⏱ ${timer}:${minutter} igjen`;
+}
+
+// Viser status-bar med pålogget-badge, nedtelling og logg-ut-knapp.
+// Bruker eksisterende CSS-klasser (.status-bar, .status-timer, .logout-btn).
+function visAuthStatusBar() {
+    const eksisterende = document.getElementById('auth-status-bar');
+    if (eksisterende) eksisterende.remove();
+
+    const bar = document.createElement('div');
+    bar.id = 'auth-status-bar';
+    bar.className = 'status-bar';
+    bar.innerHTML = `
+        <span class="status-badge">🔓 Pålogget</span>
+        <span class="status-timer" id="session-timer">⏱ 2:00 igjen</span>
+        <button class="logout-btn" id="auth-logout-btn">🔒 Logg ut</button>
+    `;
+    document.body.insertBefore(bar, document.body.firstChild);
+
+    document.getElementById('auth-logout-btn').addEventListener('click', () => {
+        loggUt();
+    });
+
+    oppdaterNedtelling();
 }
 
 // Logger ut
 async function loggUt() {
-    // Rydd opp timere
     if (window.authTimer) clearInterval(window.authTimer);
-    if (window.authTimeout) clearTimeout(window.authTimeout);
-    
+    window.authExpiry = null;
+
     try {
-        // Logg ut fra Supabase
         await window.sb.auth.signOut();
     } catch (err) {
         console.error('Feil ved utlogging:', err);
     }
-    
+
     // Last om siden for å vise påloggingsskjerm
     window.location.reload();
 }
@@ -98,7 +139,8 @@ function setupLogin() {
             document.body.classList.add('logged-in');
             document.body.classList.remove('logged-out');
             startPåloggetSession();
-            
+            visAuthStatusBar();
+
             // Nullstill passordfelt
             document.getElementById('login-password').value = '';
             errorDiv.style.display = 'none';
