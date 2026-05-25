@@ -36,6 +36,12 @@ async function sjekkPålogget() {
 // Wall-clock i stedet for setTimeout fordi setTimeout-timing kan drifte
 // hvis tab-en suspenderes (laptop sover, mobil bytter app). Date.now()
 // gir alltid faktisk tid uansett om intervall-callbacks har stått stille.
+//
+// NB: authExpiry er kun en UX-lokal idle-mekanisme for kiosken. Den
+// kan trivielt endres fra devtools — det er ikke et reelt sikkerhetshull
+// fordi den faktiske DB-tilgangen styres av Supabase sin JWT (server-
+// side expiry, refresher automatisk). Forlenget authExpiry gir ikke
+// utvidet rettighet utover JWT-ens egen levetid.
 function startPåloggetSession() {
     if (window.authTimer) clearInterval(window.authTimer);
 
@@ -73,7 +79,7 @@ function visAuthStatusBar() {
     bar.className = 'status-bar';
     bar.innerHTML = `
         <span class="status-badge">🔓 Pålogget</span>
-        <span class="status-timer" id="session-timer">⏱ 2:00 igjen</span>
+        <span class="status-timer" id="session-timer" aria-live="polite">⏱ 2:00 igjen</span>
         <button class="logout-btn" id="auth-logout-btn">🔒 Logg ut</button>
     `;
     document.body.insertBefore(bar, document.body.firstChild);
