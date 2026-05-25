@@ -89,27 +89,13 @@ function renderHistoryTable(historyData) {
         // Varighet (allerede lagret i databasen, men vi kan også beregne)
         let varighetTekst = '';
         if (record.varighet_minutter) {
-            const timer = Math.floor(record.varighet_minutter / 60);
-            const minutter = record.varighet_minutter % 60;
-            
-            if (timer > 0) {
-                varighetTekst = `${timer}t ${minutter}min`;
-            } else {
-                varighetTekst = `${minutter}min`;
-            }
+            varighetTekst = `${record.varighet_minutter} min`;
         } else {
             // Fallback: beregn selv
             const start = new Date(record.start_tid);
             const slutt = new Date(record.slutt_tid);
             const diffMin = Math.max(1, Math.floor((slutt - start) / 60000));
-            const timer = Math.floor(diffMin / 60);
-            const minutter = diffMin % 60;
-            
-            if (timer > 0) {
-                varighetTekst = `${timer}t ${minutter}min`;
-            } else {
-                varighetTekst = `${minutter}min`;
-            }
+            varighetTekst = `${diffMin} min`;
         }
         
         tr.innerHTML = `

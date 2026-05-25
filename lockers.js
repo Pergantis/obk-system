@@ -144,7 +144,7 @@ async function searchLockerMembers(query) {
         if (error) throw error;
         
         if (!members || members.length === 0) {
-            showNoLockerResultsBubble();
+            visIngenMedlemModal();  // Ny funksjon
             return;
         }
         
@@ -259,31 +259,6 @@ function renderLockerSearchBubble(members, memberLockers) {
             }
         });
     }, 100);
-}
-
-function showNoLockerResultsBubble() {
-    removeLockerSearchBubble();
-    const searchWrapper = document.querySelector('#mod-skap .search-wrapper');
-    if (!searchWrapper) return;
-    
-    const bubble = document.createElement('div');
-    bubble.className = 'search-bubble';
-    bubble.innerHTML = `
-        <div class="search-bubble-item" style="text-align: center;">
-            <div style="margin-bottom: 10px;">😕 Ingen medlemmer funnet</div>
-            <button class="search-bubble-btn" id="skap-register-member-btn">➕ Registrer nytt medlem</button>
-        </div>
-    `;
-    searchWrapper.appendChild(bubble);
-    
-    const registerBtn = document.getElementById('skap-register-member-btn');
-    if (registerBtn) {
-        registerBtn.addEventListener('click', () => {
-            openNewMemberModalForSkap((newMember) => {
-                selectLockerMember(newMember);
-            });
-        });
-    }
 }
 
 function removeLockerSearchBubble() {
@@ -728,3 +703,22 @@ window.addEventListener('load', () => {
         window.attachLockerEvents();
     }, 500);
 });
+// Viser modal når ingen medlemmer finnes i søket
+function visIngenMedlemModal() {
+    const searchInput = document.getElementById('skap-search');
+    if (searchInput) searchInput.value = '';
+    
+    visBekreftelse(
+        "📋 MEDLEM IKKE FUNNET",
+        `Fant ingen medlemmer med dette søket.\n\nNye medlemmer må registreres i KONTROLLPANELET før de kan leie skap.\nDer fyller du ut navn, mobil (påkrevd) og e-post (valgfritt).\n\nNår medlemmet er opprettet, kommer du tilbake hit og søker opp medlemmet.`,
+        "🔍",
+        () => {
+            showModule('admin');
+        },
+        () => {
+            console.log('Avbrutt - søkefelt tømt');
+        },
+        "⚙️ TIL KONTROLLPANEL",  // ← NY: Ja-knapp tekst
+        "✖️ AVBRYT"              // ← NY: Nei-knapp tekst
+    );
+}

@@ -173,7 +173,7 @@ window.lukkBeskjed = function() {
 // --- BEKREFTELSESMODAL (JA/NEI) ---
 let confirmCallback = null;
 
-window.visBekreftelse = function(tittel, melding, emoji, onConfirm, onCancel) {
+window.visBekreftelse = function(tittel, melding, emoji, onConfirm, onCancel, jaTekst = "JA", neiTekst = "NEI") {
     const modal = document.getElementById('custom-confirm');
     const tittelFelt = document.getElementById('confirm-title');
     const meldingFelt = document.getElementById('confirm-message');
@@ -186,10 +186,14 @@ window.visBekreftelse = function(tittel, melding, emoji, onConfirm, onCancel) {
     meldingFelt.innerText = melding;
     iconFelt.innerText = emoji || '🤔';
     
+    // Sett knappetekster
+    jaKnapp.innerText = jaTekst;
+    neiKnapp.innerText = neiTekst;
+    
     // Lagre callbacks
     confirmCallback = { onConfirm, onCancel };
     
-    // Fjern gamle event listeners for å unngå duplikater
+    // Fjern gamle event listeners
     const newJaKnapp = jaKnapp.cloneNode(true);
     const newNeiKnapp = neiKnapp.cloneNode(true);
     jaKnapp.parentNode.replaceChild(newJaKnapp, jaKnapp);

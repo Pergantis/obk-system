@@ -177,9 +177,23 @@ function filterAdminMedlemmer() {
 async function adminOpprettMedlem() {
     const fornavn = document.getElementById('admin-fornavn').value.trim();
     const etternavn = document.getElementById('admin-etternavn').value.trim();
+    const mobil = document.getElementById('admin-mobil').value.trim();
+    const epost = document.getElementById('admin-epost').value.trim();
     
     if (!fornavn || !etternavn) {
         visBeskjed('Mangler', 'Fyll ut fornavn og etternavn', 'error');
+        return;
+    }
+    
+    // Valider mobil (obligatorisk)
+    if (!validerMobil(mobil)) {
+        visBeskjed('Feil', 'Mobilnummer må være 8 siffer (kun tall)', 'error');
+        return;
+    }
+    
+    // Valider e-post (valgfritt, men sjekk format hvis utfylt)
+    if (!validerEpost(epost)) {
+        visBeskjed('Feil', 'Ugyldig e-postadresse', 'error');
         return;
     }
     
@@ -200,10 +214,16 @@ async function adminOpprettMedlem() {
             return;
         }
         
-        // Opprett nytt medlem
+        // Opprett nytt medlem med mobil og epost
         const { data: newMember, error: memberError } = await sb
             .from('medlemmer')
-            .insert([{ fornavn, etternavn, er_aktiv: true }])
+            .insert([{ 
+                fornavn, 
+                etternavn, 
+                tlf_mobil: mobil,
+                epost: epost || null,
+                er_aktiv: true 
+            }])
             .select()
             .single();
         
@@ -220,7 +240,6 @@ async function adminOpprettMedlem() {
     }
     
     showLoader(false);
-   
 }
  function adminAvbryt() {
     document.getElementById('admin-fornavn').value = '';
@@ -262,29 +281,28 @@ function initAdminSearch() {
 async function adminSokMedlemmer(query) {
     try {
         const safe = sanitizeSearchQuery(query);
-        // Unngå "match alle" hvis input består av bare strippede spesialtegn
         if (!safe) return;
+        
         const { data, error } = await sb
             .from('medlemmer')
-            .select('id, fornavn, etternavn, tlf_mobil')
+            .select('id, fornavn, etternavn, tlf_mobil, epost')
             .or(`fornavn.ilike.%${safe}%,etternavn.ilike.%${safe}%,tlf_mobil.ilike.%${safe}%`)
             .eq('er_aktiv', true)
             .limit(10);
         
         if (error) throw error;
         
-       let bubble = document.getElementById('admin-search-bubble');
-if (!bubble) {
-    // Opprett boblen hvis den ikke finnes
-    const searchWrapper = document.querySelector('#mod-admin .search-wrapper');
-    if (searchWrapper) {
-        bubble = document.createElement('div');
-        bubble.id = 'admin-search-bubble';
-        bubble.className = 'search-bubble';
-        bubble.style.display = 'none';
-        searchWrapper.appendChild(bubble);
-    }
-}
+        let bubble = document.getElementById('admin-search-bubble');
+        if (!bubble) {
+            const searchWrapper = document.querySelector('#mod-admin .search-wrapper');
+            if (searchWrapper) {
+                bubble = document.createElement('div');
+                bubble.id = 'admin-search-bubble';
+                bubble.className = 'search-bubble';
+                bubble.style.display = 'none';
+                searchWrapper.appendChild(bubble);
+            }
+        }
         
         if (!data || data.length === 0) {
             bubble.innerHTML = '<div class="search-bubble-item">Ingen medlemmer funnet</div>';
@@ -293,7 +311,7 @@ if (!bubble) {
         }
         
         bubble.innerHTML = data.map(member => `
-            <div class="search-bubble-item" onclick="adminVelgMedlem('${member.id}', '${escapeHtml(member.fornavn)}', '${escapeHtml(member.etternavn)}', '${member.tlf_mobil || ''}')">
+            <div class="search-bubble-item" onclick="adminVelgMedlem('${member.id}', '${escapeHtml(member.fornavn)}', '${escapeHtml(member.etternavn)}', '${member.tlf_mobil || ''}', '${member.epost || ''}')">
                 <span class="search-bubble-name">${escapeHtml(member.fornavn)} ${escapeHtml(member.etternavn)}</span>
                 <span class="search-bubble-phone">📱 ${member.tlf_mobil || 'Ingen telefon'}</span>
             </div>
@@ -306,16 +324,17 @@ if (!bubble) {
     }
 }
 
-function adminVelgMedlem(id, fornavn, etternavn, mobil) {
-    valgtAdminMedlem = { id, fornavn, etternavn, mobil };
+function adminVelgMedlem(id, fornavn, etternavn, mobil, epost) {
+    valgtAdminMedlem = { id, fornavn, etternavn, mobil, epost };
     
     document.getElementById('admin-fornavn').value = fornavn;
     document.getElementById('admin-etternavn').value = etternavn;
-    document.getElementById('admin-mobil').value = mobil || 'Ikke registrert';
+    document.getElementById('admin-mobil').value = mobil || '';
+    document.getElementById('admin-epost').value = epost || '';
     
     // Lukk boble
     const bubble = document.getElementById('admin-search-bubble');
-    bubble.style.display = 'none';
+    if (bubble) bubble.style.display = 'none';
     
     // Tøm søkefelt
     document.getElementById('admin-member-search').value = '';
@@ -329,9 +348,23 @@ async function adminRedigerMedlem() {
     
     const fornavn = document.getElementById('admin-fornavn').value.trim();
     const etternavn = document.getElementById('admin-etternavn').value.trim();
+    const mobil = document.getElementById('admin-mobil').value.trim();
+    const epost = document.getElementById('admin-epost').value.trim();
     
     if (!fornavn || !etternavn) {
         visBeskjed('Feil', 'Fornavn og etternavn kan ikke være tomme', 'error');
+        return;
+    }
+    
+    // Valider mobil (obligatorisk)
+    if (!validerMobil(mobil)) {
+        visBeskjed('Feil', 'Mobilnummer må være 8 siffer (kun tall)', 'error');
+        return;
+    }
+    
+    // Valider e-post (valgfritt, men sjekk format hvis utfylt)
+    if (!validerEpost(epost)) {
+        visBeskjed('Feil', 'Ugyldig e-postadresse', 'error');
         return;
     }
     
@@ -340,7 +373,13 @@ async function adminRedigerMedlem() {
     try {
         const { error } = await sb
             .from('medlemmer')
-            .update({ fornavn, etternavn, oppdatert_at: new Date() })
+            .update({ 
+                fornavn, 
+                etternavn, 
+                tlf_mobil: mobil,
+                epost: epost || null,
+                oppdatert_at: new Date() 
+            })
             .eq('id', valgtAdminMedlem.id);
         
         if (error) throw error;
@@ -356,37 +395,6 @@ async function adminRedigerMedlem() {
     showLoader(false);
 }
 
-async function adminSlettMedlem() {
-    if (!valgtAdminMedlem) {
-        visBeskjed('Feil', 'Søk opp og velg et medlem først', 'error');
-        return;
-    }
-    
-    visBekreftelse(
-        'Bekreft sletting',
-        `Er du sikker på at du vil slette ${valgtAdminMedlem.fornavn} ${valgtAdminMedlem.etternavn}?`,
-        '🗑️',
-        async () => {
-            showLoader(true);
-            try {
-                const { error } = await sb
-                    .from('medlemmer')
-                    .update({ er_aktiv: false, oppdatert_at: new Date() })
-                    .eq('id', valgtAdminMedlem.id);
-                
-                if (error) throw error;
-                
-                visBeskjed('Suksess', 'Medlemmet er slettet', 'success');
-                adminAvbryt();
-                
-            } catch (err) {
-                console.error('Feil ved sletting:', err);
-                visBeskjed('Feil', 'Kunne ikke slette medlem', 'error');
-            }
-            showLoader(false);
-        }
-    );
-}
 // Variabel for å lagre rapportdata til PDF
 let sisteRapportData = [];
 
@@ -600,5 +608,25 @@ function adminAvbryt() {
     document.getElementById('admin-mobil').value = '';
     document.getElementById('admin-epost').value = '';
     document.getElementById('admin-member-search').value = '';
-    document.getElementById('admin-search-bubble').style.display = 'none';
+    const bubble = document.getElementById('admin-search-bubble');
+    if (bubble) bubble.style.display = 'none';
+}
+// Validerer mobilnummer (8 siffer, kun tall)
+function validerMobil(mobil) {
+    if (!mobil) return false;
+    const mobilStr = String(mobil).trim();
+    // Må være nøyaktig 8 siffer
+    return /^\d{8}$/.test(mobilStr);
+}
+
+// Validerer e-post (må inneholde @ og . etter @, eller være tom)
+function validerEpost(epost) {
+    if (!epost || epost.trim() === '') return true; // Valgfritt
+    const epostStr = epost.trim();
+    // Sjekk @ og . etter @
+    const atPos = epostStr.indexOf('@');
+    if (atPos === -1) return false;
+    const dotPos = epostStr.lastIndexOf('.');
+    if (dotPos <= atPos + 1) return false;
+    return true;
 }

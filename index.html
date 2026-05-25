@@ -68,60 +68,46 @@
 
 <!-- MODUL: VAKTPLAN -->
 <section id="mod-vaktplan" class="module">
-    <div class="vakt-header">
-        <h1>🎱 Bak disken – Vaktplan</h1>
-    </div>
-
-    <!-- Forenklet toolbar -->
-    <div class="vakt-toolbar">
-        <div class="vakt-controls">
-            <label for="vakt-month-picker">Velg måned:</label>
-            <input type="month" id="vakt-month-picker" class="vakt-month-input">
-            <button class="btn btn-edit" id="btn-toggle-edit" onclick="toggleEditMode()">🔓 ÅPNE FOR REDIGERING</button>
-        </div>
-    </div>
-
-
-        <div class="admin-card card-marine" style="overflow-x: auto;">
-            <table class="vakt-table" id="vakt-table-prototype">
-                <thead>
-                    <tr>
-                        <th>Uke</th>
-                        <th>Mandag</th>
-                        <th>Tirsdag</th>
-                        <th>Onsdag</th>
-                        <th>Torsdag</th>
-                        <th>Fredag</th>
-                        <th class="th-weekend">Lørdag</th>
-                        <th class="th-weekend">Søndag</th>
-                    </tr>
-                </thead>
-                <tbody id="vakt-body-prototype"></tbody>
-            </table>
-        </div>
-
-        <div class="admin-card card-green" style="margin-top: 30px;">
-            <h3>📊 Frivillige – Poengoversikt</h3>
-            <p style="font-size: 13px; color: var(--tekst-lys); margin-bottom: 15px;">
-                💡 1 vakt = 1 poeng | 3 poeng = 1 måned gratis spill
-            </p>
-            <div class="column-list">
-                <table style="border: 1px solid #ddd;">
-                    <thead>
-                        <tr>
-                            <th>Frivillig</th>
-                            <th>Poeng opptjent</th>
-                            <th>Poeng benyttet</th>
-                            <th>Poeng til gode</th>
-                        </tr>
-                    </thead>
-                    <tbody id="vakt-score-body">
-                        <!-- Fylles av JS -->
-                    </tbody>
-                </table>
+    <div class="vaktplan-header">
+        <h1>📋 Vaktplan</h1>
+        <div class="vaktplan-toolbar">
+            <div class="month-nav">
+                <button class="month-nav-btn" id="prevMonthBtn">←</button>
+                <span id="currentMonthDisplay"></span>
+                <button class="month-nav-btn" id="nextMonthBtn">→</button>
+            </div>
+            <div class="vaktplan-controls">
+                <button class="btn btn-edit" id="btn-toggle-edit" onclick="toggleEditMode()">🔓 ÅPNE FOR REDIGERING</button>
             </div>
         </div>
-    </section>
+    </div>
+
+    <!-- Vaktplan grid -->
+    <div id="vaktplan-grid" class="vaktplan-grid"></div>
+
+    <!-- Poengoversikt -->
+    <div class="admin-card card-green" style="margin-top: 30px;">
+        <h3>📊 Frivillige – Poengoversikt</h3>
+        <p style="font-size: 13px; color: var(--tekst-lys); margin-bottom: 15px;">
+            💡 1 vakt = 1 poeng | 3 poeng = 1 måned gratis spill
+        </p>
+        <div class="column-list">
+            <table style="border: 1px solid #ddd;">
+                <thead>
+                    <tr>
+                        <th>Frivillig</th>
+                        <th>Poeng opptjent</th>
+                        <th>Poeng benyttet</th>
+                        <th>Poeng til gode</th>
+                    </tr>
+                </thead>
+                <tbody id="vakt-score-body">
+                    <!-- Fylles av JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
 
     <div id="error-log" class="alert-box alert-danger" style="display:none;"></div>
     <div id="sync-loader">Synkroniserer...</div>
@@ -159,19 +145,19 @@
         
         <div class="form-row">
             <div class="form-group">
-                <label>MOBIL</label>
-                <input type="text" id="admin-mobil" class="input-field" disabled placeholder="🔒 Kommer snart">
+                <label>MOBIL *</label>
+                <input type="tel" id="admin-mobil" class="input-field" placeholder="Påkrevd for nøkkel">
             </div>
             <div class="form-group">
                 <label>EPOST</label>
-                <input type="email" id="admin-epost" class="input-field" disabled placeholder="🔒 Kommer snart">
+                <input type="email" id="admin-epost" class="input-field" placeholder="Valgfritt">
             </div>
         </div>
         
         <div class="form-buttons">
             <button class="btn" style="background: var(--biljard-gronn);" onclick="adminOpprettMedlem()">💾 OPPRETT</button>
             <button class="btn" style="background: var(--marine);" onclick="adminRedigerMedlem()">✏️ REDIGER</button>
-            <button class="btn" style="background: var(--advarsel);" onclick="adminSlettMedlem()">🗑️ SLETT</button>
+            <button class="btn" style="background: #95a5a6; cursor: not-allowed;" disabled>🔒 SLETTING KREVER ADMIN</button>
             <button class="btn" style="background: #95a5a6;" onclick="adminAvbryt()">✖️ AVBRYT</button>
         </div>
     </div>
@@ -355,7 +341,7 @@
 
     <!-- MODUL: SKAPLEIE -->
 <section id="mod-skap" class="module">
-    <h1>🔐 Skaputleie</h1>
+    <h1>🔐 Skaputleie - OBS! Husk kontrakt både ny og forlengelse</h1>
     
     <div class="skap-split-container">
         <!-- Venstre: Skapgrid -->
@@ -506,13 +492,13 @@
         
         <div class="input-group" style="gap: 15px;">
             <div class="input-half">
-                <label>Mobil</label>
-                <input type="tel" id="new-mobil" class="input-field" disabled style="background: #e0e0e0; color: #888;" placeholder="🔒 Kommer snart">
+                <label>MOBIL *</label>
+                <input type="tel" id="new-mobil" class="input-field" placeholder="Påkrevd for nøkkel">
             </div>
             <div class="input-half">
-                <label>Epost</label>
-                <input type="email" id="new-epost" class="input-field" disabled style="background: #e0e0e0; color: #888;" placeholder="🔒 Kommer snart">
-            </div>
+                <label>EPOST</label>
+                <input type="email" id="new-epost" class="input-field" placeholder="Valgfritt">
+    </div>
         </div>
         
         <hr style="margin: 20px 0; border-color: #eee;">

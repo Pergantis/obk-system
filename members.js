@@ -227,6 +227,8 @@ function openNewMemberModal() {
     // Tøm modal-feltene
     document.getElementById('new-fornavn').value = '';
     document.getElementById('new-etternavn').value = '';
+    document.getElementById('new-mobil').value = '';
+    document.getElementById('new-epost').value = '';
     document.getElementById('new-startdato').value = '';
     document.getElementById('new-sluttdato').value = '';
     
@@ -322,6 +324,8 @@ async function processNewMemberForSkap() {
 async function processNewMember() {
     const fornavn = document.getElementById('new-fornavn').value.trim();
     const etternavn = document.getElementById('new-etternavn').value.trim();
+    const mobil = document.getElementById('new-mobil').value.trim();
+    const epost = document.getElementById('new-epost').value.trim();
     let startDato = document.getElementById('new-startdato').value;
     let sluttDato = document.getElementById('new-sluttdato').value;
     const today = getTodayLocal();
@@ -337,7 +341,19 @@ async function processNewMember() {
         return;
     }
     
-    // Sjekk først om medlem finnes
+    // Valider mobil (obligatorisk)
+    if (!validerMobil(mobil)) {
+        visBeskjed("FEIL", "Mobilnummer må være 8 siffer (kun tall)", "error");
+        return;
+    }
+    
+    // Valider e-post (valgfritt, men sjekk format hvis utfylt)
+    if (!validerEpost(epost)) {
+        visBeskjed("FEIL", "Ugyldig e-postadresse", "error");
+        return;
+    }
+    
+    // Sjekk først om medlem finnes (basert på navn)
     const exists = await checkMemberExists(fornavn, etternavn);
     if (exists) {
         visBekreftelse(
@@ -345,11 +361,10 @@ async function processNewMember() {
             `${fornavn} ${etternavn} finnes allerede i systemet. Vil du likevel opprette?`,
             "⚠️",
             async () => {
-                // Ja - fortsett med registrering
-                await fortsettRegistrering(fornavn, etternavn, startDato, sluttDato, today);
+                await fortsettRegistrering(fornavn, etternavn, mobil, epost, startDato, sluttDato, today);
             },
             () => {
-                // Nei - bare lukk bekreftelse, behold modalen åpen
+                // Nei - behold modalen åpen
                 return;
             }
         );
@@ -357,10 +372,9 @@ async function processNewMember() {
     }
     
     // Håndter auto-fyll logikk
-    await handterAutoFyllOgRegistrer(fornavn, etternavn, startDato, sluttDato, today);
+    await handterAutoFyllOgRegistrer(fornavn, etternavn, mobil, epost, startDato, sluttDato, today);
 }
-
-async function handterAutoFyllOgRegistrer(fornavn, etternavn, startDato, sluttDato, today) {
+async function handterAutoFyllOgRegistrer(fornavn, etternavn, mobil, epost, startDato, sluttDato, today) {
     const autoFyllTilfelle = {
         kunStart: (startDato && !sluttDato),
         kunSlutt: (!startDato && sluttDato),
@@ -374,10 +388,9 @@ async function handterAutoFyllOgRegistrer(fornavn, etternavn, startDato, sluttDa
             `Sluttdato for kortet er automatisk satt til ${formatDateForDisplay(nySluttDato)}. Vil du fortsette?`,
             "🤔",
             async () => {
-                await fortsettRegistrering(fornavn, etternavn, startDato, nySluttDato, today);
+                await fortsettRegistrering(fornavn, etternavn, mobil, epost, startDato, nySluttDato, today);
             },
             () => {
-                // Nei - behold modalen åpen, la bruker fylle ut manuelt
                 return;
             }
         );
@@ -391,10 +404,9 @@ async function handterAutoFyllOgRegistrer(fornavn, etternavn, startDato, sluttDa
             `Startdato for kortet er automatisk satt til ${formatDateForDisplay(nyStartDato)}. Vil du fortsette?`,
             "🤔",
             async () => {
-                await fortsettRegistrering(fornavn, etternavn, nyStartDato, sluttDato, today);
+                await fortsettRegistrering(fornavn, etternavn, mobil, epost, nyStartDato, sluttDato, today);
             },
             () => {
-                // Nei - behold modalen åpen
                 return;
             }
         );
@@ -407,21 +419,20 @@ async function handterAutoFyllOgRegistrer(fornavn, etternavn, startDato, sluttDa
             `Ingen periodekort vil bli opprettet for ${fornavn} ${etternavn}. Vil du fortsette?`,
             "🤔",
             async () => {
-                await fortsettRegistrering(fornavn, etternavn, null, null, today);
+                await fortsettRegistrering(fornavn, etternavn, mobil, epost, null, null, today);
             },
             () => {
-                // Nei - behold modalen åpen
                 return;
             }
         );
         return;
     }
     
-    // Begge datoer er fylt ut - ingen auto-fyll nødvendig
-    await fortsettRegistrering(fornavn, etternavn, startDato, sluttDato, today);
+    // Begge datoer er fylt ut
+    await fortsettRegistrering(fornavn, etternavn, mobil, epost, startDato, sluttDato, today);
 }
 
-async function fortsettRegistrering(fornavn, etternavn, startDato, sluttDato, today) {
+async function fortsettRegistrering(fornavn, etternavn, mobil, epost, startDato, sluttDato, today) {
     // Valider datoer hvis begge er satt
     if (startDato && sluttDato) {
         if (sluttDato < startDato) {
@@ -435,14 +446,14 @@ async function fortsettRegistrering(fornavn, etternavn, startDato, sluttDato, to
     }
     
     try {
-        // Opprett medlem
+        // Opprett medlem med mobil og epost
         const { data: newMember, error: memberError } = await sb
             .from('medlemmer')
             .insert({
                 fornavn: fornavn,
                 etternavn: etternavn,
-                tlf_mobil: null,
-                epost: null,
+                tlf_mobil: mobil,
+                epost: epost || null,
                 er_aktiv: true,
                 created_at: new Date().toISOString()
             })
@@ -491,6 +502,8 @@ async function fortsettRegistrering(fornavn, etternavn, startDato, sluttDato, to
         visBeskjed("FEIL", "Kunne ikke registrere medlem. Prøv igjen.", "error");
     }
 }
+
+
 
 async function checkMemberExists(fornavn, etternavn) {
     try {
@@ -695,7 +708,8 @@ async function fetchActivePasses() {
                 medlem_id,
                 medlemmer!inner (
                     fornavn,
-                    etternavn
+                    etternavn,
+                    tlf_mobil
                 )
             `)
             .eq('medlemmer.er_aktiv', true)
@@ -781,25 +795,28 @@ function renderMemberCards(members) {
             dagerTekst = `✅ ${dagerIgjen} dager igjen`;
         }
         
-        html += `
-            <div class="periodekort-card ${fargeKlasse}" style="border-left: 5px solid ${borderFarge}; background: linear-gradient(135deg, #fff 0%, ${bakgrunnFarge} 100%);">
-                <div class="card-navn">${escapeHtml(m.medlemmer.fornavn)} ${escapeHtml(m.medlemmer.etternavn)}</div>
-                <div class="card-dato">
-                    <span>📅</span>
-                    <span>Utløper: ${formatDateForDisplay(sluttDato)}</span>
-                </div>
-                <div class="card-dager">
-                    <span>${dagerTekst}</span>
-                    <div class="card-rediger" 
-                        data-medlem-id="${m.medlem_id}" 
-                        data-medlem-fornavn="${escapeHtml(m.medlemmer.fornavn)}" 
-                        data-medlem-etternavn="${escapeHtml(m.medlemmer.etternavn)}"
-                        data-start-dato="${m.start_dato || ''}" 
-                        data-slutt-dato="${sluttDato}">
-                        ✏️
+      html += `
+                <div class="periodekort-card" style="border-left: 5px solid ${borderFarge}; background: linear-gradient(135deg, #fff 0%, ${bakgrunnFarge} 100%);">
+                    <div class="card-navn">${escapeHtml(m.medlemmer.fornavn)} ${escapeHtml(m.medlemmer.etternavn)}</div>
+                    <div class="card-dato">
+                        <span>📅</span>
+                        <span>Utløper: ${formatDateForDisplay(sluttDato)}</span>
+                    </div>
+                    <div class="card-dager">
+                        <span>${dagerTekst}</span>
+                        <div class="card-rediger" 
+                            data-medlem-id="${m.medlem_id}" 
+                            data-medlem-fornavn="${escapeHtml(m.medlemmer.fornavn)}" 
+                            data-medlem-etternavn="${escapeHtml(m.medlemmer.etternavn)}"
+                            data-start-dato="${m.start_dato || ''}" 
+                            data-slutt-dato="${sluttDato}">
+                            ✏️
+                        </div>
+                    </div>
+                    <div class="card-telefon">
+                        📱 ${m.medlemmer.tlf_mobil || '--------'}
                     </div>
                 </div>
-            </div>
         `;
     });
 
@@ -874,4 +891,21 @@ async function selectMemberById(medlemId, fornavn, etternavn, startDato, sluttDa
     // Rull skjemaet synlig
     const sidebar = document.querySelector('.member-sidebar');
     if (sidebar) sidebar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+// Validerer mobilnummer (8 siffer, kun tall)
+function validerMobil(mobil) {
+    if (!mobil) return false;
+    const mobilStr = String(mobil).trim();
+    return /^\d{8}$/.test(mobilStr);
+}
+
+// Validerer e-post (må inneholde @ og . etter @, eller være tom)
+function validerEpost(epost) {
+    if (!epost || epost.trim() === '') return true;
+    const epostStr = epost.trim();
+    const atPos = epostStr.indexOf('@');
+    if (atPos === -1) return false;
+    const dotPos = epostStr.lastIndexOf('.');
+    if (dotPos <= atPos + 1) return false;
+    return true;
 }
