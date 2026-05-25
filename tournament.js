@@ -11,7 +11,6 @@ async function initTurnering() {
     
     // Vent på at Supabase er klar
     if (!window.sb) {
-        console.log('Venter på Supabase...');
         setTimeout(initTurnering, 100);
         return;
     }
@@ -25,19 +24,15 @@ async function initTurnering() {
 
 // Henter medlemmer for søkefunksjon
 async function hentMedlemmerForSøk() {
-    console.log('Henter medlemmer...');
     const { data, error } = await window.sb
         .from('medlemmer')
         .select('id, fornavn, etternavn')
         .eq('er_aktiv', true);
-    
-    console.log('Resultat:', { data, error });
-    
+
     if (!error && data) {
         window.turneringMedlemmer = data;
-        console.log('Lagret', data.length, 'medlemmer');
     } else {
-        console.log('Feil ved henting:', error);
+        console.error('Feil ved henting av medlemmer:', error);
     }
 }
 
@@ -51,7 +46,7 @@ function renderTurneringSkjema() {
             <div class="turnering-skjema">
                 <div class="form-gruppe">
                     <label>📅 Dato</label>
-                    <input type="date" id="tur-dato" value="${new Date().toISOString().split('T')[0]}">
+                    <input type="date" id="tur-dato" value="${getTodayLocal()}">
                 </div>
                 
                 <div class="form-gruppe">
@@ -602,7 +597,6 @@ async function lagreTurnering() {
         },
         () => {
             // Avbryt - gjør ingenting
-            console.log('Lagring avbrutt');
         }
     );
 }
@@ -684,19 +678,16 @@ async function utførLagring() {
         mottatt_kontant: kontant
     };
     
-    console.log('Lagrer turnering:', turneringData);
-    
     // Lagre til Supabase
     const { data, error } = await window.sb
         .from('turneringer')
         .insert([turneringData])
         .select();
-    
+
     if (error) {
         console.error('Feil ved lagring:', error);
         visBeskjed('Feil ved lagring', error.message, 'error');
     } else {
-        console.log('Lagret:', data);
         visBeskjed('✅ Turnering lagret!', `Turneringen er lagret i databasen.\nID: ${data[0].id}`, 'success');
         
         // Last om siden etter 1.5 sekund

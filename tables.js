@@ -1,4 +1,6 @@
 // --- BORDKONTROLL LOGIKK ---
+const BORD_POLL_INTERVAL_MS = 10000;
+
 let tableData = [];
 let currentStoppingId = null;
 let confirmStopInProgress = false; // hindrer dobbelt-trykk på BEKREFT
@@ -22,15 +24,11 @@ async function loadTodayHistory() {
     if (!tbody) return;
     
     try {
-        // Hent dagens dato i riktig format (YYYY-MM-DD)
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
-        
-        // Neste dag for å avgrense søket
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowStr = tomorrow.toISOString().split('T')[0];
-        
+        // Bruk lokale dato-hjelpere — toISOString() gir UTC, som kan bli
+        // gårsdagens dato mellom 23:00 og midnatt norsk tid (UTC+1/+2).
+        const todayStr = getTodayLocal();
+        const tomorrowStr = addDaysLocal(todayStr, 1);
+
         // Hent alle utleier fra i dag (som har slutt_tid, dvs. ferdige)
         const { data, error } = await sb
             .from('bord_leie_historikk')
@@ -346,7 +344,7 @@ let bordPollId = null;
 
 function startBordPolling() {
     if (bordPollId !== null) return;
-    bordPollId = setInterval(loadTables, 10000);
+    bordPollId = setInterval(loadTables, BORD_POLL_INTERVAL_MS);
 }
 
 function stopBordPolling() {

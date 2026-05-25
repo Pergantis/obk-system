@@ -10,7 +10,6 @@ let lockerSearchTimeout = null;
 async function fetchLockers() {
     const { data, error } = await sb.from('skapleie').select('*');
     if (!error && data) {
-        window.lockersData = data;
         renderLockerGrid(data);
     } else if (error) {
         console.error("Feil ved henting av skap:", error);
@@ -79,7 +78,9 @@ async function selectLocker(skapNummer) {
     if (data && data.status === 'Opptatt') {
         // Skap er opptatt
         currentLeaseDiv.style.display = 'block';
-        document.getElementById('skap-current-tenant').innerHTML = `${data.medlemmer?.fornavn || ''} ${data.medlemmer?.etternavn || ''} (📱 ${data.medlemmer?.tlf_mobil || 'Ingen'})`;
+        // escapeHtml på alt som kommer fra DB — medlemsnavn er fri tekst og
+        // kan inneholde <, > eller " som ellers tolkes som markup i innerHTML.
+        document.getElementById('skap-current-tenant').innerHTML = `${escapeHtml(data.medlemmer?.fornavn)} ${escapeHtml(data.medlemmer?.etternavn)} (📱 ${escapeHtml(data.medlemmer?.tlf_mobil || 'Ingen')})`;
         document.getElementById('skap-current-period').innerHTML = `${formatDateForDisplay(data.fra_dato)} - ${formatDateForDisplay(data.til_dato)}`;
         
         tenantNameInput.value = `${data.medlemmer?.fornavn || ''} ${data.medlemmer?.etternavn || ''}`;
@@ -130,11 +131,14 @@ async function searchLockerMembers(query) {
         const safe = sanitizeSearchQuery(query);
         // Unngå "match alle" hvis input består av bare strippede spesialtegn
         if (!safe) return;
-        // Hent medlemmer som matcher søket
+        // Hent medlemmer som matcher søket. er_aktiv-filter for å skjule
+        // soft-slettede medlemmer (jf. maintenance.js adminSlettMedlem som
+        // setter er_aktiv = false i stedet for å slette raden).
         const { data: members, error } = await sb
             .from('medlemmer')
             .select('id, fornavn, etternavn, tlf_mobil')
             .or(`fornavn.ilike.%${safe}%,etternavn.ilike.%${safe}%,tlf_mobil.ilike.%${safe}%`)
+            .eq('er_aktiv', true)
             .limit(10);
         
         if (error) throw error;
@@ -156,7 +160,7 @@ async function searchLockerMembers(query) {
         
         // Bygg et map: medlem_id -> liste over skap
         const memberLockers = {};
-        lockers.forEach(locker => {
+        (lockers || []).forEach(locker => {
             if (!memberLockers[locker.medlem_id]) {
                 memberLockers[locker.medlem_id] = [];
             }
@@ -301,7 +305,8 @@ function selectLockerMember(member) {
     const selectedNameSpan = document.getElementById('skap-selected-name');
     
     tenantNameInput.value = `${member.fornavn} ${member.etternavn}`;
-    selectedNameSpan.innerHTML = `${member.fornavn} ${member.etternavn} (📱 ${member.tlf_mobil || 'Ingen'})`;
+    // escapeHtml fordi navn/mobil interpoleres inn i innerHTML.
+    selectedNameSpan.innerHTML = `${escapeHtml(member.fornavn)} ${escapeHtml(member.etternavn)} (📱 ${escapeHtml(member.tlf_mobil || 'Ingen')})`;
     selectedDiv.style.display = 'block';
     
     removeLockerSearchBubble();
