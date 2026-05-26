@@ -130,7 +130,9 @@ function showToast(message, type = 'success') {
 
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = (type === 'success' ? '✅ ' : '⚠️ ') + message;
+    // textContent for å hindre at message (kan inneholde feilmeldinger fra Supabase
+    // eller andre kilder utenfor vår kontroll) rendres som HTML
+    toast.textContent = (type === 'success' ? '✅ ' : '⚠️ ') + message;
     
     document.body.appendChild(toast);
 

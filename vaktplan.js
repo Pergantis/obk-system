@@ -17,42 +17,44 @@ let aktivRedigeringsDato = null;
 async function initVaktplan() {
     if (isLoadingVaktplan) return;
     isLoadingVaktplan = true;
-    
+
     const section = document.getElementById('mod-vaktplan');
     if (!section.classList.contains('edit-locked')) {
         section.classList.add('edit-locked');
         oppdaterGrensesnitt(true);
     }
-    
+
     showLoader(true);
-    
-    // Sett månedsvelger i grensesnittet
-    const monthDisplay = document.getElementById('currentMonthDisplay');
-    if (monthDisplay) {
-        const date = new Date(currentYear, currentMonth, 1);
-        monthDisplay.innerText = date.toLocaleString('no-NO', { month: 'long', year: 'numeric' });
+
+    try {
+        // Sett månedsvelger i grensesnittet
+        const monthDisplay = document.getElementById('currentMonthDisplay');
+        if (monthDisplay) {
+            const date = new Date(currentYear, currentMonth, 1);
+            monthDisplay.innerText = date.toLocaleString('no-NO', { month: 'long', year: 'numeric' });
+        }
+
+        // Hent alle medlemmer til cache (både aktive og inaktive for historikk)
+        const { data: members, error: memberError } = await sb.from('medlemmer')
+            .select('id, fornavn, etternavn, tlf_mobil, poeng_benyttet, er_aktiv');
+
+        if (memberError) {
+            console.error("Feil ved henting av medlemmer:", memberError);
+            showError("Kunne ikke hente medlemmer: " + memberError.message);
+        } else {
+            alleMedlemmerCache = members || [];
+            oppdaterMedlemDatalist(); // Fyller autocomplete med kun aktive
+        }
+
+        // Hent historiske vakter EN gang for poengberegning
+        await lastHistoriskeVakter();
+
+        // Last inn gjeldende måned og tegn griddet
+        await lastVaktplan();
+    } finally {
+        showLoader(false);
+        isLoadingVaktplan = false;
     }
-    
-    // Hent alle medlemmer til cache (både aktive og inaktive for historikk)
-    const { data: members, error: memberError } = await sb.from('medlemmer')
-        .select('id, fornavn, etternavn, tlf_mobil, poeng_benyttet, er_aktiv');
-
-    if (memberError) {
-        console.error("Feil ved henting av medlemmer:", memberError);
-        showError("Kunne ikke hente medlemmer: " + memberError.message);
-    } else {
-        alleMedlemmerCache = members || [];
-        oppdaterMedlemDatalist(); // Fyller autocomplete med kun aktive
-    }
-
-    // Hent historiske vakter EN gang for poengberegning
-    await lastHistoriskeVakter();
-
-    // Last inn gjeldende måned og tegn griddet
-    await lastVaktplan();
-    
-    showLoader(false);
-    isLoadingVaktplan = false;
 }
 
 // Fyller datalist for input-feltene (kun aktive medlemmer kan velges)
@@ -388,7 +390,8 @@ async function lagreVaktFraModal() {
         
         if (vaktObj && vaktObj.id) {
             // Oppdater i DB
-            await sb.from('vaktplan').update(updateData).eq('id', vaktObj.id);
+            const { error: updError } = await sb.from('vaktplan').update(updateData).eq('id', vaktObj.id);
+            if (updError) throw updError;
             Object.assign(vaktObj, updateData);
         } else {
             // Sett inn ny rad i DB
@@ -451,6 +454,8 @@ function beregnOgVisPoengFraCache() {
 
     let htmlBuilder = "";
 
+    const erLaast = document.getElementById('mod-vaktplan').classList.contains('edit-locked');
+
     sortertListe.forEach(m => {
         const opptjent = teller[m.id] || 0;
         const benyttet = m.poeng_benyttet || 0;
@@ -462,9 +467,10 @@ function beregnOgVisPoengFraCache() {
                     <td class="navn-fet">${escapeHtml(m.fornavn)} ${escapeHtml(m.etternavn)}</td>
                     <td style="text-align: center; font-weight: bold;">${opptjent}</td>
                     <td style="text-align: center;">
-                        <input type="number" value="${benyttet}" class="input-field" 
+                        <input type="number" value="${benyttet}" class="input-field"
                                style="width: 70px; margin: 0; padding: 4px; text-align: center;"
                                data-medlem-id="${m.id}"
+                               ${erLaast ? 'disabled' : ''}
                                onchange="oppdaterBenyttedePoeng(this.dataset.medlemId, this.value)">
                     </td>
                     <td class="tekst-gronn" style="text-align: right; font-weight: bold;">${saldo}</td>
@@ -477,23 +483,32 @@ function beregnOgVisPoengFraCache() {
 
 // 11. Oppdatering av manuelt benyttede poeng
 async function oppdaterBenyttedePoeng(medlemId, verdi) {
+    // Krev opplåst modus — input rendres som disabled, men beskytt mot konsoll-kall
+    if (document.getElementById('mod-vaktplan').classList.contains('edit-locked')) {
+        beregnOgVisPoengFraCache(); // tilbakestill input til lagret verdi
+        return;
+    }
+
     const nyVerdi = parseInt(verdi) || 0;
     showLoader(true);
-    
-    const { error } = await sb
-        .from('medlemmer')
-        .update({ poeng_benyttet: nyVerdi })
-        .eq('id', medlemId);
-    
-    if (error) {
-        console.error("Feil ved oppdatering av poeng:", error);
-        showError("Kunne ikke oppdatere poeng: " + error.message);
-    } else {
-        const member = alleMedlemmerCache.find(m => m.id === medlemId);
-        if (member) member.poeng_benyttet = nyVerdi;
-        beregnOgVisPoengFraCache();
+
+    try {
+        const { error } = await sb
+            .from('medlemmer')
+            .update({ poeng_benyttet: nyVerdi })
+            .eq('id', medlemId);
+
+        if (error) {
+            console.error("Feil ved oppdatering av poeng:", error);
+            showError("Kunne ikke oppdatere poeng: " + error.message);
+        } else {
+            const member = alleMedlemmerCache.find(m => m.id === medlemId);
+            if (member) member.poeng_benyttet = nyVerdi;
+            beregnOgVisPoengFraCache();
+        }
+    } finally {
+        showLoader(false);
     }
-    showLoader(false);
 }
 
 // 12. Redigeringsmodus (PIN-autentisering)
