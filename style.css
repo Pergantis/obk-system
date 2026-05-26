@@ -2572,6 +2572,7 @@ body.logged-out #login-screen {
 .vaktplan-employee-name {
     font-weight: 600;
     font-size: 0.75rem;
+    color: #1a2f3c;
 }
 
 .vaktplan-no-assigned {
@@ -2651,8 +2652,8 @@ body.logged-out #login-screen {
 }
 
 .vaktplan-employee-name {
-    font-weight: 600;
-    font-size: 0.75rem;
+    font-weight: 700;
+    font-size: 0.9rem;
     color: #1a2f3c;
 }
 .vaktplan-clickable-card {
