@@ -161,7 +161,7 @@ function renderSearchBubble(members) {
         item.innerHTML = `
             <div>
                 <span class="search-bubble-name">${escapeHtml(member.fornavn)} ${escapeHtml(member.etternavn)}</span>
-                <span class="search-bubble-phone">📱 ${member.tlf_mobil || 'Ingen telefon'}</span>
+                <span class="search-bubble-phone">📱 ${escapeHtml(member.tlf_mobil || 'Ingen telefon')}</span>
             </div>
             <div class="search-bubble-status ${statusClass}">
                 ${statusText}
@@ -573,18 +573,18 @@ function suggestDates() {
         const endExists = latestPassForMember.slutt_dato;
         
         if (startExists >= today) {
+            // Fremtidsdatert periodekort som ikke har startet enda — vis som-er
             startDate = startExists;
             endDate = endExists;
-        } 
-        else if (startExists < today) {
-            startDate = today;
-            endDate = addDaysLocal(today, 30);
-        }
-        
-        if (endExists >= today) {
+        } else if (endExists >= today) {
+            // Aktivt periodekort — foreslå fornyelse fra dagen etter utløp
             const newStart = addDaysLocal(endExists, 1);
             startDate = newStart;
             endDate = addDaysLocal(newStart, 30);
+        } else {
+            // Utløpt periodekort — start nytt fra i dag
+            startDate = today;
+            endDate = addDaysLocal(today, 30);
         }
     }
     
@@ -594,19 +594,26 @@ function suggestDates() {
 
 // --- OVERLAPPSSJEKK ---
 async function validateOverlap(memberId, startDate) {
-    const { data: passes } = await sb
+    const { data: passes, error } = await sb
         .from('periodekort')
         .select('slutt_dato')
         .eq('medlem_id', memberId)
         .order('slutt_dato', { ascending: false })
         .limit(1);
-    
+
+    // Fail-closed: hvis vi ikke kan verifisere mot DB skal vi IKKE tillate ny rad
+    if (error) {
+        console.error("Feil ved overlapssjekk:", error);
+        visBeskjed("FEIL", "Kunne ikke sjekke om periodekort overlapper: " + error.message, "error");
+        return false;
+    }
+
     if (!passes || passes.length === 0) return true;
-    
+
     const lastEndDate = passes[0].slutt_dato;
     if (startDate <= lastEndDate) {
         visBeskjed(
-            "ADVARSEL", 
+            "ADVARSEL",
             `Kan ikke overlappe med eksisterende periodekort. Ny startdato må være etter ${formatDateForDisplay(lastEndDate)}`,
             "error"
         );
@@ -717,13 +724,8 @@ async function fetchActivePasses() {
 
         if (error) throw error;
 
-if (!data || data.length === 0) {
-    container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--tekst-lys);">Ingen aktive periodekort funnet</div>';
-    return;
-}
-
         const uniqueMembers = {};
-        data.forEach(row => {
+        (data || []).forEach(row => {
             const id = row.medlem_id;
             if (!uniqueMembers[id] || row.slutt_dato > uniqueMembers[id].slutt_dato) {
                 uniqueMembers[id] = row;
@@ -814,7 +816,7 @@ function renderMemberCards(members) {
                         </div>
                     </div>
                     <div class="card-telefon">
-                        📱 ${m.medlemmer.tlf_mobil || '--------'}
+                        📱 ${escapeHtml(m.medlemmer.tlf_mobil || '--------')}
                     </div>
                 </div>
         `;

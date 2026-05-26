@@ -196,7 +196,7 @@ function renderLockerSearchBubble(members, memberLockers) {
         memberInfo.className = 'search-bubble-member-info';
         memberInfo.innerHTML = `
             <span class="search-bubble-name">${escapeHtml(member.fornavn)} ${escapeHtml(member.etternavn)}</span>
-            <span class="search-bubble-phone">📱 ${member.tlf_mobil || 'Ingen telefon'}</span>
+            <span class="search-bubble-phone">📱 ${escapeHtml(member.tlf_mobil || 'Ingen telefon')}</span>
         `;
         memberInfo.addEventListener('click', () => selectLockerMember(member));
         memberDiv.appendChild(memberInfo);
@@ -303,9 +303,16 @@ async function checkLockerOverlap(skapNummer, fraDato, tilDato, excludeSkapNumme
         .select('*')
         .eq('skap_nummer', skapNummer)
         .eq('status', 'Opptatt');
-    
-    if (error || !data || data.length === 0) return true;
-    
+
+    // Fail-closed: hvis vi ikke kan verifisere mot DB skal vi IKKE tillate overskriving
+    if (error) {
+        console.error("Feil ved overlapssjekk for skap:", error);
+        visBeskjed("FEIL", "Kunne ikke sjekke om skapet er ledig: " + error.message, "error");
+        return false;
+    }
+
+    if (!data || data.length === 0) return true;
+
     for (const lease of data) {
         // Ekskluder den nåværende leien hvis vi forlenger
         if (excludeSkapNummer && lease.skap_nummer === excludeSkapNummer) continue;
@@ -347,13 +354,18 @@ window.saveLockerLease = async function() {
     if (!noOverlap) return;
     
     try {
-        // Sjekk om skapet allerede finnes i databasen
-        const { data: existingLocker } = await sb
+        // Sjekk om skapet allerede finnes i databasen.
+        // maybeSingle() returnerer data=null + error=null når raden ikke finnes;
+        // andre feil (RLS, nett, timeout) får vi som error og må behandle eksplisitt
+        // — ellers ender vi i INSERT-grenen og treffer unique constraint.
+        const { data: existingLocker, error: lookupError } = await sb
             .from('skapleie')
             .select('skap_nummer')
             .eq('skap_nummer', currentLockerNumber)
-            .single();
-        
+            .maybeSingle();
+
+        if (lookupError) throw lookupError;
+
         if (existingLocker) {
             // Skapet finnes - bruk UPDATE
             const { error } = await sb

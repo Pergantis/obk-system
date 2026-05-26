@@ -3,6 +3,7 @@
 
 let satsCounter = 3; // Starter med 3 satser
 let sisteTurneringData = null; // Lagrer data for avstemming
+let turneringLagringIProsess = false; // Forhindrer dobbeltlagring ved raske klikk
 
 // Hovedfunksjon - kalles når modulen vises
 async function initTurnering() {
@@ -440,11 +441,24 @@ function setupLederSok() {
             return;
         }
         
+        // Data-* attributter + delegert listener i stedet for inline onclick.
+        // Et navn med apostrof ville ellers brutt ut av onclick-strengen siden
+        // HTML-parseren dekoder &#039; tilbake til ' før JS leser den.
         boble.innerHTML = treff.map(m => `
-            <div class="boble-item" onclick="velgTurneringsleder('${m.id}', '${escapeHtml(m.fornavn)} ${escapeHtml(m.etternavn)}')">
+            <div class="boble-item"
+                 data-leder-id="${escapeHtml(String(m.id))}"
+                 data-leder-navn="${escapeHtml((m.fornavn || '') + ' ' + (m.etternavn || ''))}">
                 <strong>${escapeHtml(m.fornavn)} ${escapeHtml(m.etternavn)}</strong>
             </div>
         `).join('');
+
+        boble.querySelectorAll('.boble-item').forEach(item => {
+            if (!item.dataset.lederId) return; // hopp over "Ingen treff"-elementet
+            item.addEventListener('click', () => {
+                velgTurneringsleder(item.dataset.lederId, item.dataset.lederNavn);
+            });
+        });
+
         boble.classList.remove('hidden');
     });
     
@@ -633,66 +647,78 @@ function getTurneringValidering() {
 
 // Utfører selve lagringen til database
 async function utførLagring() {
-    const dato = document.getElementById('tur-dato')?.value;
-    const lederId = document.getElementById('tur-leder-id')?.value;
-    const avsetning = parseInt(document.getElementById('tur-avsetning')?.value) || 0;
-    const premiemodell = parseInt(document.querySelector('input[name="premiemodell"]:checked')?.value || '1');
-    
-    // Hent satser
-    const satser = [];
-    const rader = document.querySelectorAll('.sats-rad');
-    let totalAvgiftInn = 0;
-    
-    rader.forEach(rad => {
-        const navn = rad.querySelector('.sats-navn-input')?.value;
-        const antall = parseInt(rad.querySelector('.sats-antall-input')?.value || 0);
-        const avgift = parseInt(rad.querySelector('.sats-avgift-input')?.value || 0);
-        if (antall > 0 && avgift > 0) {
-            satser.push({ navn, antall, avgift });
-            totalAvgiftInn += antall * avgift;
-        }
-    });
-    
-    // Hent mottatte beløp
-    const vipps = parseInt(document.getElementById('avstem-vipps')?.value || 0);
-    const kort = parseInt(document.getElementById('avstem-kort')?.value || 0);
-    const kontant = parseInt(document.getElementById('avstem-kontant')?.value || 0);
-    
-    // Beregn premier
-    let totalSpillere = 0;
-    satser.forEach(s => totalSpillere += s.antall);
-    const spillerPott = (totalAvgiftInn * 60) / 100;
-    const premier = spillerPott - (totalSpillere * avsetning);
-    
-    // Data for database
-    const turneringData = {
-        dato,
-        turneringsleder_id: lederId,
-        avsetning_per_spiller: avsetning,
-        premiemodell: premiemodell,
-        satser: satser,
-        total_avgift_inn: totalAvgiftInn,
-        premier: premier,
-        mottatt_vipps: vipps,
-        mottatt_kort: kort,
-        mottatt_kontant: kontant
-    };
-    
-    // Lagre til Supabase
-    const { data, error } = await window.sb
-        .from('turneringer')
-        .insert([turneringData])
-        .select();
+    if (turneringLagringIProsess) return; // Vent — en lagring er allerede underveis
+    turneringLagringIProsess = true;
 
-    if (error) {
-        console.error('Feil ved lagring:', error);
-        visBeskjed('Feil ved lagring', error.message, 'error');
-    } else {
-        visBeskjed('✅ Turnering lagret!', `Turneringen er lagret i databasen.\nID: ${data[0].id}`, 'success');
-        
-        // Last om siden etter 1.5 sekund
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
+    let suksess = false;
+    try {
+        const dato = document.getElementById('tur-dato')?.value;
+        const lederId = document.getElementById('tur-leder-id')?.value;
+        const avsetning = parseInt(document.getElementById('tur-avsetning')?.value) || 0;
+        const premiemodell = parseInt(document.querySelector('input[name="premiemodell"]:checked')?.value || '1');
+
+        // Hent satser
+        const satser = [];
+        const rader = document.querySelectorAll('.sats-rad');
+        let totalAvgiftInn = 0;
+
+        rader.forEach(rad => {
+            const navn = rad.querySelector('.sats-navn-input')?.value;
+            const antall = parseInt(rad.querySelector('.sats-antall-input')?.value || 0);
+            const avgift = parseInt(rad.querySelector('.sats-avgift-input')?.value || 0);
+            if (antall > 0 && avgift > 0) {
+                satser.push({ navn, antall, avgift });
+                totalAvgiftInn += antall * avgift;
+            }
+        });
+
+        // Hent mottatte beløp
+        const vipps = parseInt(document.getElementById('avstem-vipps')?.value || 0);
+        const kort = parseInt(document.getElementById('avstem-kort')?.value || 0);
+        const kontant = parseInt(document.getElementById('avstem-kontant')?.value || 0);
+
+        // Beregn premier
+        let totalSpillere = 0;
+        satser.forEach(s => totalSpillere += s.antall);
+        const spillerPott = (totalAvgiftInn * 60) / 100;
+        const premier = spillerPott - (totalSpillere * avsetning);
+
+        // Data for database
+        const turneringData = {
+            dato,
+            turneringsleder_id: lederId,
+            avsetning_per_spiller: avsetning,
+            premiemodell: premiemodell,
+            satser: satser,
+            total_avgift_inn: totalAvgiftInn,
+            premier: premier,
+            mottatt_vipps: vipps,
+            mottatt_kort: kort,
+            mottatt_kontant: kontant
+        };
+
+        // Lagre til Supabase
+        const { data, error } = await window.sb
+            .from('turneringer')
+            .insert([turneringData])
+            .select();
+
+        if (error) {
+            console.error('Feil ved lagring:', error);
+            visBeskjed('Feil ved lagring', error.message, 'error');
+        } else {
+            suksess = true;
+            const nyId = data?.[0]?.id ?? '(ukjent)';
+            visBeskjed('✅ Turnering lagret!', `Turneringen er lagret i databasen.\nID: ${nyId}`, 'success');
+
+            // Last om siden etter 1.5 sekund (flagget forblir satt så bruker ikke kan dobbel-lagre i mellomtiden)
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+    } finally {
+        // Slipp opp lagring-flagget kun hvis vi ikke er på vei mot reload —
+        // ellers risikerer vi at brukeren trykker en gang til i de 1.5 sekundene
+        if (!suksess) turneringLagringIProsess = false;
     }
 }

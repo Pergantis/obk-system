@@ -128,7 +128,12 @@ async function markerKontaktet(nr) {
     const { error } = await sb.from('skapleie')
         .update({ sist_kontaktet: getTodayLocal() })
         .eq('skap_nummer', nr);
-    if (!error) HentVarslerSkap();
+    if (error) {
+        console.error("Feil ved markering av kontaktet:", error);
+        visBeskjed("FEIL", "Kunne ikke registrere kontakt: " + error.message, "error");
+        return;
+    }
+    HentVarslerSkap();
 }
 
 function fornySkap(nr) {
@@ -200,14 +205,19 @@ async function adminOpprettMedlem() {
     showLoader(true);
     
     try {
-        // Sjekk om medlem finnes fra før
-        const { data: eksisterende } = await sb
+        // Sjekk om medlem finnes fra før.
+        // maybeSingle() skiller "ikke funnet" (data=null) fra "DB-feil" — single()
+        // returnerer error i begge tilfeller, så et faktisk DB-problem ville sluppet
+        // duplikat-medlem gjennom.
+        const { data: eksisterende, error: lookupError } = await sb
             .from('medlemmer')
             .select('id')
             .eq('fornavn', fornavn)
             .eq('etternavn', etternavn)
-            .single();
-        
+            .maybeSingle();
+
+        if (lookupError) throw lookupError;
+
         if (eksisterende) {
             visBeskjed('Feil', 'Medlem finnes allerede', 'error');
             showLoader(false);
@@ -310,13 +320,34 @@ async function adminSokMedlemmer(query) {
             return;
         }
         
+        // Bruk data-* attributter + delegert listener i stedet for inline onclick.
+        // HTML-attributter dekodes til strenger før JS parser dem, så
+        // onclick="...'${escapeHtml(navn)}'..." kan brytes ut av et navn som
+        // inneholder apostrof (escapeHtml gjør ' til &#039; som blir ' igjen).
         bubble.innerHTML = data.map(member => `
-            <div class="search-bubble-item" onclick="adminVelgMedlem('${member.id}', '${escapeHtml(member.fornavn)}', '${escapeHtml(member.etternavn)}', '${member.tlf_mobil || ''}', '${member.epost || ''}')">
+            <div class="search-bubble-item"
+                 data-id="${escapeHtml(String(member.id))}"
+                 data-fornavn="${escapeHtml(member.fornavn || '')}"
+                 data-etternavn="${escapeHtml(member.etternavn || '')}"
+                 data-mobil="${escapeHtml(member.tlf_mobil || '')}"
+                 data-epost="${escapeHtml(member.epost || '')}">
                 <span class="search-bubble-name">${escapeHtml(member.fornavn)} ${escapeHtml(member.etternavn)}</span>
-                <span class="search-bubble-phone">📱 ${member.tlf_mobil || 'Ingen telefon'}</span>
+                <span class="search-bubble-phone">📱 ${escapeHtml(member.tlf_mobil || 'Ingen telefon')}</span>
             </div>
         `).join('');
-        
+
+        bubble.querySelectorAll('.search-bubble-item').forEach(item => {
+            item.addEventListener('click', () => {
+                adminVelgMedlem(
+                    item.dataset.id,
+                    item.dataset.fornavn,
+                    item.dataset.etternavn,
+                    item.dataset.mobil,
+                    item.dataset.epost
+                );
+            });
+        });
+
         bubble.style.display = 'block';
         
     } catch (err) {

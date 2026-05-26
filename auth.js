@@ -45,31 +45,19 @@ async function loggUt() {
     // Rydd opp timere
     if (window.authTimer) clearInterval(window.authTimer);
     if (window.authTimeout) clearTimeout(window.authTimeout);
-    
+
     try {
         // Logg ut fra Supabase
         await window.sb.auth.signOut();
     } catch (err) {
         console.error('Feil ved utlogging:', err);
     }
-    
-    // Last om siden for å vise påloggingsskjerm
+
+    // Last om siden for å vise påloggingsskjerm.
+    // Reload re-kjører sjekkPålogget(), som setter logged-out-klassen og rydder
+    // UI — derfor trenger vi ikke duplisere DOM-opprydning her.
     window.location.reload();
 }
-    // Oppdater visning
-    document.body.classList.add('logged-out');
-    document.body.classList.remove('logged-in');
-    
-    // Fjern statusbar
-    const statusBar = document.getElementById('auth-status-bar');
-    if (statusBar) statusBar.remove();
-    
-    // Nullstill passordfelt
-    const passwordInput = document.getElementById('login-password');
-    if (passwordInput) passwordInput.value = '';
-    
-    const errorDiv = document.getElementById('login-error');
-    if (errorDiv) errorDiv.style.display = 'none';
 
 
 // Setter opp login-knapp
