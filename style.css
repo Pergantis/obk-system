@@ -2474,12 +2474,12 @@ body.logged-out #login-screen {
     color: var(--marine);
     font-size: 0.85rem;
 }
-
 .vaktplan-days-container {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, 1fr); /* 7 på PC */
     gap: 1px;
     background: #dce3ec;
+    border: 1px solid #dce3ec;
 }
 
 .vaktplan-day-card {
@@ -2607,13 +2607,16 @@ body.logged-out #login-screen {
     opacity: 0.8;
 }
 
-/* Mobil: 7 kolonner blir smalt – la det skrolle horisontalt */
+/* Mobil:   2 kort per rad */
 @media (max-width: 768px) {
     .vaktplan-days-container {
-        min-width: 700px;
+        grid-template-columns: repeat(2, 1fr); /* 2 kort i bredden på mobil */
     }
-    .vaktplan-grid {
-        overflow-x: auto;
+}
+
+@media (max-width: 480px) {
+    .vaktplan-days-container {
+        grid-template-columns: 1fr; /* 1 kort i bredden på veldig små skjermer */
     }
 }
 /* Vaktplan input-felter (datalist søk) */
