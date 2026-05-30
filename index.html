@@ -77,6 +77,8 @@
                 <button class="month-nav-btn" id="nextMonthBtn">→</button>
             </div>
             <div class="vaktplan-controls">
+                <button class="btn btn-rapport" id="btn-vaktplan-rapport" onclick="visVaktplanRapportModal()" style="background: var(--biljard-blaa); margin-right: 10px;">📄 RAPPORT</button>
+                
                 <button class="btn btn-edit" id="btn-toggle-edit" onclick="toggleEditMode()">🔓 ÅPNE FOR REDIGERING</button>
             </div>
         </div>
@@ -313,6 +315,19 @@
         <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
             <button class="btn" style="background: var(--biljard-gronn);" onclick="lastNedUtloptRapportPDF()">📥 Last ned PDF</button>
             <button class="btn" style="background: #95a5a6;" onclick="lukkUtloptRapportModal()">Lukk</button>
+        </div>
+    </div>
+</div>
+<!-- Modal for vaktplan rapport -->
+<div id="vaktplan-rapport-modal" class="c-modal" style="display:none;">
+    <div class="c-modal-content" style="max-width: 90%; max-height: 80vh; overflow-y: auto; width: 100%;">
+        <h3>📋 Vaktplan rapport</h3>
+        <div id="vaktplan-rapport-innhold" style="overflow-x: auto;">
+            <p style="text-align: center; padding: 40px;">Laster rapport...</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; flex-wrap: wrap;">
+            <button class="btn" style="background: var(--biljard-gronn); flex: 1; min-width: 120px;" onclick="lastNedVaktplanRapportPDF()">📥 Last ned PDF</button>
+            <button class="btn" style="background: #95a5a6; flex: 1; min-width: 120px;" onclick="lukkVaktplanRapportModal()">✖️ Lukk</button>
         </div>
     </div>
 </div>

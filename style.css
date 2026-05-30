@@ -2416,6 +2416,20 @@ body.logged-out #login-screen {
     flex-wrap: wrap;
     gap: 15px;
 }
+@media (max-width: 768px) {
+    .vaktplan-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .month-nav {
+        justify-content: center;
+    }
+    
+    .vaktplan-controls {
+        justify-content: center;
+    }
+}
 
 .month-nav {
     display: flex;
@@ -2663,4 +2677,60 @@ body.logged-out #login-screen {
 .vaktplan-clickable-card:active {
     transform: scale(0.98);
     background-color: #f5f0e8 !important;
+}
+/* Vaktplan rapport knapp */
+.btn-rapport {
+    background: var(--biljard-blaa);
+    color: white;
+}
+
+.btn-rapport:hover {
+    opacity: 0.9;
+}
+
+/* Vaktplan rapport tabell */
+.vaktplan-rapport-tabell {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.vaktplan-rapport-tabell th,
+.vaktplan-rapport-tabell td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: left;
+}
+
+.vaktplan-rapport-tabell th {
+    background: var(--marine);
+    color: white;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+}
+
+.vaktplan-rapport-tabell .ingen-vakt {
+    color: red;
+    font-style: italic;
+}
+
+/* Mobil: mindre tekst, horisontal scroll */
+@media (max-width: 768px) {
+    .vaktplan-rapport-tabell {
+        font-size: 10px;
+        min-width: 600px;
+    }
+    
+    .vaktplan-rapport-tabell th,
+    .vaktplan-rapport-tabell td {
+        padding: 4px 6px;
+    }
+}
+
+/* PC: større tekst */
+@media (min-width: 769px) {
+    .vaktplan-rapport-tabell {
+        font-size: 14px;
+    }
 }
