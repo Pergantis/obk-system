@@ -38,6 +38,7 @@ function startPåloggetSession() {
         loggUt();
     }, 2 * 60 * 60 * 1000);
     
+    
 }
 
 // Logger ut
@@ -54,8 +55,6 @@ async function loggUt() {
     }
 
     // Last om siden for å vise påloggingsskjerm.
-    // Reload re-kjører sjekkPålogget(), som setter logged-out-klassen og rydder
-    // UI — derfor trenger vi ikke duplisere DOM-opprydning her.
     window.location.reload();
 }
 
@@ -113,6 +112,40 @@ function setupLogin() {
             console.error('Login error:', err);
             errorDiv.innerText = err.message || 'Feil e-post eller passord';
             errorDiv.style.display = 'block';
+        }
+    });
+            setupPasswordToggle();
+            setupEnterKey();
+}
+// Setter opp toggle for vis/skjul passord
+function setupPasswordToggle() {
+    const toggleBtn = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('login-password');
+    
+    if (!toggleBtn || !passwordInput) return;
+    
+    toggleBtn.addEventListener('click', () => {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleBtn.innerText = '🙈';
+        } else {
+            passwordInput.type = 'password';
+            toggleBtn.innerText = '👁️';
+        }
+    });
+}
+
+// Setter opp Enter-tast på passordfeltet
+function setupEnterKey() {
+    const passwordInput = document.getElementById('login-password');
+    const loginBtn = document.getElementById('login-btn');
+    
+    if (!passwordInput || !loginBtn) return;
+    
+    passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            loginBtn.click();
         }
     });
 }

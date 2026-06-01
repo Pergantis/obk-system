@@ -28,9 +28,12 @@
                 <input type="email" id="login-email" class="input-field" value="bakdisken@gmail.com">
             </div>
             <div class="login-field">
-                <label>Passord</label>
-                <input type="password" id="login-password" class="input-field" placeholder="••••••••">
-            </div>
+    <label>Passord</label>
+    <div style="position: relative; display: flex; align-items: center;">
+        <input type="password" id="login-password" class="input-field" placeholder="••••••••" autofocus style="flex: 1; padding-right: 45px;">
+        <button type="button" id="toggle-password" style="position: absolute; right: 12px; background: none; border: none; cursor: pointer; font-size: 18px; padding: 0; margin: 0;"></button>
+    </div>
+</div>
             <div id="login-error" class="login-error" style="display: none;"></div>
             <button class="btn" id="login-btn" style="background: var(--biljard-gronn); width: 100%;">🔓 LOGG INN</button>
         </div>

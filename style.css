@@ -2734,3 +2734,19 @@ body.logged-out #login-screen {
         font-size: 14px;
     }
 }
+#toggle-password {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0 8px;
+    margin: 0;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+#login-password {
+    padding-right: 40px !important;
+}
